@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Home, Zap, BarChart3, TrendingUp, Globe, Sparkles, Target, Menu } from 'lucide-react';
 import Image from 'next/image';
@@ -10,6 +11,24 @@ export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { isExpanded, toggleSidebar } = useSidebar();
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkTheme = () => {
+      const htmlDark = document.documentElement.classList.contains('dark');
+      setIsDark(htmlDark);
+    };
+
+    checkTheme();
+
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const navItems = [
     { id: 'home', label: 'Início', icon: Home, path: '/' },
@@ -37,20 +56,10 @@ export function Sidebar() {
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               <Image
-                src="/logo/logo-preta.png"
+                src={isDark ? "/logo/logo-branca.png" : "/logo/logo-preta.png"}
                 alt="Hubfi"
                 width={100}
                 height={27}
-
-                className="block dark:hidden"
-                priority
-              />
-              <Image
-                src="/logo/logo-branca.png"
-                alt="Hubfi"
-                width={100}
-                height={27}
-                className="hidden dark:block"
                 priority
               />
             </button>
@@ -69,21 +78,14 @@ export function Sidebar() {
             aria-label="Expandir sidebar"
           >
             <Image
-              src="/logo/logotipo-preto.png"
+              src={isDark ? "/logo/logotipo-branco.png" : "/logo/logotipo-preto.png"}
               alt="Hubfi"
               width={24}
               height={24}
-              className="block dark:hidden"
+              className=""
               priority
             />
-            <Image
-              src="/logo/logotipo-branco.png"
-              alt="Hubfi"
-              width={24}
-              height={24}
-              className="hidden dark:block"
-              priority
-            />
+
           </button>
         )}
       </div>
@@ -99,8 +101,8 @@ export function Sidebar() {
                 <button
                   onClick={() => router.push(item.path)}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm font-sans transition-colors ${active
-                      ? 'bg-accent text-foreground font-medium'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    ? 'bg-accent text-foreground font-medium'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                     } ${!isExpanded ? 'justify-center' : ''}`}
                   title={!isExpanded ? item.label : undefined}
                 >

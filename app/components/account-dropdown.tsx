@@ -51,7 +51,7 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
         </button>
 
         {isOpen && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-card border border-border rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="absolute bottom-full left-0 mb-2 w-64 bg-card border border-border rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
             <div className="px-4 py-3 border-b border-border bg-card">
               <p className="text-sm font-medium text-foreground">{user.name}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{user.email}</p>
@@ -95,15 +95,15 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 hover:bg-accent rounded-md transition-colors outline-none"
+        className="w-full flex items-center  justify-between p-3 hover:bg-accent rounded-md transition-colors outline-none"
       >
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0 border border-border">
             <User className="w-6 h-6 text-foreground" />
           </div>
-          <div className="flex flex-col items-start min-w-0">
+          <div className="flex flex-col text-left min-w-0">
             <p className="text-sm font-medium text-foreground truncate w-full">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate w-full">{user.email}</p>
+            <p className="text-xs text-muted-foreground  truncate w-full">{user.email}</p>
           </div>
         </div>
         <ChevronUp className={`w-6 h-6 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
