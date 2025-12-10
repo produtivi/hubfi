@@ -54,7 +54,7 @@ export function MagicLinkLogin({ onRequestCode, onVerifyCode }: MagicLinkLoginPr
     return (
       <form onSubmit={handleRequestCode} className="space-y-4">
         <div>
-          <label htmlFor="magic-email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="magic-email" className="block text-sm font-medium text-foreground">
             Email
           </label>
           <input
@@ -63,14 +63,14 @@ export function MagicLinkLogin({ onRequestCode, onVerifyCode }: MagicLinkLoginPr
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
             placeholder="seu@email.com"
             disabled={isLoading}
           />
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -78,7 +78,7 @@ export function MagicLinkLogin({ onRequestCode, onVerifyCode }: MagicLinkLoginPr
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? 'Enviando...' : 'Enviar código'}
         </button>
@@ -88,12 +88,12 @@ export function MagicLinkLogin({ onRequestCode, onVerifyCode }: MagicLinkLoginPr
 
   return (
     <form onSubmit={handleVerifyCode} className="space-y-4">
-      <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
+      <div className="rounded-md bg-accent p-3 text-sm text-foreground">
         Código enviado para <strong>{email}</strong>
       </div>
 
       <div>
-        <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="code" className="block text-sm font-medium text-foreground">
           Código de verificação
         </label>
         <input
@@ -102,7 +102,7 @@ export function MagicLinkLogin({ onRequestCode, onVerifyCode }: MagicLinkLoginPr
           required
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-center text-lg tracking-widest"
+          className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-foreground text-center text-lg tracking-widest"
           placeholder="000000"
           maxLength={6}
           disabled={isLoading}
@@ -111,7 +111,7 @@ export function MagicLinkLogin({ onRequestCode, onVerifyCode }: MagicLinkLoginPr
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
@@ -121,14 +121,14 @@ export function MagicLinkLogin({ onRequestCode, onVerifyCode }: MagicLinkLoginPr
           type="button"
           onClick={handleBack}
           disabled={isLoading}
-          className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 rounded-md border border-border px-4 py-2 text-foreground font-medium hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Voltar
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 rounded-md bg-primary px-4 py-2 text-primary-foreground font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? 'Verificando...' : 'Verificar'}
         </button>

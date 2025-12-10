@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "./components/theme-provider";
-import { SidebarProvider } from "./components/sidebar-layout";
-import { Sidebar } from "./components/sidebar";
-import { MainContent } from "./components/main-content";
+import { ConditionalLayout } from "./components/conditional-layout";
 import "./globals.css";
 
 const stixTwo = localFont({
@@ -64,12 +62,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider>
-            <div className="flex h-screen overflow-hidden">
-              <Sidebar />
-              <MainContent>{children}</MainContent>
-            </div>
-          </SidebarProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
         </ThemeProvider>
       </body>
     </html>

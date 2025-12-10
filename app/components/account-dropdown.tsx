@@ -16,7 +16,7 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = {
-    name: 'Caio Borges',
+    name: 'Caio Calderaro',
     email: 'caio@hubfi.com',
   };
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Search, Plus, Filter, Activity, Eye, EyeOff, MoreVertical, Copy, Trash2, Edit2, X, TestTube, FileText, LayoutDashboard, Shield, Zap, ShoppingCart } from 'lucide-react'
+import { CreatePixelModal } from '../components/create-pixel-modal'
 
 interface Pixel {
      id: string
@@ -352,103 +353,9 @@ export default function PixelTracker() {
 
                {/* Modal de criar pixel */}
                {showCreateModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                         {/* Overlay */}
-                         <div 
-                              className="absolute inset-0 bg-black/50"
-                              onClick={() => setShowCreateModal(false)}
-                         />
-                         
-                         {/* Modal */}
-                         <div className="relative bg-card border border-border rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                              {/* Header */}
-                              <div className="flex items-center justify-between mb-6">
-                                   <h2 className="text-headline">Criar Novo Pixel</h2>
-                                   <button 
-                                        onClick={() => setShowCreateModal(false)}
-                                        className="p-2 hover:bg-accent rounded-md transition-colors"
-                                   >
-                                        <X className="w-5 h-5" />
-                                   </button>
-                              </div>
-
-                              {/* Formulário */}
-                              <div className="space-y-6">
-                                   {/* Switch de confirmação */}
-                                   <div className="p-4 bg-accent/50 rounded-md">
-                                        <label className="flex items-center justify-between gap-4 cursor-pointer">
-                                             <p className="text-body">
-                                                  Criei minha campanha no HubFi ou minha ação de conversão (pixel) está na MCC
-                                             </p>
-                                             <input type="checkbox" className="sr-only peer" />
-                                             <div className="relative w-11 h-6 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-foreground shrink-0"></div>
-                                        </label>
-                                   </div>
-
-                                   {/* Suas contas do Gmail */}
-                                   <div>
-                                        <label className="block text-body font-semibold mb-2">
-                                             Suas contas do Gmail
-                                        </label>
-                                        <select className="w-full px-4 py-2 border border-border bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                             <option value="">Escolha o email da conta</option>
-                                             <option value="conta1@gmail.com">conta1@gmail.com</option>
-                                             <option value="conta2@gmail.com">conta2@gmail.com</option>
-                                        </select>
-                                   </div>
-
-                                   {/* Suas contas do Google ADS */}
-                                   <div>
-                                        <label className="block text-body font-semibold mb-2">
-                                             Suas contas do Google ADS
-                                        </label>
-                                        <select className="w-full px-4 py-2 border border-border bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                             <option value="">Sua conta do Google ADS</option>
-                                             <option value="ads1">Conta ADS 1 - 123-456-7890</option>
-                                             <option value="ads2">Conta ADS 2 - 098-765-4321</option>
-                                        </select>
-                                   </div>
-
-                                   {/* Suas ações de conversão */}
-                                   <div>
-                                        <label className="block text-body font-semibold mb-2">
-                                             Suas ações de conversão do Google ADS
-                                        </label>
-                                        <select className="w-full px-4 py-2 border border-border bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                             <option value="">Suas metas de conversão</option>
-                                             <option value="compra">Compra</option>
-                                             <option value="lead">Lead</option>
-                                             <option value="cadastro">Cadastro</option>
-                                        </select>
-                                   </div>
-
-                                   {/* URL da presell */}
-                                   <div>
-                                        <label className="block text-body font-semibold mb-2">
-                                             Cole aqui o endereço (URL) da sua presell
-                                        </label>
-                                        <input
-                                             type="url"
-                                             placeholder="https://exemplo.com/presell"
-                                             className="w-full px-4 py-2 border border-border bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                        />
-                                   </div>
-
-                                   {/* Botões de ação */}
-                                   <div className="flex justify-end gap-3 pt-4">
-                                        <button 
-                                             onClick={() => setShowCreateModal(false)}
-                                             className="px-6 py-2 border border-border bg-card hover:bg-accent text-foreground rounded-md transition-colors"
-                                        >
-                                             Cancelar
-                                        </button>
-                                        <button className="px-6 py-2 bg-white hover:opacity-90 text-black rounded-md transition-colors">
-                                             Criar Pixel
-                                        </button>
-                                   </div>
-                              </div>
-                         </div>
-                    </div>
+                    <CreatePixelModal 
+                         onClose={() => setShowCreateModal(false)}
+                    />
                )}
 
                {/* Modal de relatórios */}

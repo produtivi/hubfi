@@ -36,19 +36,26 @@ export function CreatePageModal({ isOpen, onClose, onCreatePage }: CreatePageMod
 
         {/* Content */}
         <div className="p-6 space-y-3">
-          {Object.entries(PAGE_TYPES).map(([key, value]) => (
-            <button
-              key={key}
-              onClick={() => {
-                onCreatePage(key as PageType);
-                onClose();
-              }}
-              className="w-full flex items-center justify-between px-6 py-3 bg-accent text-foreground rounded-md hover:bg-accent/80 transition-colors text-left"
-            >
-              <span className="text-body font-medium">{value.label}</span>
-              <ExternalLink className="w-4 h-4" />
-            </button>
-          ))}
+          <button
+            onClick={() => {
+              onCreatePage('presell' as PageType);
+              onClose();
+            }}
+            className="w-full flex items-center justify-between px-6 py-3 bg-accent text-foreground rounded-md hover:bg-accent/80 transition-colors text-left"
+          >
+            <span className="text-body font-medium">Presell</span>
+            <ExternalLink className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              onCreatePage('review' as PageType);
+              onClose();
+            }}
+            className="w-full flex items-center justify-between px-6 py-3 bg-accent text-foreground rounded-md hover:bg-accent/80 transition-colors text-left"
+          >
+            <span className="text-body font-medium">Página de Review</span>
+            <ExternalLink className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Footer */}
