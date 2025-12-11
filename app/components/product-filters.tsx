@@ -1,5 +1,5 @@
 import { Search, Filter } from 'lucide-react';
-import type { ProductFilters, Niche, Platform, ProductTemperature } from '../types/product';
+import type { ProductFilters, Niche, Platform } from '../types/product';
 
 interface ProductFiltersBarProps {
   filters: ProductFilters;
@@ -8,7 +8,7 @@ interface ProductFiltersBarProps {
 
 export function ProductFiltersBar({ filters, onFiltersChange }: ProductFiltersBarProps) {
   const handleSearchChange = (search: string) => {
-    onFiltersChange({ ...filters, search });
+    onFiltersChange({ ...filters, searchContains: search || undefined });
   };
 
   const handleNicheChange = (niche: string) => {
@@ -16,11 +16,12 @@ export function ProductFiltersBar({ filters, onFiltersChange }: ProductFiltersBa
   };
 
   const handlePlatformChange = (platform: string) => {
-    onFiltersChange({ ...filters, platform: platform as Platform || undefined });
+    onFiltersChange({ ...filters, platforms: platform ? [platform as Platform] : undefined });
   };
 
-  const handleTemperatureChange = (temperature: string) => {
-    onFiltersChange({ ...filters, temperature: temperature as ProductTemperature || undefined });
+  const handleTemperatureMinChange = (temperature: string) => {
+    const temp = temperature ? parseFloat(temperature) : undefined;
+    onFiltersChange({ ...filters, temperatureMin: temp });
   };
 
   return (
@@ -56,7 +57,7 @@ export function ProductFiltersBar({ filters, onFiltersChange }: ProductFiltersBa
           </label>
           <select
             id="platform"
-            value={filters.platform || ''}
+            value={filters.platforms?.[0] || ''}
             onChange={(e) => handlePlatformChange(e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
           >
@@ -73,17 +74,15 @@ export function ProductFiltersBar({ filters, onFiltersChange }: ProductFiltersBa
           <label htmlFor="temperature" className="block text-sm font-medium text-gray-700 mb-1">
             Temperatura
           </label>
-          <select
+          <input
             id="temperature"
-            value={filters.temperature || ''}
-            onChange={(e) => handleTemperatureChange(e.target.value)}
+            type="number"
+            value={filters.temperatureMin || ''}
+            onChange={(e) => handleTemperatureMinChange(e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-          >
-            <option value="">Todas</option>
-            <option value="hot">Quente</option>
-            <option value="warm">Morno</option>
-            <option value="cold">Frio</option>
-          </select>
+            placeholder="Ex: 50"
+            min="0"
+          />
         </div>
 
         <div>
@@ -108,7 +107,7 @@ export function ProductFiltersBar({ filters, onFiltersChange }: ProductFiltersBa
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
         <input
           type="text"
-          value={filters.search || ''}
+          value={filters.searchContains || ''}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="Buscar por nome do produto..."
           className="w-full rounded-md border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"

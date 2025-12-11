@@ -8,25 +8,15 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onViewDetails }: ProductCardProps) {
   const getTemperatureIcon = () => {
-    switch (product.temperature) {
-      case 'hot':
-        return <Flame className="w-4 h-4 text-red-500" />;
-      case 'warm':
-        return <Thermometer className="w-4 h-4 text-orange-500" />;
-      case 'cold':
-        return <Snowflake className="w-4 h-4 text-blue-500" />;
-    }
+    if (product.temperature >= 100) return <Flame className="w-4 h-4 text-red-500" />;
+    if (product.temperature >= 50) return <Thermometer className="w-4 h-4 text-orange-500" />;
+    return <Snowflake className="w-4 h-4 text-blue-500" />;
   };
 
   const getTemperatureLabel = () => {
-    switch (product.temperature) {
-      case 'hot':
-        return 'Quente';
-      case 'warm':
-        return 'Morno';
-      case 'cold':
-        return 'Frio';
-    }
+    if (product.temperature >= 100) return 'Quente';
+    if (product.temperature >= 50) return 'Morno';
+    return 'Frio';
   };
 
   return (
@@ -54,16 +44,16 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
           <DollarSign className="text-green-500 w-5 h-5" />
           <div>
             <p className="text-xs text-gray-500">Comissão</p>
-            <p className="font-semibold text-gray-900">{product.commission}%</p>
+            <p className="font-semibold text-gray-900">{product.commissionPercent}%</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <TrendingUp className="text-blue-500 w-5 h-5" />
           <div>
-            <p className="text-xs text-gray-500">Ticket médio</p>
+            <p className="text-xs text-gray-500">Preço</p>
             <p className="font-semibold text-gray-900">
-              R$ {product.averageTicket.toFixed(2)}
+              R$ {product.price.toFixed(2)}
             </p>
           </div>
         </div>
