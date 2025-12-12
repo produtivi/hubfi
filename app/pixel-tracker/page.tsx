@@ -183,10 +183,10 @@ export default function PixelTracker() {
                          {/* Botão criar pixel */}
                          <button 
                               onClick={() => setShowCreateModal(true)}
-                              className="flex items-center gap-2 px-4 py-2 bg-white hover:opacity-90 rounded-md transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-foreground hover:opacity-90 rounded-md transition-colors"
                          >
-                              <Plus className="w-4 h-4 text-black"/>
-                              <span className="text-body text-black">Criar Pixel</span>
+                              <Plus className="w-4 h-4 text-background"/>
+                              <span className="text-body text-background">Criar Pixel</span>
                          </button>
                     </div>
                </div>
