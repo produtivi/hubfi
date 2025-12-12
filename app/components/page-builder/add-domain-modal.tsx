@@ -51,17 +51,25 @@ export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalP
     navigator.clipboard.writeText(ns);
   };
 
+  const resetModalState = () => {
+    setStep('choose-registrar');
+    setRegistrar(null);
+    setDomain('');
+    setDomainError('');
+    setIsTransferringExisting(false);
+  };
+
   const handleFinish = () => {
     if (registrar) {
       onAddDomain(domain, registrar);
       onClose();
-      // Reset
-      setStep('choose-registrar');
-      setRegistrar(null);
-      setDomain('');
-      setDomainError('');
-      setIsTransferringExisting(false);
+      resetModalState();
     }
+  };
+
+  const handleClose = () => {
+    onClose();
+    resetModalState();
   };
 
   return (
@@ -88,7 +96,7 @@ export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalP
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-accent rounded-md transition-colors"
             aria-label="Fechar"
           >

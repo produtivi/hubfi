@@ -96,8 +96,14 @@ export default function PageBuilder() {
   }, [filterType, filterDomain]);
 
   const handleCreatePage = (type: PageType) => {
-    console.log('Criar página do tipo:', type);
-    // Implementar lógica de criação de página
+    if (type === 'presell') {
+      router.push('/page-builder/create-presell');
+    } else if (type === 'review') {
+      router.push('/page-builder/create-review');
+    } else {
+      console.log('Criar página do tipo:', type);
+      // Implementar lógica para outros tipos de página
+    }
   };
 
   const handleEdit = (id: string) => {

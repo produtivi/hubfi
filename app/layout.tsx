@@ -44,6 +44,9 @@ const acuminPro = localFont({
 export const metadata: Metadata = {
   title: "Hubfi",
   description: "Plataforma de gestão e análise para afiliados",
+  icons: {
+    icon: "/logo/logotipo-branco.png",
+  },
 };
 
 export default function RootLayout({
