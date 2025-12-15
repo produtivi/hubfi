@@ -37,12 +37,12 @@ npm run lint
 ### Routes
 - `/` - Home dashboard with stats, tutorials, and quick tips
 - `/login` - Authentication page with traditional and magic link login
-- `/product-finder` - Main product discovery and filtering interface
-- `/ads-analytics` - Ads performance analytics
-- `/ranking-hub` - Product rankings and market trends
-- `/page-builder` - Landing page builder
-- `/campaign-wizard` - Campaign automation wizard
-- `/pixel-tracker` - Pixel tracking management
+- `/product-finder` - HubFinder: Main product discovery and filtering interface
+- `/ads-analytics` - HubAds: Ads performance analytics
+- `/ranking-hub` - HubRanking: Product rankings and market trends
+- `/page-builder` - HubPage: Landing page builder
+- `/campaign-wizard` - HubCampaign: Campaign automation wizard
+- `/pixel-tracker` - HubPixel: Pixel tracking management
 
 ### Core Components (`/app/components`)
 - `sidebar.tsx` - Fixed sidebar navigation with all app modules
@@ -120,9 +120,9 @@ The project follows a strict monochromatic design with typography as the protago
 - **Inputs**: `border-border focus:ring-ring` with semantic backgrounds
 - **Hover states**: `hover:bg-accent transition-colors`
 
-## Product Finder Architecture
+## HubFinder Architecture
 
-The Product Finder is the main feature with complex filtering capabilities:
+The HubFinder is the main feature with complex filtering capabilities:
 
 ### Filters Available
 1. **Platform Selection** - Multi-select from 11 platforms

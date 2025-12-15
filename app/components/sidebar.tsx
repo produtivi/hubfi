@@ -32,12 +32,12 @@ export function Sidebar() {
 
   const navItems = [
     { id: 'home', label: 'Início', icon: Home, path: '/' },
-    { id: 'product-finder', label: 'Product Finder', icon: Zap, path: '/product-finder' },
-    { id: 'ads-analytics', label: 'Ads Analytics', icon: BarChart3, path: '/ads-analytics' },
-    { id: 'ranking-hub', label: 'Ranking Hub', icon: TrendingUp, path: '/ranking-hub' },
-    { id: 'page-builder', label: 'Page Builder', icon: Globe, path: '/page-builder' },
-    { id: 'campaign-wizard', label: 'Campaign Wizard', icon: Sparkles, path: '/campaign-wizard/campaigns' },
-    { id: 'pixel-tracker', label: 'Pixel Tracker', icon: Target, path: '/pixel-tracker' },
+    { id: 'product-finder', label: 'HubFinder', icon: Zap, path: '/product-finder' },
+    { id: 'ads-analytics', label: 'HubAds', icon: BarChart3, path: '/ads-analytics' },
+    { id: 'ranking-hub', label: 'HubRanking', icon: TrendingUp, path: '/ranking-hub' },
+    { id: 'page-builder', label: 'HubPage', icon: Globe, path: '/page-builder' },
+    { id: 'campaign-wizard', label: 'HubCampaign', icon: Sparkles, path: '/campaign-wizard/campaigns' },
+    { id: 'pixel-tracker', label: 'HubPixel', icon: Target, path: '/pixel-tracker' },
   ];
 
   const isActive = (path: string) => pathname === path;

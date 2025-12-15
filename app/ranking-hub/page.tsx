@@ -438,7 +438,7 @@ export default function RankingHub() {
 			<div className="mb-8">
 				<div className="flex items-start justify-between mb-6">
 					<div>
-						<h1 className="text-headline mb-2">Ranking Hub</h1>
+						<h1 className="text-headline mb-2">HubRanking</h1>
 						<p className="text-body-muted">
 							Acompanhe os produtos mais populares em tempo real
 						</p>

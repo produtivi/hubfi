@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ArrowLeft, Settings } from 'lucide-react';
+import { ChevronDown, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CreateReview() {
   const router = useRouter();
-  const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
   const [isAwareOfAI, setIsAwareOfAI] = useState(false);
   const [formData, setFormData] = useState({
     domain: '',
@@ -188,46 +187,6 @@ export default function CreateReview() {
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 </div>
               </div>
-            </div>
-            {/* Configurações avançadas */}
-            <div className="pt-8">
-              <button
-                type="button"
-                onClick={() => setShowAdvancedConfig(!showAdvancedConfig)}
-                className="flex items-center gap-3 text-body font-medium hover:text-foreground transition-colors"
-              >
-                <Settings className="w-5 h-5" />
-                <span>Configurações avançadas</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showAdvancedConfig ? 'rotate-180' : ''}`} />
-              </button>
-
-              {showAdvancedConfig && (
-                <div className="mt-6 p-6 bg-accent/30 rounded-lg border border-border">
-                  <div className="space-y-6">
-                    {/* Script do cabeçalho head */}
-                    <div className="space-y-3">
-                      <label className="text-body font-medium">
-                        Informe o script do cabeçalho "head" (opcional)
-                      </label>
-                      <textarea
-                        placeholder="Informe o script do cabeçalho (opcional)"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none h-32"
-                      />
-                    </div>
-
-                    {/* Script do cabeçalho body */}
-                    <div className="space-y-3">
-                      <label className="text-body font-medium">
-                        Informe o script do cabeçalho "body" (opcional)
-                      </label>
-                      <textarea
-                        placeholder="Informe o script do corpo (opcional)"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none h-32"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Confirmação IA */}

@@ -132,7 +132,7 @@ export default function PageBuilder() {
       <div className="mb-8">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-headline mb-2">Page Builder</h1>
+            <h1 className="text-headline mb-2">HubPage</h1>
             <p className="text-body-muted">
               Crie e personalize suas landing pages
             </p>

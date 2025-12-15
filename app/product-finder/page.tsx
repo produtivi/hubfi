@@ -144,7 +144,7 @@ export default function ProductFinderPageNew() {
     <div className="min-h-screen p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-headline mb-4">Product Finder</h1>
+        <h1 className="text-headline mb-4">HubFinder</h1>
 
         {/* Platform Selector */}
         <PlatformSelector

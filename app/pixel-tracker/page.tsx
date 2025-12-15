@@ -22,8 +22,6 @@ export default function PixelTracker() {
      const [selectedPixelForReport, setSelectedPixelForReport] = useState<Pixel | null>(null)
      const [showDashboardModal, setShowDashboardModal] = useState(false)
      const [selectedPixelForDashboard, setSelectedPixelForDashboard] = useState<Pixel | null>(null)
-     const [showReduceEscapeModal, setShowReduceEscapeModal] = useState(false)
-     const [selectedPixelForEscape, setSelectedPixelForEscape] = useState<Pixel | null>(null)
      const [showIpBlockerModal, setShowIpBlockerModal] = useState(false)
      const [selectedPixelForIpBlocker, setSelectedPixelForIpBlocker] = useState<Pixel | null>(null)
      const [ipBlockerActiveTab, setIpBlockerActiveTab] = useState('current')
@@ -120,12 +118,6 @@ export default function PixelTracker() {
           setOpenDropdownId(null)
      }
 
-     // Função para abrir reduzir fuga
-     const handleOpenReduceEscape = (pixel: Pixel) => {
-          setSelectedPixelForEscape(pixel)
-          setShowReduceEscapeModal(true)
-          setOpenDropdownId(null)
-     }
 
      // Função para abrir bloqueador de IPs
      const handleOpenIpBlocker = (pixel: Pixel) => {
@@ -147,7 +139,7 @@ export default function PixelTracker() {
      return (
           <div className="min-h-screen p-8">
                <div className="mb-8">
-                    <h1 className="text-headline mb-2">Pixel Tracker</h1>
+                    <h1 className="text-headline mb-2">HubPixel</h1>
                     <p className="text-body-muted">
                          Gerencie e monitore seus pixels de conversão
                     </p>
@@ -294,13 +286,6 @@ export default function PixelTracker() {
                                                             <span className="text-body">Testar instalação</span>
                                                        </button>
                                                        <button 
-                                                            onClick={() => handleOpenReport(pixel)}
-                                                            className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left"
-                                                       >
-                                                            <FileText className="w-4 h-4" />
-                                                            <span className="text-body">Relatórios</span>
-                                                       </button>
-                                                       <button 
                                                             onClick={() => handleOpenDashboard(pixel)}
                                                             className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left"
                                                        >
@@ -313,13 +298,6 @@ export default function PixelTracker() {
                                                        >
                                                             <Shield className="w-4 h-4" />
                                                             <span className="text-body">Bloqueador de IPs</span>
-                                                       </button>
-                                                       <button 
-                                                            onClick={() => handleOpenReduceEscape(pixel)}
-                                                            className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left"
-                                                       >
-                                                            <Zap className="w-4 h-4" />
-                                                            <span className="text-body">Reduzir fuga</span>
                                                        </button>
                                                        <button className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left border-t border-border">
                                                             <ShoppingCart className="w-4 h-4" />
@@ -636,111 +614,6 @@ export default function PixelTracker() {
                     </div>
                )}
 
-               {/* Modal de reduzir fuga */}
-               {showReduceEscapeModal && selectedPixelForEscape && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                         {/* Overlay */}
-                         <div 
-                              className="absolute inset-0 bg-black/50"
-                              onClick={() => setShowReduceEscapeModal(false)}
-                         />
-                         
-                         {/* Modal */}
-                         <div className="relative bg-card border border-border rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                              {/* Header */}
-                              <div className="flex items-center justify-between p-6 border-b border-border">
-                                   <h2 className="text-headline">Reduzir Fuga</h2>
-                                   <button 
-                                        onClick={() => setShowReduceEscapeModal(false)}
-                                        className="p-2 hover:bg-accent rounded-md transition-colors"
-                                   >
-                                        <X className="w-5 h-5" />
-                                   </button>
-                              </div>
-
-                              <div className="p-6 space-y-6">
-                                   {/* Introdução */}
-                                   <div>
-                                        <h3 className="text-title mb-3">Funcionalidade que reduz fugas na sua presell</h3>
-                                        <div className="space-y-3 text-body text-muted-foreground">
-                                             <p>Detecta quando o cliente clica no anúncio e redireciona automaticamente para o produtor.</p>
-                                             <p>Aumenta suas chances de finalizar mais checkouts e vendas.</p>
-                                        </div>
-                                   </div>
-
-                                   {/* Link do afiliado */}
-                                   <div>
-                                        <label className="block text-body font-semibold mb-2">Cole aqui o seu link de afiliado</label>
-                                        <input
-                                             type="url"
-                                             placeholder="https://exemplo.com/afiliado"
-                                             className="w-full px-4 py-2 border border-border bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                        />
-                                   </div>
-
-                                   {/* Tempo de redirecionamento */}
-                                   <div>
-                                        <label className="block text-body font-semibold mb-2">Quantos segundos após a visita o cliente deverá ser redirecionado?</label>
-                                        <p className="text-body text-muted-foreground mb-3">Recomendamos 5 segundos para uma transição suave e aumentar suas chances de conversão.</p>
-                                        <select className="w-full px-4 py-2 border border-border bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                             <option value="5">5 segundos</option>
-                                             <option value="3">3 segundos</option>
-                                             <option value="7">7 segundos</option>
-                                             <option value="10">10 segundos</option>
-                                        </select>
-                                   </div>
-
-                                   {/* Switch de redirecionamento */}
-                                   <div>
-                                        <h4 className="text-body font-semibold mb-3">Redirecionar para a página do produtor quando o cliente tentar fechar a página?</h4>
-                                        <p className="text-body text-muted-foreground mb-3">Ative para reduzir ainda mais as fugas!</p>
-                                        
-                                        <label className="flex items-center justify-between p-4 bg-accent/30 border border-border rounded-md cursor-pointer">
-                                             <span className="text-body">Ativar redirecionamento automático</span>
-                                             <input type="checkbox" className="sr-only peer" />
-                                             <div className="relative w-11 h-6 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-foreground shrink-0"></div>
-                                        </label>
-                                   </div>
-
-                                   {/* Aviso */}
-                                   <div className="bg-accent/30 border border-border rounded-md p-4">
-                                        <h4 className="text-body font-semibold mb-2">Atenção:</h4>
-                                        <div className="space-y-2 text-body text-muted-foreground">
-                                             <p>Ao ativar o redirecionamento automático (presell fantasma), você está ciente de que esta prática não está de acordo com as políticas do Google.</p>
-                                             <p>Esta funcionalidade pode resultar em restrições ou até na suspensão da sua conta.</p>
-                                        </div>
-                                        
-                                        <label className="flex items-center justify-between mt-4 p-3 bg-card border border-border rounded-md cursor-pointer">
-                                             <span className="text-body">Usar com responsabilidade e conforme sua estratégia de risco</span>
-                                             <input type="checkbox" className="sr-only peer" />
-                                             <div className="relative w-11 h-6 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-foreground shrink-0"></div>
-                                        </label>
-                                        
-                                        <p className="text-body text-muted-foreground mt-2">Não nos responsabilizamos por eventuais suspensões de contas junto ao Google.</p>
-                                   </div>
-
-                                   {/* Botões de ação */}
-                                   <div className="flex justify-end gap-3">
-                                        <button 
-                                             onClick={() => setShowReduceEscapeModal(false)}
-                                             className="px-6 py-2 border border-border bg-card hover:bg-accent text-foreground rounded-md transition-colors"
-                                        >
-                                             Cancelar
-                                        </button>
-                                        <button 
-                                             disabled 
-                                             className="px-6 py-2 bg-card border border-border text-muted-foreground rounded-md cursor-not-allowed opacity-50"
-                                        >
-                                             Desligar redirecionador
-                                        </button>
-                                        <button className="px-6 py-2 bg-foreground text-background hover:bg-foreground/90 rounded-md transition-colors">
-                                             Salvar
-                                        </button>
-                                   </div>
-                              </div>
-                         </div>
-                    </div>
-               )}
 
                {/* Modal de bloqueador de IPs */}
                {showIpBlockerModal && selectedPixelForIpBlocker && (

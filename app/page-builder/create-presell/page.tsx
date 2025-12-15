@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ArrowLeft, Settings } from 'lucide-react';
+import { ChevronDown, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CreatePresell() {
@@ -15,7 +15,6 @@ export default function CreatePresell() {
     presellLanguage: ''
   });
 
-  const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
 
   // Mock data
   const domains = [
@@ -179,60 +178,6 @@ export default function CreatePresell() {
               </div>
             </div>
 
-            {/* Configurações avançadas */}
-            <div className="pt-8">
-              <button
-                type="button"
-                onClick={() => setShowAdvancedConfig(!showAdvancedConfig)}
-                className="flex items-center gap-3 text-body font-medium hover:text-foreground transition-colors"
-              >
-                <Settings className="w-5 h-5" />
-                <span>Configurações avançadas</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showAdvancedConfig ? 'rotate-180' : ''}`} />
-              </button>
-
-              {showAdvancedConfig && (
-                <div className="mt-6 p-6 bg-accent/30 rounded-lg border border-border">
-                  <div className="space-y-6">
-                    {/* Ativar Cloaker */}
-                    <div className="space-y-3">
-                      <label className="text-body font-medium">
-                        Ativar Cloaker?
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only peer"
-                        />
-                        <div className="relative w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-stone-600"></div>
-                      </label>
-                    </div>
-
-                    {/* Script do cabeçalho head */}
-                    <div className="space-y-3">
-                      <label className="text-body font-medium">
-                        Informe o script do cabeçalho "head" (opcional)
-                      </label>
-                      <textarea
-                        placeholder="Informe o script do cabeçalho (opcional)"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none h-32"
-                      />
-                    </div>
-
-                    {/* Script do cabeçalho body */}
-                    <div className="space-y-3">
-                      <label className="text-body font-medium">
-                        Informe o script do cabeçalho "body" (opcional)
-                      </label>
-                      <textarea
-                        placeholder="Informe o script do corpo (opcional)"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none h-32"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Botões de ação */}
             <div className="flex justify-between items-center pt-8 border-t border-border">
@@ -246,7 +191,7 @@ export default function CreatePresell() {
               
               <button
                 type="submit"
-                className="px-8 py-3 rounded-md transition-colors font-medium bg-white hover:bg-white/90 text-black"
+                className="px-8 py-3 rounded-md transition-colors font-medium bg-foreground hover:opacity-90 text-background"
               >
                 Criar Presell
               </button>

@@ -39,7 +39,7 @@ export default function Home() {
 
   const tutorials = [
     {
-      title: 'Como usar o Product Finder',
+      title: 'Como usar o HubFinder',
       duration: '5:30',
       thumbnail: '/placeholder-tutorial.jpg',
     },
@@ -62,11 +62,11 @@ export default function Home() {
     },
     {
       title: 'Acompanhe tendências',
-      description: 'Verifique o Ranking Hub diariamente para identificar oportunidades.',
+      description: 'Verifique o HubRanking diariamente para identificar oportunidades.',
     },
     {
       title: 'Teste diferentes criativos',
-      description: 'Use o Page Builder para criar múltiplas versões de landing pages.',
+      description: 'Use o HubPage para criar múltiplas versões de landing pages.',
     },
   ];
 
