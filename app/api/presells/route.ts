@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { takeScreenshot } from '@/lib/screenshot';
-import { takeScreenshotWithSelenium } from '@/lib/screenshot-selenium';
-import { takeScreenshotWithBackgroundSupport } from '@/lib/screenshot-background';
 
 // GET - Listar presells do usuário
 export async function GET(request: NextRequest) {
