@@ -8,8 +8,9 @@ import { MainContent } from "./main-content";
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
+  const isPreviewPage = pathname.startsWith('/preview');
 
-  if (isLoginPage) {
+  if (isLoginPage || isPreviewPage) {
     return <>{children}</>;
   }
 

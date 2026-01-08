@@ -68,7 +68,7 @@ export default function PixelTracker() {
 
      const filteredPixels = pixels.filter(pixel => {
           const matchesSearch = pixel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                              pixel.platform.toLowerCase().includes(searchQuery.toLowerCase())
+               pixel.platform.toLowerCase().includes(searchQuery.toLowerCase())
           const matchesStatus = showInactive ? pixel.status === 'inactive' : pixel.status === 'active'
           return matchesSearch && matchesStatus
      })
@@ -93,14 +93,12 @@ export default function PixelTracker() {
     <!-- Place at the end of the head and before the </head> tag -->
     <script data-render-head="true" src="https://static.hubfi.io/hubfi.minify.js?pixelId=${pixelId}"></script>
     <!-- End HubFi tracking (hubfi.minify.js) -->`
-          
+
           navigator.clipboard.writeText(code).then(() => {
-               // Aqui poderia mostrar uma notificação de sucesso
-               console.log('Código copiado para a área de transferência!')
           }).catch((err) => {
                console.error('Erro ao copiar código:', err)
           })
-          
+
           setOpenDropdownId(null) // Fechar dropdown após copiar
      }
 
@@ -164,20 +162,19 @@ export default function PixelTracker() {
                          {/* Filtro de pixels inativos */}
                          <button
                               onClick={() => setShowInactive(!showInactive)}
-                              className={`flex items-center gap-2 px-4 py-2 border border-border rounded-md transition-colors ${
-                                   showInactive ? 'bg-accent text-foreground' : 'bg-card hover:bg-accent text-foreground'
-                              }`}
+                              className={`flex items-center gap-2 px-4 py-2 border border-border rounded-md transition-colors ${showInactive ? 'bg-accent text-foreground' : 'bg-card hover:bg-accent text-foreground'
+                                   }`}
                          >
                               <Filter className="w-4 h-4" />
                               <span className="text-body">{showInactive ? 'Mostrar ativos' : 'Mostrar inativos'}</span>
                          </button>
 
                          {/* Botão criar pixel */}
-                         <button 
+                         <button
                               onClick={() => setShowCreateModal(true)}
                               className="flex items-center gap-2 px-4 py-2 bg-foreground hover:opacity-90 rounded-md transition-colors"
                          >
-                              <Plus className="w-4 h-4 text-background"/>
+                              <Plus className="w-4 h-4 text-background" />
                               <span className="text-body text-background">Criar Pixel</span>
                          </button>
                     </div>
@@ -192,55 +189,87 @@ export default function PixelTracker() {
                                    className="bg-card border border-border rounded-md p-6 hover:shadow-md transition-shadow"
                               >
                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                             <div className="flex items-center gap-3 mb-2">
-                                                  <div className="flex items-center gap-2 group">
-                                                       {editingPixelId === pixel.id ? (
-                                                            <input
-                                                                 type="text"
-                                                                 defaultValue={pixel.name}
-                                                                 className="text-title bg-card border-b-2 border-primary outline-none px-1"
-                                                                 autoFocus
-                                                                 onBlur={() => setEditingPixelId(null)}
-                                                                 onKeyDown={(e) => {
-                                                                      if (e.key === 'Escape' || e.key === 'Enter') {
-                                                                           setEditingPixelId(null)
-                                                                      }
-                                                                 }}
-                                                            />
-                                                       ) : (
-                                                            <>
-                                                                 <h3 className="text-title">{pixel.name}</h3>
-                                                                 <button 
-                                                                      onClick={() => setEditingPixelId(pixel.id)}
-                                                                      className="p-1 hover:bg-accent rounded transition-colors"
-                                                                      title="Editar nome"
-                                                                 >
-                                                                      <Edit2 className="w-4 h-4 text-muted-foreground" />
-                                                                 </button>
-                                                            </>
-                                                       )}
+                                        <div className="flex-1 ">
+                                             <div className='flex flex-row  justify-between pb-5'>
+                                                  <div className="flex items-center gap-3 mb-2">
+                                                       <div className="flex items-center gap-2 group">
+                                                            {editingPixelId === pixel.id ? (
+                                                                 <input
+                                                                      type="text"
+                                                                      defaultValue={pixel.name}
+                                                                      className="text-title bg-card border-b-2 border-primary outline-none px-1"
+                                                                      autoFocus
+                                                                      onBlur={() => setEditingPixelId(null)}
+                                                                      onKeyDown={(e) => {
+                                                                           if (e.key === 'Escape' || e.key === 'Enter') {
+                                                                                setEditingPixelId(null)
+                                                                           }
+                                                                      }}
+                                                                 />
+                                                            ) : (
+                                                                 <>
+                                                                      <h3 className="text-title">{pixel.name}</h3>
+                                                                      <button
+                                                                           onClick={() => setEditingPixelId(pixel.id)}
+                                                                           className="p-1 hover:bg-accent rounded transition-colors"
+                                                                           title="Editar nome"
+                                                                      >
+                                                                           <Edit2 className="w-4 h-4 text-muted-foreground" />
+                                                                      </button>
+                                                                 </>
+                                                            )}
+                                                       </div>
+                                                       <span
+                                                            className={`flex items-center gap-1 px-2 py-1 rounded-full text-label ${pixel.status === 'active'
+                                                                      ? 'bg-success/10 text-success'
+                                                                      : 'bg-destructive/10 text-destructive'
+                                                                 }`}
+                                                       >
+                                                            {pixel.status === 'active' ? (
+                                                                 <>
+                                                                      <Activity className="w-3 h-3" />
+                                                                      Ativo
+                                                                 </>
+                                                            ) : (
+                                                                 <>
+                                                                      <EyeOff className="w-3 h-3" />
+                                                                      Inativo
+                                                                 </>
+                                                            )}
+                                                       </span>
+                                                       {/* Botões de ação principais */}
                                                   </div>
-                                                  <span
-                                                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-label ${
-                                                            pixel.status === 'active'
-                                                                 ? 'bg-success/10 text-success'
-                                                                 : 'bg-destructive/10 text-destructive'
-                                                       }`}
-                                                  >
-                                                       {pixel.status === 'active' ? (
-                                                            <>
-                                                                 <Activity className="w-3 h-3" />
-                                                                 Ativo
-                                                            </>
-                                                       ) : (
-                                                            <>
-                                                                 <EyeOff className="w-3 h-3" />
-                                                                 Inativo
-                                                            </>
-                                                       )}
-                                                  </span>
+                                                  <div className="flex items-center gap-2">
+                                                       <button
+                                                            onClick={() => handleOpenDashboard(pixel)}
+                                                            className="flex items-center gap-2 px-3 py-2 bg-accent hover:bg-accent/80 text-foreground rounded-md transition-colors text-sm"
+                                                       >
+                                                            <LayoutDashboard className="w-4 h-4" />
+                                                            <span>Dashboard</span>
+                                                       </button>
+
+                                                       {/* Menu de ações */}
+                                                       <div className="relative dropdown-container">
+                                                            <button
+                                                                 onClick={() => setOpenDropdownId(openDropdownId === pixel.id ? null : pixel.id)}
+                                                                 className="p-2 hover:bg-accent rounded-md transition-colors"
+                                                            >
+                                                                 <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                                                            </button>
+
+                                                            {/* Dropdown menu */}
+                                                            {openDropdownId === pixel.id && (
+                                                                 <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-md shadow-lg z-10">
+                                                                      <button className="w-full flex items-center gap-3 px-4 py-3 text-destructive hover:bg-destructive/10 transition-colors text-left">
+                                                                           <EyeOff className="w-4 h-4" />
+                                                                           <span className="text-body">Desativar pixel</span>
+                                                                      </button>
+                                                                 </div>
+                                                            )}
+                                                       </div>
+                                                  </div>
                                              </div>
+
 
                                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                   <div>
@@ -260,56 +289,42 @@ export default function PixelTracker() {
                                                        <p className="text-body">{pixel.createdAt}</p>
                                                   </div>
                                              </div>
-                                        </div>
 
-                                        {/* Menu de ações */}
-                                        <div className="relative dropdown-container">
-                                             <button 
-                                                  onClick={() => setOpenDropdownId(openDropdownId === pixel.id ? null : pixel.id)}
-                                                  className="p-2 hover:bg-accent rounded-md transition-colors"
-                                             >
-                                                  <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                                             </button>
-                                             
-                                             {/* Dropdown menu */}
-                                             {openDropdownId === pixel.id && (
-                                                  <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-md shadow-lg z-10">
-                                                       <button 
+
+                                             {/* Ações adicionais */}
+                                             <div className="flex flex-row justify-between mt-4 pt-4 border-t border-border">
+                                                  <div className="flex gap-4">
+                                                       <button
                                                             onClick={() => handleCopyPixelCode(pixel.id)}
-                                                            className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left"
+                                                            className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm"
                                                        >
                                                             <Copy className="w-4 h-4" />
-                                                            <span className="text-body">Copiar código</span>
+                                                            <span>Copiar código</span>
                                                        </button>
-                                                       <button className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left">
+                                                      
+                                                       
+                                                  </div>
+                                                  <div className='flex flex-row gap-3'>
+                                                        <button className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm">
                                                             <TestTube className="w-4 h-4" />
-                                                            <span className="text-body">Testar instalação</span>
+                                                            <span>Testar instalação</span>
                                                        </button>
-                                                       <button 
-                                                            onClick={() => handleOpenDashboard(pixel)}
-                                                            className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left"
-                                                       >
-                                                            <LayoutDashboard className="w-4 h-4" />
-                                                            <span className="text-body">Dashboard</span>
-                                                       </button>
-                                                       <button 
+                                                       <button
                                                             onClick={() => handleOpenIpBlocker(pixel)}
-                                                            className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left"
+                                                            className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm"
                                                        >
                                                             <Shield className="w-4 h-4" />
-                                                            <span className="text-body">Bloqueador de IPs</span>
+                                                            <span>Bloqueador de IPs</span>
                                                        </button>
-                                                       <button className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors text-left border-t border-border">
+                                                  <button className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm">
                                                             <ShoppingCart className="w-4 h-4" />
-                                                            <span className="text-body">Configurar checkout</span>
+                                                            <span>Configurar checkout</span>
                                                        </button>
-                                                       <button className="w-full flex items-center gap-3 px-4 py-3 text-destructive hover:bg-destructive/10 transition-colors text-left border-t border-border">
-                                                            <EyeOff className="w-4 h-4" />
-                                                            <span className="text-body">Desativar pixel</span>
-                                                       </button>
-                                                  </div>
-                                             )}
+                                                       </div>
+                                             </div>
                                         </div>
+
+
                                    </div>
                               </div>
                          ))}
@@ -319,7 +334,7 @@ export default function PixelTracker() {
                          <p className="text-body text-muted-foreground mb-4">
                               Nenhum pixel encontrado
                          </p>
-                         <button 
+                         <button
                               onClick={() => setShowCreateModal(true)}
                               className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-black hover:bg-accent/80 rounded-md transition-colors"
                          >
@@ -331,7 +346,7 @@ export default function PixelTracker() {
 
                {/* Modal de criar pixel */}
                {showCreateModal && (
-                    <CreatePixelModal 
+                    <CreatePixelModal
                          onClose={() => setShowCreateModal(false)}
                     />
                )}
@@ -340,11 +355,11 @@ export default function PixelTracker() {
                {showReportModal && selectedPixelForReport && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                          {/* Overlay */}
-                         <div 
+                         <div
                               className="absolute inset-0 bg-black/50"
                               onClick={() => setShowReportModal(false)}
                          />
-                         
+
                          {/* Modal */}
                          <div className="relative bg-card border border-border rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden">
                               {/* Header */}
@@ -360,7 +375,7 @@ export default function PixelTracker() {
                                              <FileText className="w-4 h-4" />
                                              Exportar relatório de Funil completo
                                         </button>
-                                        <button 
+                                        <button
                                              onClick={() => setShowReportModal(false)}
                                              className="p-2 hover:bg-accent rounded-md transition-colors"
                                         >
@@ -434,7 +449,7 @@ export default function PixelTracker() {
                                              </svg>
                                              Anterior
                                         </button>
-                                        
+
                                         <div className="flex items-center gap-1">
                                              <button className="w-8 h-8 flex items-center justify-center bg-foreground text-background rounded-md text-sm font-medium">
                                                   1
@@ -467,17 +482,17 @@ export default function PixelTracker() {
                {showDashboardModal && selectedPixelForDashboard && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                          {/* Overlay */}
-                         <div 
+                         <div
                               className="absolute inset-0 bg-black/50"
                               onClick={() => setShowDashboardModal(false)}
                          />
-                         
+
                          {/* Modal */}
                          <div className="relative bg-card border border-border rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
                               {/* Header */}
                               <div className="flex items-center justify-between p-6 border-b border-border">
                                    <h2 className="text-headline">Dashboard</h2>
-                                   <button 
+                                   <button
                                         onClick={() => setShowDashboardModal(false)}
                                         className="p-2 hover:bg-accent rounded-md transition-colors"
                                    >
@@ -500,7 +515,7 @@ export default function PixelTracker() {
                                                        <button className="px-4 py-2 bg-foreground text-background rounded-md text-body">Tudo</button>
                                                   </div>
                                              </div>
-                                             
+
                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                                   <div>
                                                        <label className="block text-label text-muted-foreground mb-2">Data inicial:</label>
@@ -511,7 +526,7 @@ export default function PixelTracker() {
                                                        <input type="date" className="w-full px-4 py-2 border border-border bg-card rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
                                                   </div>
                                              </div>
-                                             
+
                                              <button className="flex items-center gap-2 px-6 py-2 bg-foreground text-background rounded-md hover:bg-foreground/90 transition-colors">
                                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -549,37 +564,37 @@ export default function PixelTracker() {
                                    {/* Funil de Conversão */}
                                    <div className="mb-8">
                                         <h3 className="text-title mb-6">Funil de Conversão</h3>
-                                        
+
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                                              <div className="bg-card border border-border rounded-md p-6 text-center hover:shadow-sm transition-shadow">
                                                   <div className="text-3xl font-bold text-foreground mb-2">170</div>
                                                   <div className="text-label text-muted-foreground font-medium">Total de visitas</div>
                                              </div>
-                                             
+
                                              <div className="bg-card border border-border rounded-md p-6 text-center hover:shadow-sm transition-shadow">
                                                   <div className="text-3xl font-bold text-foreground mb-1">102</div>
                                                   <div className="text-label text-muted-foreground font-medium mb-1">Visitas únicas</div>
                                                   <div className="text-label text-muted-foreground">60.0%</div>
                                              </div>
-                                             
+
                                              <div className="bg-card border border-border rounded-md p-6 text-center hover:shadow-sm transition-shadow">
                                                   <div className="text-3xl font-bold text-foreground mb-1">75</div>
                                                   <div className="text-label text-muted-foreground font-medium mb-1">Visitas limpas</div>
                                                   <div className="text-label text-muted-foreground">73.5%</div>
                                              </div>
-                                             
+
                                              <div className="bg-card border border-border rounded-md p-6 text-center hover:shadow-sm transition-shadow">
                                                   <div className="text-3xl font-bold text-foreground mb-1">51</div>
                                                   <div className="text-label text-muted-foreground font-medium mb-1">Visitas tráfego pago</div>
                                                   <div className="text-label text-muted-foreground">68.0%</div>
                                              </div>
-                                             
+
                                              <div className="bg-card border border-border rounded-md p-6 text-center hover:shadow-sm transition-shadow">
                                                   <div className="text-3xl font-bold text-foreground mb-1">22</div>
                                                   <div className="text-label text-muted-foreground font-medium mb-1">Checkouts</div>
                                                   <div className="text-label text-muted-foreground">43.1%</div>
                                              </div>
-                                             
+
                                              <div className="bg-card border border-border rounded-md p-6 text-center hover:shadow-sm transition-shadow">
                                                   <div className="text-3xl font-bold text-foreground mb-1">10</div>
                                                   <div className="text-label text-muted-foreground font-medium mb-1">Vendas</div>
@@ -593,7 +608,7 @@ export default function PixelTracker() {
                                                   <div className="text-label text-muted-foreground font-medium mb-1">Cliques na sua página</div>
                                                   <div className="text-label text-muted-foreground">98.0%</div>
                                              </div>
-                                             
+
                                              <div className="bg-card border border-border rounded-md p-6 text-center hover:shadow-sm transition-shadow">
                                                   <div className="text-3xl font-bold text-foreground mb-2">2.0%</div>
                                                   <div className="text-label text-muted-foreground font-medium">Taxa de Fuga</div>
@@ -619,11 +634,11 @@ export default function PixelTracker() {
                {showIpBlockerModal && selectedPixelForIpBlocker && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                          {/* Overlay */}
-                         <div 
+                         <div
                               className="absolute inset-0 bg-black/50"
                               onClick={() => setShowIpBlockerModal(false)}
                          />
-                         
+
                          {/* Modal */}
                          <div className="relative bg-card border border-border rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
                               {/* Header com logo do Google Ads */}
@@ -631,7 +646,7 @@ export default function PixelTracker() {
                                    <div className="flex items-center gap-3">
                                         <h2 className="text-headline">Bloqueador automático de IPs</h2>
                                    </div>
-                                   <button 
+                                   <button
                                         onClick={() => setShowIpBlockerModal(false)}
                                         className="p-2 hover:bg-accent rounded-md transition-colors"
                                    >
@@ -642,13 +657,13 @@ export default function PixelTracker() {
                               <div className="p-6">
                                    {/* Abas */}
                                    <div className="flex mb-6">
-                                        <button 
+                                        <button
                                              onClick={() => setIpBlockerActiveTab('current')}
                                              className={`px-4 py-2 ${ipBlockerActiveTab === 'current' ? 'border-b-2 border-foreground text-foreground font-medium' : 'text-blue-500 hover:text-blue-600'} transition-colors`}
                                         >
                                              Configuração atual
                                         </button>
-                                        <button 
+                                        <button
                                              onClick={() => setIpBlockerActiveTab('configure')}
                                              className={`px-4 py-2 ${ipBlockerActiveTab === 'configure' ? 'border-b-2 border-foreground text-foreground font-medium' : 'text-blue-500 hover:text-blue-600'} transition-colors`}
                                         >
@@ -662,10 +677,10 @@ export default function PixelTracker() {
                                              <div className="bg-accent/30 border border-border rounded-md p-8">
                                                   <h3 className="text-title mb-4">Nenhuma configuração ativa</h3>
                                                   <p className="text-body text-muted-foreground mb-6">
-                                                       Você ainda não configurou o bloqueador automático de IPs. 
+                                                       Você ainda não configurou o bloqueador automático de IPs.
                                                        Configure agora para começar a bloquear IPs suspeitos automaticamente.
                                                   </p>
-                                                  <button 
+                                                  <button
                                                        onClick={() => setIpBlockerActiveTab('configure')}
                                                        className="px-6 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-md transition-colors"
                                                   >

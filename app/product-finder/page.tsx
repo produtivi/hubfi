@@ -194,7 +194,7 @@ export default function ProductFinderPageNew() {
 
           {/* Results Info */}
           <div className="bg-card rounded-md border border-border p-4 mb-6">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between ">
               <p className="text-body font-medium text-foreground">
                 {filteredProducts.length.toLocaleString()} produtos encontrados
               </p>

@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  presells  Presell[]
+  
+  @@map("users")
+}
+
+model Domain {
+  id         Int      @id @default(autoincrement())
+  domainName String   @unique @map("domain_name")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  presells   Presell[]
+  
+  @@map("domains")
+}
+
+model Presell {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @map("user_id")
+  domainId           Int      @map("domain_id")
+  pageName           String   @map("page_name")
+  slug               String
+  affiliateLink      String   @map("affiliate_link")
+  producerSalesPage  String   @map("producer_sales_page")
+  presellType        String   @map("presell_type")
+  language           String
+  status             String   @default("draft")
+  
+  // Conteúdo gerado
+  headline           String?
+  subheadline        String?
+  contentHtml        String?  @map("content_html")
+  metaTitle          String?  @map("meta_title")
+  metaDescription    String?  @map("meta_description")
+  
+  // Screenshots
+  screenshotDesktop  String?  @map("screenshot_desktop")
+  screenshotMobile   String?  @map("screenshot_mobile")
+  
+  // Métricas
+  views              Int      @default(0)
+  clicks             Int      @default(0)
+  
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  publishedAt        DateTime? @map("published_at")
+  
+  // Relacionamentos
+  user               User     @relation(fields: [userId], references: [id])
+  domain             Domain   @relation(fields: [domainId], references: [id])
+  analytics          PresellAnalytics[]
+  
+  @@unique([domainId, slug])
+  @@map("presells")
+}
+
+model PresellTemplate {
+  id           Int      @id @default(autoincrement())
+  name         String
+  type         String
+  templateHtml String   @map("template_html")
+  thumbnailUrl String?  @map("thumbnail_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  @@map("presell_templates")
+}
+
+model PresellAnalytics {
+  id        Int      @id @default(autoincrement())
+  presellId Int      @map("presell_id")
+  eventType String   @map("event_type")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  referer   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  presell   Presell  @relation(fields: [presellId], references: [id])
+  
+  @@map("presell_analytics")
+}

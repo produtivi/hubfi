@@ -1,44 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Eye, Trash2, Check, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Domain } from '@/app/types/page-builder';
 import { AddDomainModal } from '@/app/components/page-builder/add-domain-modal';
 import { DomainsList } from '@/app/components/page-builder/domains-list';
 
-// Mock data
-const mockDomains: Domain[] = [
-  {
-    id: '1',
-    domain: 'onlydiscount.site',
-    status: 'published',
-    createdAt: new Date('2025-10-30T19:34:36')
-  },
-  {
-    id: '2',
-    domain: 'lojaonlineproducts.site',
-    status: 'published',
-    createdAt: new Date('2025-05-06T21:21:31')
-  },
-  {
-    id: '3',
-    domain: 'theofficialportal.store',
-    status: 'published',
-    createdAt: new Date('2025-05-06T15:39:14')
-  },
-  {
-    id: '4',
-    domain: 'officialportal.tech',
-    status: 'published',
-    createdAt: new Date('2025-02-01T07:27:39')
-  }
-];
-
 export default function DomainsPage() {
   const router = useRouter();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [domains] = useState<Domain[]>(mockDomains);
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Carregar domínios do banco
+  useEffect(() => {
+    loadDomains();
+  }, []);
+
+  const loadDomains = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/domains');
+      const result = await response.json();
+      
+      if (result.success) {
+        // Mapear dados do banco para o formato esperado pelo componente
+        const mappedDomains: Domain[] = result.data.map((domain: any) => ({
+          id: domain.id.toString(),
+          domain: domain.domainName,
+          status: domain.isActive ? 'published' : 'draft',
+          createdAt: new Date(domain.createdAt)
+        }));
+        
+        setDomains(mappedDomains);
+      } else {
+        console.error('Erro ao carregar domínios:', result.error);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar domínios:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
@@ -66,10 +70,44 @@ export default function DomainsPage() {
     // Implementar exclusão
   };
 
-  const handleAddDomain = (domain: string, registrar: 'godaddy' | 'hostinger' | 'already-have') => {
-    console.log('Adicionar domínio:', domain, 'via', registrar);
-    // Implementar adição de domínio
+  const handleAddDomain = async (domain: string, registrar: 'godaddy' | 'hostinger' | 'already-have') => {
+    try {
+      const response = await fetch('/api/domains', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          domainName: domain,
+          registrar: registrar === 'already-have' ? 'other' : registrar
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Recarregar lista de domínios
+        await loadDomains();
+        setIsAddModalOpen(false);
+        console.log('Domínio adicionado com sucesso!');
+      } else {
+        console.error('Erro ao adicionar domínio:', result.error);
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar domínio:', error);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-muted-foreground">Carregando domínios...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-8">

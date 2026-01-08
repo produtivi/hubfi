@@ -219,7 +219,7 @@ export default function CreateReview() {
                 disabled={!isAwareOfAI}
                 className={`px-8 py-3 rounded-md transition-colors font-medium ${
                   isAwareOfAI
-                    ? 'bg-white hover:bg-white/90 text-black'
+                    ? 'bg-gray-800 hover:bg-gray-700 text-white'
                     : 'bg-border text-muted-foreground cursor-not-allowed'
                 }`}
               >

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { KeywordInfoModal } from '../components/keyword-info-modal';
 import { TrafficDashboardModal } from '../components/traffic-dashboard-modal';
 import {
@@ -37,348 +37,7 @@ interface RankedProduct {
 type TrendFilter = 'all' | 'rising' | 'falling' | 'stable';
 type VolumeFilter = 'all' | 'hot' | 'warm' | 'cold';
 
-const RANKED_PRODUCTS: RankedProduct[] = [
-	{
-		id: '1',
-		name: 'mitolyn',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'mitolyn',
-		ranking: 1,
-		searchVolume: 74000,
-		searchVolumeTrend: 'up',
-		traffic: 1000000,
-		trafficTrend: 'up',
-		gravity: 390,
-		gravityTrend: 'stable',
-		commission: 188.59,
-		currency: 'USD',
-		rankingChange: 0
-	},
-	{
-		id: '2',
-		name: 'ProstaVive - Powerhouse Prostate',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'prostavive',
-		ranking: 2,
-		searchVolume: 14800,
-		searchVolumeTrend: 'stable',
-		traffic: 165900,
-		trafficTrend: 'up',
-		gravity: 235,
-		gravityTrend: 'up',
-		commission: 148.54,
-		currency: 'USD',
-		rankingChange: 1
-	},
-	{
-		id: '3',
-		name: 'ProDentim - The Biggest Monster',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'prodentim',
-		ranking: 3,
-		searchVolume: 33100,
-		searchVolumeTrend: 'down',
-		traffic: 548400,
-		trafficTrend: 'down',
-		gravity: 157,
-		gravityTrend: 'down',
-		commission: 159.98,
-		currency: 'USD',
-		rankingChange: -1
-	},
-	{
-		id: '4',
-		name: 'Nagano Tonic',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'nagano tonic',
-		ranking: 4,
-		searchVolume: 22100,
-		searchVolumeTrend: 'up',
-		traffic: 301000,
-		trafficTrend: 'up',
-		gravity: 198,
-		gravityTrend: 'up',
-		commission: 142.30,
-		currency: 'USD',
-		rankingChange: 2
-	},
-	{
-		id: '5',
-		name: 'Sugar Defender',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'sugar defender',
-		ranking: 5,
-		searchVolume: 49500,
-		searchVolumeTrend: 'up',
-		traffic: 673200,
-		trafficTrend: 'stable',
-		gravity: 312,
-		gravityTrend: 'stable',
-		commission: 175.45,
-		currency: 'USD',
-		rankingChange: 0
-	},
-	{
-		id: '6',
-		name: 'Fórmula Negócio Online',
-		platform: 'hotmart',
-		platform_logo: '/platforms/hotmart.png',
-		keyword: 'formula negocio online',
-		ranking: 6,
-		searchVolume: 18200,
-		searchVolumeTrend: 'up',
-		traffic: 245000,
-		trafficTrend: 'up',
-		gravity: 289,
-		gravityTrend: 'up',
-		commission: 497.00,
-		currency: 'BRL',
-		rankingChange: 3
-	},
-	{
-		id: '7',
-		name: 'Detox Slim',
-		platform: 'monetizze',
-		platform_logo: '/platforms/monetizze.png',
-		keyword: 'detox slim',
-		ranking: 7,
-		searchVolume: 38900,
-		searchVolumeTrend: 'down',
-		traffic: 512000,
-		trafficTrend: 'down',
-		gravity: 276,
-		gravityTrend: 'stable',
-		commission: 127.90,
-		currency: 'BRL',
-		rankingChange: -2
-	},
-	{
-		id: '8',
-		name: 'Curso de Inglês do Jerry',
-		platform: 'hotmart',
-		platform_logo: '/platforms/hotmart.png',
-		keyword: 'curso ingles jerry',
-		ranking: 8,
-		searchVolume: 27400,
-		searchVolumeTrend: 'stable',
-		traffic: 389000,
-		trafficTrend: 'up',
-		gravity: 321,
-		gravityTrend: 'up',
-		commission: 387.00,
-		currency: 'BRL',
-		rankingChange: 1
-	},
-	{
-		id: '9',
-		name: 'Emagrecer de Vez',
-		platform: 'kiwify',
-		platform_logo: '/platforms/kiwify.png',
-		keyword: 'emagrecer de vez',
-		ranking: 9,
-		searchVolume: 52100,
-		searchVolumeTrend: 'up',
-		traffic: 698000,
-		trafficTrend: 'up',
-		gravity: 264,
-		gravityTrend: 'stable',
-		commission: 197.00,
-		currency: 'BRL',
-		rankingChange: 0
-	},
-	{
-		id: '10',
-		name: 'The Ex Factor Guide',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'ex factor guide',
-		ranking: 10,
-		searchVolume: 12300,
-		searchVolumeTrend: 'down',
-		traffic: 187000,
-		trafficTrend: 'stable',
-		gravity: 198,
-		gravityTrend: 'down',
-		commission: 132.45,
-		currency: 'USD',
-		rankingChange: -1
-	},
-	{
-		id: '11',
-		name: 'Tráfego Orgânico no Instagram',
-		platform: 'hotmart',
-		platform_logo: '/platforms/hotmart.png',
-		keyword: 'trafego organico instagram',
-		ranking: 11,
-		searchVolume: 23600,
-		searchVolumeTrend: 'up',
-		traffic: 321000,
-		trafficTrend: 'up',
-		gravity: 287,
-		gravityTrend: 'up',
-		commission: 297.00,
-		currency: 'BRL',
-		rankingChange: 4
-	},
-	{
-		id: '12',
-		name: 'Ikigai Weight Loss',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'ikigai weight loss',
-		ranking: 12,
-		searchVolume: 19800,
-		searchVolumeTrend: 'stable',
-		traffic: 267000,
-		trafficTrend: 'stable',
-		gravity: 223,
-		gravityTrend: 'stable',
-		commission: 156.78,
-		currency: 'USD',
-		rankingChange: 0
-	},
-	{
-		id: '13',
-		name: 'Método Fan Page Lucrativa',
-		platform: 'braip',
-		platform_logo: '/platforms/braip.png',
-		keyword: 'fan page lucrativa',
-		ranking: 13,
-		searchVolume: 8900,
-		searchVolumeTrend: 'down',
-		traffic: 134000,
-		trafficTrend: 'down',
-		gravity: 176,
-		gravityTrend: 'down',
-		commission: 247.00,
-		currency: 'BRL',
-		rankingChange: -3
-	},
-	{
-		id: '14',
-		name: 'Java Burn',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'java burn',
-		ranking: 14,
-		searchVolume: 61200,
-		searchVolumeTrend: 'up',
-		traffic: 823000,
-		trafficTrend: 'up',
-		gravity: 345,
-		gravityTrend: 'stable',
-		commission: 164.32,
-		currency: 'USD',
-		rankingChange: 2
-	},
-	{
-		id: '15',
-		name: 'Segredo da Conquista',
-		platform: 'monetizze',
-		platform_logo: '/platforms/monetizze.png',
-		keyword: 'segredo da conquista',
-		ranking: 15,
-		searchVolume: 16700,
-		searchVolumeTrend: 'stable',
-		traffic: 223000,
-		trafficTrend: 'stable',
-		gravity: 192,
-		gravityTrend: 'stable',
-		commission: 147.90,
-		currency: 'BRL',
-		rankingChange: 0
-	},
-	{
-		id: '16',
-		name: 'The Smoothie Diet',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'smoothie diet',
-		ranking: 16,
-		searchVolume: 28900,
-		searchVolumeTrend: 'up',
-		traffic: 392000,
-		trafficTrend: 'up',
-		gravity: 267,
-		gravityTrend: 'stable',
-		commission: 143.21,
-		currency: 'USD',
-		rankingChange: 1
-	},
-	{
-		id: '17',
-		name: 'Fórmula do Lançamento',
-		platform: 'hotmart',
-		platform_logo: '/platforms/hotmart.png',
-		keyword: 'formula do lancamento',
-		ranking: 17,
-		searchVolume: 11200,
-		searchVolumeTrend: 'down',
-		traffic: 156000,
-		trafficTrend: 'down',
-		gravity: 234,
-		gravityTrend: 'down',
-		commission: 697.00,
-		currency: 'BRL',
-		rankingChange: -2
-	},
-	{
-		id: '18',
-		name: 'Kerassentials',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'kerassentials',
-		ranking: 18,
-		searchVolume: 34500,
-		searchVolumeTrend: 'up',
-		traffic: 467000,
-		trafficTrend: 'up',
-		gravity: 289,
-		gravityTrend: 'up',
-		commission: 152.89,
-		currency: 'USD',
-		rankingChange: 3
-	},
-	{
-		id: '19',
-		name: 'Treino Hipertrofia em Casa',
-		platform: 'kiwify',
-		platform_logo: '/platforms/kiwify.png',
-		keyword: 'treino hipertrofia casa',
-		ranking: 19,
-		searchVolume: 9800,
-		searchVolumeTrend: 'stable',
-		traffic: 143000,
-		trafficTrend: 'stable',
-		gravity: 167,
-		gravityTrend: 'stable',
-		commission: 97.00,
-		currency: 'BRL',
-		rankingChange: 0
-	},
-	{
-		id: '20',
-		name: 'His Secret Obsession',
-		platform: 'clickbank',
-		platform_logo: '/platforms/clickbank.png',
-		keyword: 'his secret obsession',
-		ranking: 20,
-		searchVolume: 15600,
-		searchVolumeTrend: 'down',
-		traffic: 209000,
-		trafficTrend: 'down',
-		gravity: 201,
-		gravityTrend: 'stable',
-		commission: 138.67,
-		currency: 'USD',
-		rankingChange: -1
-	}
-];
+const RANKED_PRODUCTS: RankedProduct[] = [];
 
 export default function RankingHub() {
 	const [searchTerm, setSearchTerm] = useState('');
@@ -388,18 +47,92 @@ export default function RankingHub() {
 	const [showFilters, setShowFilters] = useState(false);
 	const [selectedKeyword, setSelectedKeyword] = useState<RankedProduct | null>(null);
 	const [selectedTraffic, setSelectedTraffic] = useState<RankedProduct | null>(null);
-
+	const [products, setProducts] = useState<RankedProduct[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string>('');
 	const platforms = [
-		{ id: 'all', name: 'Todas' },
+		{ id: 'all', name: 'Todas as plataformas' },
 		{ id: 'clickbank', name: 'ClickBank' },
-		{ id: 'hotmart', name: 'Hotmart' },
-		{ id: 'braip', name: 'Braip' },
-		{ id: 'kiwify', name: 'Kiwify' },
-		{ id: 'monetizze', name: 'Monetizze' },
+		{ id: 'buygoods', name: 'Buygoods' },
+		{ id: 'gurumedia', name: 'Gurumedia' },
+		{ id: 'maxweb', name: 'Maxweb' },
 	];
 
+	// Função para converter dados da API para formato da interface
+	const transformApiData = (apiData: any[]): RankedProduct[] => {
+		return apiData.map((item, index) => ({
+			id: item.sku || `product-${index}`,
+			name: item.keyword.replace(/\b\w/g, l => l.toUpperCase()), // Capitalizar
+			platform: 'clickbank' as Platform,
+			platform_logo: '/logos/clickbank-logo.svg', // Logo padrão
+			keyword: item.keyword,
+			ranking: item.position,
+			searchVolume: parseFloat(item.volumeBusca.replace(/[KM]/g, '')) * (item.volumeBusca.includes('K') ? 1000 : item.volumeBusca.includes('M') ? 1000000 : 1),
+			searchVolumeTrend: 'up' as const, // Simulado
+			traffic: parseFloat(item.trafego.replace(/[KM]/g, '')) * (item.trafego.includes('K') ? 1000 : item.trafego.includes('M') ? 1000000 : 1),
+			trafficTrend: 'stable' as const, // Simulado  
+			gravity: item.gravidez,
+			gravityTrend: 'up' as const, // Simulado
+			commission: parseFloat(item.comissao),
+			currency: 'USD' as const, // ClickBank usa USD
+			rankingChange: Math.floor(Math.random() * 10 - 5) // Simulado -5 a +5
+		}));
+	};
+
+	// Buscar dados da API
+	useEffect(() => {
+		const fetchRankingData = async () => {
+			try {
+				setIsLoading(true);
+				setError('');
+				
+				console.log('🔍 Buscando dados do ranking...');
+				
+				// Buscar dados da ClickBank primeiro
+				const response = await fetch('/api/ranking/clickbank');
+				const result = await response.json();
+				
+				console.log('📊 Resposta da API:', result);
+				
+				if (result.success && result.data && result.data.length > 0) {
+					const transformedProducts = transformApiData(result.data);
+					setProducts(transformedProducts);
+					console.log(`✅ ${transformedProducts.length} produtos carregados!`);
+					
+					// Mostrar warning se usar dados mock
+					if (result.source === 'mock-data-temporary') {
+						console.log('⚠️', result.warning);
+					}
+				} else {
+					setProducts([]);
+					if (result.source === 'system-rebuild') {
+						setError('🚀 Sistema de inteligência de mercado em desenvolvimento - Use o botão "Testar Web Scraping" para ver como funciona!');
+					} else {
+						setError(result.message || 'Nenhum produto encontrado');
+					}
+				}
+			} catch (error) {
+				console.error('💥 Erro ao buscar ranking:', error);
+				setError('Erro ao conectar com a API');
+				setProducts([]);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchRankingData();
+	}, []);
+
+	// Atualizar dados quando filtro de plataforma mudar
+	useEffect(() => {
+		if (selectedPlatform !== 'all') {
+			// TODO: Implementar busca específica por plataforma
+			console.log(`Filtro alterado para: ${selectedPlatform}`);
+		}
+	}, [selectedPlatform]);
+
 	const filteredProducts = useMemo(() => {
-		return RANKED_PRODUCTS.filter((product: RankedProduct) => {
+		return products.filter((product: RankedProduct) => {
 			if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
 				!product.keyword.toLowerCase().includes(searchTerm.toLowerCase())) {
 				return false;
@@ -419,7 +152,7 @@ export default function RankingHub() {
 
 			return true;
 		});
-	}, [searchTerm, selectedPlatform, trendFilter, volumeFilter]);
+	}, [products, searchTerm, selectedPlatform, trendFilter, volumeFilter]);
 
 	const formatNumber = (num: number) => {
 		if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -460,6 +193,7 @@ export default function RankingHub() {
 					/>
 				</div>
 			</div>
+
 
 			<div className="mb-6">
 				<button
@@ -621,22 +355,39 @@ export default function RankingHub() {
 				))}
 			</div>
 
-			{filteredProducts.length === 0 && (
+			{filteredProducts.length === 0 && !isLoading && (
 				<div className="bg-card border border-border rounded-md p-12 text-center">
 					<p className="text-body text-muted-foreground mb-4">
-						Nenhum produto encontrado
+						{error || 'Nenhum produto encontrado'}
 					</p>
-					<button
-						className="text-label text-foreground hover:text-muted-foreground transition-colors"
-						onClick={() => {
-							setSelectedPlatform('all');
-							setTrendFilter('all');
-							setVolumeFilter('all');
-							setSearchTerm('');
-						}}
-					>
-						Limpar filtros
-					</button>
+					{error ? (
+						<button
+							className="text-label text-foreground hover:text-muted-foreground transition-colors"
+							onClick={() => window.location.reload()}
+						>
+							Tentar novamente
+						</button>
+					) : (
+						<button
+							className="text-label text-foreground hover:text-muted-foreground transition-colors"
+							onClick={() => {
+								setSelectedPlatform('all');
+								setTrendFilter('all');
+								setVolumeFilter('all');
+								setSearchTerm('');
+							}}
+						>
+							Limpar filtros
+						</button>
+					)}
+				</div>
+			)}
+
+			{isLoading && (
+				<div className="bg-card border border-border rounded-md p-12 text-center">
+					<p className="text-body text-muted-foreground">
+						🔍 Buscando produtos do ranking...
+					</p>
 				</div>
 			)}
 

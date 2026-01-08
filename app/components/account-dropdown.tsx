@@ -13,6 +13,8 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = {
@@ -23,6 +25,26 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
+
+  // Marcar como montado e detectar tema
+  useEffect(() => {
+    setMounted(true);
+    const checkTheme = () => {
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      setIsDark(hasDarkClass);
+    };
+    
+    checkTheme();
+    
+    // Observer para mudanças no tema
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -66,10 +88,12 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
                 className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
               >
                 <span>Tema</span>
-                <div className="flex items-center gap-2">
-                  <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                </div>
+                <span className="inline dark:hidden">
+                  <Moon className="h-4 w-4" />
+                </span>
+                <span className="hidden dark:inline">
+                  <Sun className="h-4 w-4" />
+                </span>
               </button>
 
               <div className="h-px bg-border my-1" />
@@ -120,10 +144,12 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
               className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
             >
               <span>Tema</span>
-              <div className="flex items-center gap-2">
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              </div>
+              <span className="inline dark:hidden">
+                <Moon className="h-4 w-4" />
+              </span>
+              <span className="hidden dark:inline">
+                <Sun className="h-4 w-4" />
+              </span>
             </button>
 
             <div className="h-px bg-border my-1" />

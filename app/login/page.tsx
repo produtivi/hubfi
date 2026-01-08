@@ -11,18 +11,15 @@ export default function Home() {
   const [loginMethod, setLoginMethod] = useState<LoginMethod>('traditional');
 
   const handleTraditionalLogin = async (credentials: LoginCredentials) => {
-    console.log('Login tradicional:', credentials);
     await new Promise(resolve => setTimeout(resolve, 1000));
     router.push('/');
   };
 
   const handleRequestCode = async (request: MagicLinkRequest) => {
-    console.log('Solicitando código:', request);
     await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
   const handleVerifyCode = async (verification: MagicLinkVerification) => {
-    console.log('Verificando código:', verification);
     await new Promise(resolve => setTimeout(resolve, 1000));
     router.push('/');
   };

@@ -1,99 +1,106 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, RefreshCw, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CreatePageModal } from '../components/page-builder/create-page-modal';
+import { DeleteConfirmationModal } from '../components/page-builder/delete-confirmation-modal';
 import { PagesList } from '../components/page-builder/pages-table';
 import { Page, PageType, PAGE_TYPES } from '../types/page-builder';
+import { Toast } from '../components/ui/toast';
+import { useToast } from '../hooks/useToast';
 
-// Mock data - substituir com API real
-const mockPages: Page[] = [
-  {
-    id: '1',
-    name: 'teste',
-    type: 'presell',
-    domain: 'lojaonlineproducts.site',
-    status: 'published',
-    createdAt: new Date('2025-11-28T15:15:55'),
-    updatedAt: new Date('2025-11-28T15:15:55')
-  },
-  {
-    id: '2',
-    name: 'google',
-    type: 'presell',
-    domain: 'theofficialportal.store',
-    status: 'published',
-    createdAt: new Date('2025-11-19T15:14:25'),
-    updatedAt: new Date('2025-11-19T15:14:25')
-  },
-  {
-    id: '3',
-    name: 'teste-ricardo',
-    type: 'presell',
-    domain: 'onlydiscount.site',
-    status: 'published',
-    createdAt: new Date('2025-11-15T15:17:49'),
-    updatedAt: new Date('2025-11-15T15:19:48')
-  },
-  {
-    id: '4',
-    name: 'tonicgreens',
-    type: 'presell',
-    domain: 'theofficialportal.store',
-    status: 'published',
-    createdAt: new Date('2025-11-14T17:54:25'),
-    updatedAt: new Date('2025-11-14T20:23:44')
-  },
-  {
-    id: '5',
-    name: 'nervecalm',
-    type: 'presell',
-    domain: 'theofficialportal.store',
-    status: 'published',
-    createdAt: new Date('2025-11-11T18:30:52'),
-    updatedAt: new Date('2025-11-13T11:17:11')
-  },
-  {
-    id: '6',
-    name: 'neuro-sharp',
-    type: 'review',
-    domain: 'theofficialportal.store',
-    status: 'published',
-    createdAt: new Date('2025-11-10T17:45:40'),
-    updatedAt: new Date('2025-11-10T18:27:10')
-  },
-  {
-    id: '7',
-    name: 'lipovive',
-    type: 'presell',
-    domain: 'lojaonlineproducts.site',
-    status: 'published',
-    createdAt: new Date('2025-10-27T16:06:32'),
-    updatedAt: new Date('2025-11-09T14:06:19')
-  }
-];
+interface Presell {
+  id: number;
+  pageName: string;
+  presellType: string;
+  language: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  affiliateLink: string;
+  screenshotDesktop?: string;
+  screenshotMobile?: string;
+  domain: {
+    domainName: string;
+  };
+  fullUrl: string;
+}
 
 export default function PageBuilder() {
   const router = useRouter();
+  const { toast, showSuccess, showError, hideToast } = useToast();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filterType, setFilterType] = useState<PageType | 'all'>('all');
   const [filterDomain, setFilterDomain] = useState<string | 'all'>('all');
   const [showArchived, setShowArchived] = useState(false);
+  const [presells, setPresells] = useState<Presell[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    pageId: string;
+    pageName: string;
+    isDeleting: boolean;
+  }>({
+    isOpen: false,
+    pageId: '',
+    pageName: '',
+    isDeleting: false
+  });
+
+  // Carregar presells da API
+  useEffect(() => {
+    loadPresells();
+  }, []);
+
+  const loadPresells = async () => {
+    try {
+      setIsLoading(true);
+      // TODO: Pegar userId real da sessão/auth
+      const userId = 1;
+      
+      const response = await fetch(`/api/presells?userId=${userId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setPresells(result.data);
+      } else {
+        console.error('Erro ao carregar presells:', result.error);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar presells:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Converter presells para o formato de páginas
+  const pages: Page[] = useMemo(() => {
+    return presells.map(presell => ({
+      id: presell.id.toString(),
+      name: presell.pageName,
+      type: 'presell' as PageType,
+      domain: presell.domain.domainName,
+      status: presell.status as 'draft' | 'published' | 'archived',
+      createdAt: new Date(presell.createdAt),
+      updatedAt: new Date(presell.updatedAt),
+      url: presell.fullUrl
+    }));
+  }, [presells]);
 
   // Extrair domínios únicos das páginas
   const uniqueDomains = useMemo(() => {
-    return Array.from(new Set(mockPages.map(page => page.domain)));
-  }, []);
+    return Array.from(new Set(pages.map(page => page.domain)));
+  }, [pages]);
 
   // Filtrar páginas
   const filteredPages = useMemo(() => {
-    return mockPages.filter(page => {
+    return pages.filter(page => {
       const typeMatch = filterType === 'all' || page.type === filterType;
       const domainMatch = filterDomain === 'all' || page.domain === filterDomain;
       return typeMatch && domainMatch;
     });
-  }, [filterType, filterDomain]);
+  }, [pages, filterType, filterDomain]);
 
   const handleCreatePage = (type: PageType) => {
     if (type === 'presell') {
@@ -106,24 +113,80 @@ export default function PageBuilder() {
     }
   };
 
+  // Função para recarregar manualmente se necessário
+  // (removido auto-reload no focus para evitar conflito com preview)
+
   const handleEdit = (id: string) => {
-    console.log('Editar página:', id);
-    // Implementar navegação para editor
+    router.push(`/page-builder/edit-presell/${id}`);
   };
 
   const handleView = (id: string) => {
-    console.log('Visualizar página:', id);
-    // Implementar visualização da página
+    // Abrir preview em nova guia
+    window.open(`/preview/${id}`, '_blank');
   };
 
-  const handleCopy = (id: string) => {
-    console.log('Copiar página:', id);
-    // Implementar duplicação de página
+  const handleCopy = async (id: string) => {
+    try {
+      const previewUrl = `${window.location.origin}/preview/${id}`;
+      await navigator.clipboard.writeText(previewUrl);
+      showSuccess('Link copiado para a área de transferência!');
+    } catch (error) {
+      console.error('Erro ao copiar link:', error);
+      showError('Erro ao copiar o link');
+    }
   };
 
   const handleDelete = (id: string) => {
-    console.log('Excluir página:', id);
-    // Implementar exclusão de página
+    const presell = presells.find(p => p.id.toString() === id);
+    if (presell) {
+      setDeleteModal({
+        isOpen: true,
+        pageId: id,
+        pageName: presell.pageName,
+        isDeleting: false
+      });
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleteModal(prev => ({ ...prev, isDeleting: true }));
+
+    try {
+      const response = await fetch(`/api/presells/${deleteModal.pageId}`, {
+        method: 'DELETE'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Recarregar a lista de presells após exclusão
+        await loadPresells();
+        setDeleteModal({
+          isOpen: false,
+          pageId: '',
+          pageName: '',
+          isDeleting: false
+        });
+      } else {
+        alert('Erro ao excluir página: ' + result.error);
+        setDeleteModal(prev => ({ ...prev, isDeleting: false }));
+      }
+    } catch (error) {
+      console.error('Erro ao excluir página:', error);
+      alert('Erro ao excluir página');
+      setDeleteModal(prev => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  const handleCancelDelete = () => {
+    if (!deleteModal.isDeleting) {
+      setDeleteModal({
+        isOpen: false,
+        pageId: '',
+        pageName: '',
+        isDeleting: false
+      });
+    }
   };
 
   return (
@@ -134,7 +197,7 @@ export default function PageBuilder() {
           <div>
             <h1 className="text-headline mb-2">HubPage</h1>
             <p className="text-body-muted">
-              Crie e personalize suas landing pages
+              Crie e personalize suas pages
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -146,11 +209,12 @@ export default function PageBuilder() {
               <span className="text-label font-medium">Gerenciar Domínios</span>
             </button>
             <button
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-foreground text-foreground border border-border rounded-md hover:opacity-80 transition-opacity"
+              onClick={loadPresells}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-foreground text-foreground border border-border rounded-md hover:opacity-80 transition-opacity disabled:opacity-50"
             >
-              <RefreshCw className="w-4 h-4" />
-              <span className="text-label font-medium">Atualizar</span>
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className="text-label font-medium">{isLoading ? 'Carregando...' : 'Atualizar'}</span>
             </button>
           </div>
         </div>
@@ -219,19 +283,45 @@ export default function PageBuilder() {
       </div>
 
       {/* Pages List */}
-      <PagesList
-        pages={filteredPages}
-        onEdit={handleEdit}
-        onView={handleView}
-        onCopy={handleCopy}
-        onDelete={handleDelete}
-      />
+      {isLoading ? (
+        <div className="bg-card border border-border rounded-md p-12 text-center">
+          <div className="inline-flex items-center gap-2 text-muted-foreground">
+            <RefreshCw className="w-5 h-5 animate-spin" />
+            <span className="text-body">Carregando páginas...</span>
+          </div>
+        </div>
+      ) : (
+        <PagesList
+          pages={filteredPages}
+          onEdit={handleEdit}
+          onView={handleView}
+          onCopy={handleCopy}
+          onDelete={handleDelete}
+        />
+      )}
 
       {/* Create Modal */}
       <CreatePageModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreatePage={handleCreatePage}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        pageName={deleteModal.pageName}
+        isDeleting={deleteModal.isDeleting}
+      />
+
+      {/* Toast */}
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
       />
     </div>
   );

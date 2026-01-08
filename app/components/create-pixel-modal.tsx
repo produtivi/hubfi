@@ -30,7 +30,6 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
       setCurrentStep(currentStep + 1)
     } else {
       // Finalizar criação do pixel
-      console.log('Criando pixel com dados:', formData)
       onClose()
     }
   }

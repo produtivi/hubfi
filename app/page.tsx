@@ -1,25 +1,41 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart3, TrendingUp, DollarSign, Users, Play, Lightbulb, BookOpen } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, MousePointerClick, Play, Lightbulb, BookOpen, TrendingDown } from 'lucide-react';
 
 export default function Home() {
   const [dateFilter, setDateFilter] = useState('7days');
 
   const stats = [
+    // Primeira linha - Métricas Financeiras
     {
-      label: 'Receita Total',
-      value: 'R$ 47.500',
-      change: '+12%',
+      label: 'Lucro Total',
+      value: 'R$ 12.847',
+      change: '+18%',
       changeType: 'positive' as const,
       icon: DollarSign,
     },
     {
-      label: 'Produtos Ativos',
-      value: '24',
-      change: '+3',
+      label: 'Receita Total',
+      value: 'R$ 47.832',
+      change: '+22%',
       changeType: 'positive' as const,
-      icon: BarChart3,
+      icon: DollarSign,
+    },
+    {
+      label: 'Investimento',
+      value: 'R$ 34.985',
+      change: '+8%',
+      changeType: 'positive' as const,
+      icon: TrendingDown,
+    },
+    // Segunda linha - Métricas de Performance
+    {
+      label: 'Total de Cliques',
+      value: '3.842',
+      change: '+156',
+      changeType: 'positive' as const,
+      icon: MousePointerClick,
     },
     {
       label: 'Taxa de Conversão',
@@ -29,11 +45,11 @@ export default function Home() {
       icon: TrendingUp,
     },
     {
-      label: 'Visitantes',
-      value: '12.4k',
-      change: '-2%',
-      changeType: 'negative' as const,
-      icon: Users,
+      label: 'Produtos Ativos',
+      value: '24',
+      change: '+3',
+      changeType: 'positive' as const,
+      icon: BarChart3,
     },
   ];
 
@@ -99,7 +115,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (

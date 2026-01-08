@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Toast } from '../../components/ui/toast';
+import { useToast } from '../../hooks/useToast';
 
 export default function CreatePresell() {
   const router = useRouter();
+  const { toast, showSuccess, showError, hideToast } = useToast();
   const [formData, setFormData] = useState({
     domain: '',
     pageName: '',
@@ -14,21 +17,44 @@ export default function CreatePresell() {
     presellType: '',
     presellLanguage: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [domains, setDomains] = useState<string[]>([]);
+  const [presellTypes, setPresellTypes] = useState<string[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
+  // Carregar domínios e tipos do banco
+  useEffect(() => {
+    loadDomainsAndTypes();
+  }, []);
 
-  // Mock data
-  const domains = [
-    'lojaonlineproducts.site',
-    'theofficialportal.store',
-    'onlydiscount.site'
-  ];
-
-  const presellTypes = [
-    'VSL (Video Sales Letter)',
-    'Carta de Vendas',
-    'Landing Page',
-    'Página de Captura'
-  ];
+  const loadDomainsAndTypes = async () => {
+    try {
+      setIsLoadingData(true);
+      
+      // Carregar domínios
+      const domainsResponse = await fetch('/api/domains');
+      const domainsResult = await domainsResponse.json();
+      
+      if (domainsResult.success) {
+        setDomains(domainsResult.data.map((domain: any) => domain.domainName));
+      }
+      
+      // Carregar tipos de presell
+      const typesResponse = await fetch('/api/presell-templates');
+      const typesResult = await typesResponse.json();
+      
+      if (typesResult.success) {
+        setPresellTypes(typesResult.data.map((template: any) => template.name));
+      }
+      
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      showError('Erro ao carregar dados do formulário');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const languages = [
     'Português',
@@ -36,12 +62,67 @@ export default function CreatePresell() {
     'Espanhol'
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Dados do formulário:', formData);
-    // Navegar de volta para page-builder
-    router.push('/page-builder');
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // TODO: Pegar userId real da sessão/auth
+      const userId = 1;
+
+      const response = await fetch('/api/presells', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          domain: formData.domain,
+          pageName: formData.pageName,
+          affiliateLink: formData.affiliateLink,
+          producerSalesPage: formData.producerSalesPage,
+          presellType: formData.presellType,
+          presellLanguage: formData.presellLanguage
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao criar presell');
+      }
+
+      console.log('Presell criada:', result.data);
+      
+      // Mostrar toast de sucesso
+      showSuccess(`Página "${formData.pageName}" criada com sucesso!`);
+      
+      // Aguardar um pouco para mostrar o toast antes de navegar
+      setTimeout(() => {
+        router.push('/page-builder');
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Erro:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isLoadingData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-muted-foreground">Carregando dados...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-8">
@@ -67,6 +148,13 @@ export default function CreatePresell() {
       <div className="w-full">
         <div className="bg-card border border-border rounded-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Mensagem de erro */}
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4 mb-6">
+                <p className="text-destructive text-body">{error}</p>
+              </div>
+            )}
+
             {/* Grid de campos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Domínio */}
@@ -191,14 +279,26 @@ export default function CreatePresell() {
               
               <button
                 type="submit"
-                className="px-8 py-3 rounded-md transition-colors font-medium bg-foreground hover:opacity-90 text-background"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-8 py-3 rounded-md transition-colors font-medium bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white"
               >
-                Criar Presell
+                {isLoading && (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                )}
+                <span>{isLoading ? 'Criando...' : 'Criar Presell'}</span>
               </button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Toast */}
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     </div>
   );
 }
