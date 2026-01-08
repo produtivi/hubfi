@@ -62,7 +62,7 @@ export default function RankingHub() {
 	const transformApiData = (apiData: any[]): RankedProduct[] => {
 		return apiData.map((item, index) => ({
 			id: item.sku || `product-${index}`,
-			name: item.keyword.replace(/\b\w/g, l => l.toUpperCase()), // Capitalizar
+			name: item.keyword.replace(/\b\w/g, (l: string) => l.toUpperCase()), // Capitalizar
 			platform: 'clickbank' as Platform,
 			platform_logo: '/logos/clickbank-logo.svg', // Logo padrão
 			keyword: item.keyword,

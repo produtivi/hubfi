@@ -147,8 +147,8 @@ export async function POST(request: NextRequest) {
     
     try {
       // Criar promise com timeout de 30 segundos
-      const screenshotPromise = takeScreenshot(producerSalesPage, `temp-${Date.now()}`);
-      const timeoutPromise = new Promise((_, reject) => {
+      const screenshotPromise = takeScreenshot(producerSalesPage, Date.now());
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Screenshot timeout após 30 segundos')), 30000);
       });
       

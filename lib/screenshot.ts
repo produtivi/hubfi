@@ -169,8 +169,8 @@ export async function takeScreenshot(url: string, presellId: number) {
         const mobileSpacesUrl = await Promise.race([mobileUploadPromise, mobileTimeoutPromise]);
         
         // Usar URLs do Spaces
-        finalDesktopPath = desktopSpacesUrl;
-        finalMobilePath = mobileSpacesUrl;
+        finalDesktopPath = desktopSpacesUrl as string;
+        finalMobilePath = mobileSpacesUrl as string;
         
         // Deletar arquivos locais após upload
         await fs.unlink(desktopFullPath);

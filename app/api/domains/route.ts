@@ -65,7 +65,6 @@ export async function POST(request: NextRequest) {
     const newDomain = await prisma.domain.create({
       data: {
         domainName,
-        registrar: registrar || 'other',
         isActive: true
       }
     });
