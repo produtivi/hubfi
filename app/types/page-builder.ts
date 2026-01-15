@@ -27,14 +27,14 @@ export const PAGE_TYPES: Record<PageType, { label: string; description: string }
   },
   cloned: {
     label: 'Página Clonada',
-    description: 'Página duplicada de outra existente'
+    description: 'Página clonada de um modelo ou página existente'
   },
   review: {
     label: 'Página de Review',
     description: 'Página de análise e avaliação de produtos'
   },
   'top-funnel': {
-    label: 'Top Funil',
-    description: 'Página para captura no topo do funil'
+    label: 'Top Funnel',
+    description: 'Página para atrair visitantes no topo do funil de vendas'
   }
 };

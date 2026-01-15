@@ -86,7 +86,7 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
             <div>
               <p className="text-label mb-1">Domínio</p>
               <p className="text-body font-medium text-foreground">{page.domain}</p>
@@ -94,6 +94,10 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
             <div>
               <p className="text-label mb-1">Criado em</p>
               <p className="text-body font-medium text-foreground">{formatDate(page.createdAt)}</p>
+            </div>
+            <div>
+              <p className="text-label mb-1">Atualizado em</p>
+              <p className="text-body font-medium text-foreground">{formatDate(page.updatedAt)}</p>
             </div>
           </div>
         </div>

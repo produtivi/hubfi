@@ -8,17 +8,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId é obrigatório' },
-        { status: 400 }
-      );
-    }
+    // Para desenvolvimento, buscar todas as presells se não tiver userId
+    const whereClause = userId ? { userId: parseInt(userId) } : {};
 
     const presells = await prisma.presell.findMany({
-      where: {
-        userId: parseInt(userId)
-      },
+      where: whereClause,
       include: {
         domain: true,
         user: {
@@ -37,7 +31,7 @@ export async function GET(request: NextRequest) {
     // Adicionar URL completa para cada presell
     const presellsWithUrl = presells.map(presell => ({
       ...presell,
-      fullUrl: `https://${presell.domain.domainName}/${presell.slug}`
+      fullUrl: presell.domain ? `https://${presell.domain.domainName}/${presell.slug}` : presell.slug
     }));
 
     return NextResponse.json({

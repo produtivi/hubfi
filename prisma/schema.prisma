@@ -18,7 +18,9 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
   
   // Relacionamentos
-  presells  Presell[]
+  presells      Presell[]
+  pixels        Pixel[]
+  googleAccounts GoogleAccount[]
   
   @@map("users")
 }
@@ -100,4 +102,92 @@ model PresellAnalytics {
   presell   Presell  @relation(fields: [presellId], references: [id])
   
   @@map("presell_analytics")
+}
+
+model Pixel {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  name        String
+  platform    String   // hotmart, braip, monetizze, etc.
+  presellUrl  String   @map("presell_url")
+  pixelId     String   @unique @map("pixel_id") // ID único para o código de tracking
+  status      String   @default("active") // active, inactive
+  
+  // Métricas básicas
+  visits              Int      @default(0)                    // Total de visitas
+  uniqueVisits        Int      @default(0) @map("unique_visits")        // Visitas únicas
+  cleanVisits         Int      @default(0) @map("clean_visits")         // Visitas limpas (sem bots)
+  paidTrafficVisits   Int      @default(0) @map("paid_traffic_visits")  // Visitas de tráfego pago
+  clicks              Int      @default(0)                    // Cliques na página
+  checkouts           Int      @default(0)                    // Checkouts
+  sales               Int      @default(0)                    // Vendas
+  bounceRate          Decimal  @default(0) @map("bounce_rate") @db.Decimal(5,2) // Taxa de fuga (0.00 - 100.00)
+  blockedIps          Int      @default(0) @map("blocked_ips")          // IPs bloqueados
+  
+  // Métricas antigas (manter compatibilidade)
+  conversions         Int      @default(0)                    // Deprecated - usar sales
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  user        User     @relation(fields: [userId], references: [id])
+  events      PixelEvent[]
+  blockedIpsList BlockedIp[] // Lista de IPs bloqueados
+  
+  @@map("pixels")
+}
+
+model PixelEvent {
+  id        Int      @id @default(autoincrement())
+  pixelId   Int      @map("pixel_id")
+  eventType String   @map("event_type") // visit, click, conversion, checkout, sale
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  referer   String?
+  url       String?  // URL onde o evento ocorreu
+  timestamp DateTime @default(now())
+  data      Json?    // dados extras do evento (valor da venda, produto, etc)
+  
+  // Flags para análise
+  isBot     Boolean  @default(false) @map("is_bot")        // Se foi identificado como bot
+  isPaid    Boolean  @default(false) @map("is_paid")       // Se veio de tráfego pago
+  isUnique  Boolean  @default(false) @map("is_unique")     // Se é visita única
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  pixel     Pixel    @relation(fields: [pixelId], references: [id])
+  
+  @@map("pixel_events")
+}
+
+model BlockedIp {
+  id        Int      @id @default(autoincrement())
+  pixelId   Int      @map("pixel_id")
+  ipAddress String   @map("ip_address")
+  reason    String   // Motivo do bloqueio: "bot", "suspicious", "manual", etc
+  userAgent String?  @map("user_agent")
+  attempts  Int      @default(1) // Número de tentativas bloqueadas
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  pixel     Pixel    @relation(fields: [pixelId], references: [id])
+  
+  @@unique([pixelId, ipAddress])
+  @@map("blocked_ips")
+}
+
+model GoogleAccount {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  email     String
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, email])
+  @@map("google_accounts")
 }

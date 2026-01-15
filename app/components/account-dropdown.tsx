@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, ChevronUp, User, Moon, Sun } from 'lucide-react';
+import { LogOut, ChevronUp, User, Moon, Sun, Settings } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 interface AccountDropdownProps {
@@ -82,21 +82,32 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
             <div className="py-1 bg-card">
               <button
                 onClick={() => {
+                  router.push('/settings');
+                  setIsOpen(false);
+                }}
+                className="w-full flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Configurações</span>
+              </button>
+
+              <button
+                onClick={() => {
                   toggleTheme();
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
+                className="w-full flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
               >
-                <span>Tema</span>
                 <span className="inline dark:hidden">
-                  <Moon className="h-4 w-4" />
+                  <Moon className="mr-2 h-4 w-4" />
                 </span>
                 <span className="hidden dark:inline">
-                  <Sun className="h-4 w-4" />
+                  <Sun className="mr-2 h-4 w-4" />
                 </span>
+                <span>Tema</span>
               </button>
 
-              <div className="h-px bg-border my-1" />
+              <div className="h-px bg-border opacity-50" />
 
               <button
                 onClick={() => {
@@ -138,21 +149,32 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
           <div className="py-1 bg-card">
             <button
               onClick={() => {
+                router.push('/settings');
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
+            </button>
+
+            <button
+              onClick={() => {
                 toggleTheme();
                 setIsOpen(false);
               }}
-              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
+              className="w-full flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
             >
-              <span>Tema</span>
               <span className="inline dark:hidden">
-                <Moon className="h-4 w-4" />
+                <Moon className="mr-2 h-4 w-4" />
               </span>
               <span className="hidden dark:inline">
-                <Sun className="h-4 w-4" />
+                <Sun className="mr-2 h-4 w-4" />
               </span>
+              <span>Tema</span>
             </button>
 
-            <div className="h-px bg-border my-1" />
+            <div className="h-px bg-border" />
 
             <button
               onClick={() => {

@@ -1,57 +1,115 @@
 'use client'
 
 import { useState } from 'react'
-import { X, CheckCircle, Download } from 'lucide-react'
+import { X, CheckCircle, Download, Copy } from 'lucide-react'
 
 interface CreatePixelModalProps {
   onClose: () => void
+  onPixelCreated?: (pixel: any) => void
 }
 
-export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
+export function CreatePixelModal({ onClose, onPixelCreated }: CreatePixelModalProps) {
   const [currentStep, setCurrentStep] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [createdPixel, setCreatedPixel] = useState<any>(null)
+  const [trackingCode, setTrackingCode] = useState('')
   const [formData, setFormData] = useState({
-    campaignConfirmation: false,
-    gmailAccount: '',
-    googleAdsAccount: '',
-    conversionAction: '',
+    name: '',
+    platform: '',
     presellUrl: ''
   })
   const [confirmations, setConfirmations] = useState({
     confirmation1: false,
     confirmation2: false,
     confirmation3: false,
-    confirmation4: false,
-    confirmation4b: false,
-    confirmation5: false
+    confirmation4: false
   })
 
-  const handleStepAdvance = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1)
+  const handleStepAdvance = async () => {
+    if (currentStep === 1) {
+      // Validar formulário antes de avançar
+      if (!isFormValid()) {
+        alert('Preencha todos os campos obrigatórios')
+        return
+      }
+      setCurrentStep(2)
+    } else if (currentStep === 2) {
+      // Criar pixel
+      await createPixel()
+    } else if (currentStep === 3) {
+      // Gerar código
+      await generateTrackingCode()
     } else {
-      // Finalizar criação do pixel
+      // Finalizar
       onClose()
     }
   }
 
-  // Verificar se todos os campos obrigatórios estão preenchidos
   const isFormValid = () => {
     return (
-      formData.campaignConfirmation &&
-      formData.gmailAccount &&
-      formData.googleAdsAccount &&
-      formData.conversionAction &&
-      formData.presellUrl
+      formData.name.trim() &&
+      formData.platform &&
+      formData.presellUrl.trim()
     )
   }
 
-  // Verificar se todas as confirmações estão marcadas
+  const createPixel = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/pixels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      
+      const result = await response.json()
+      
+      if (result.success) {
+        setCreatedPixel(result.data)
+        onPixelCreated?.(result.data)
+        setCurrentStep(3)
+      } else {
+        alert('Erro ao criar pixel: ' + result.error)
+      }
+    } catch (error) {
+      alert('Erro ao criar pixel')
+      console.error(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const generateTrackingCode = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/pixels/${createdPixel.pixelId}/code`)
+      const result = await response.json()
+      
+      if (result.success) {
+        setTrackingCode(result.data.trackingCode)
+        setCurrentStep(4)
+      } else {
+        alert('Erro ao gerar código: ' + result.error)
+      }
+    } catch (error) {
+      alert('Erro ao gerar código')
+      console.error(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const copyTrackingCode = () => {
+    navigator.clipboard.writeText(trackingCode)
+    alert('Código copiado!')
+  }
+
   const areAllConfirmationsValid = () => {
     return (
       confirmations.confirmation1 &&
       confirmations.confirmation2 &&
       confirmations.confirmation3 &&
-      (confirmations.confirmation4 || confirmations.confirmation4b)
+      confirmations.confirmation4
     )
   }
 
@@ -61,25 +119,15 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
     }
   }
 
-  // Dados mockados para os selects
-  const mockGmailAccounts = [
-    'caioberto10@gmail.com',
-    'contato@hubfi.com',
-    'admin@exemplo.com'
-  ]
-
-  const mockGoogleAdsAccounts = [
-    { id: '845-371-6990', name: 'OP - | 14:04 (845-371-6990)' },
-    { id: '123-456-7890', name: 'Conta Principal (123-456-7890)' },
-    { id: '987-654-3210', name: 'Conta Teste (987-654-3210)' }
-  ]
-
-  const mockConversionActions = [
-    'Dental',
-    'Compra',
-    'Lead',
-    'Cadastro',
-    'Download'
+  const platforms = [
+    { id: 'hotmart', name: 'Hotmart' },
+    { id: 'braip', name: 'Braip' },
+    { id: 'monetizze', name: 'Monetizze' },
+    { id: 'eduzz', name: 'Eduzz' },
+    { id: 'kiwify', name: 'Kiwify' },
+    { id: 'clickbank', name: 'ClickBank' },
+    { id: 'warriorplus', name: 'WarriorPlus' },
+    { id: 'outros', name: 'Outros' }
   ]
 
   return (
@@ -108,80 +156,33 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
 
             {/* Formulário Step 1 */}
             <div className="p-6 space-y-6">
-              {/* Switch de confirmação */}
-              <div>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer"
-                    checked={formData.campaignConfirmation}
-                    onChange={(e) => setFormData({...formData, campaignConfirmation: e.target.checked})}
-                  />
-                  <div className="relative w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-stone-600"></div>
-                  <span className="text-body">
-                    Criei minha campanha no HubFi ou minha ação de conversão (pixel) está na MCC
-                  </span>
-                </label>
-              </div>
-
-              {/* Botão adicionar conta Google */}
-              <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-full hover:bg-accent transition-colors">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                <span className="text-body">Adicionar conta Google</span>
-              </button>
-
-              {/* Suas contas do Gmail */}
+              {/* Nome do Pixel */}
               <div>
                 <label className="block text-body mb-2">
-                  Suas contas do Gmail
+                  Nome do Pixel
                 </label>
-                <select 
+                <input
+                  type="text"
+                  placeholder="Ex: Hotmart - Curso de Marketing"
                   className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={formData.gmailAccount}
-                  onChange={(e) => setFormData({...formData, gmailAccount: e.target.value})}
-                >
-                  <option value="">Escolha o email da conta</option>
-                  {mockGmailAccounts.map((account) => (
-                    <option key={account} value={account}>{account}</option>
-                  ))}
-                </select>
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                />
               </div>
 
-              {/* Suas contas do Google ADS */}
+              {/* Plataforma */}
               <div>
-                <label className="flex items-center justify-between mb-2">
-                  <span className="text-body">Suas contas do Google ADS</span>
+                <label className="block text-body mb-2">
+                  Plataforma de Afiliados
                 </label>
                 <select 
                   className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={formData.googleAdsAccount}
-                  onChange={(e) => setFormData({...formData, googleAdsAccount: e.target.value})}
+                  value={formData.platform}
+                  onChange={(e) => setFormData({...formData, platform: e.target.value})}
                 >
-                  <option value="">Sua conta do google ADS</option>
-                  {mockGoogleAdsAccounts.map((account) => (
-                    <option key={account.id} value={account.id}>{account.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Suas ações de conversão */}
-              <div>
-                <label className="flex items-center justify-between mb-2">
-                  <span className="text-body">Suas ações de conversão do Google ADS</span>
-                </label>
-                <select 
-                  className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={formData.conversionAction}
-                  onChange={(e) => setFormData({...formData, conversionAction: e.target.value})}
-                >
-                  <option value="">Suas metas de conversão</option>
-                  {mockConversionActions.map((action) => (
-                    <option key={action} value={action}>{action}</option>
+                  <option value="">Selecione a plataforma</option>
+                  {platforms.map((platform) => (
+                    <option key={platform.id} value={platform.id}>{platform.name}</option>
                   ))}
                 </select>
               </div>
@@ -189,15 +190,18 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
               {/* URL da presell */}
               <div>
                 <label className="block text-body mb-2">
-                  Cole aqui o endereço (URL) da sua presell
+                  URL da sua Presell
                 </label>
                 <input
                   type="url"
-                  placeholder=""
+                  placeholder="https://suapresell.com"
                   className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   value={formData.presellUrl}
                   onChange={(e) => setFormData({...formData, presellUrl: e.target.value})}
                 />
+                <p className="text-label text-muted-foreground mt-2">
+                  O pixel funcionará apenas nesta URL
+                </p>
               </div>
 
               {/* Botões de ação */}
@@ -223,7 +227,7 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
           <>
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-headline">Resumo da criação do Pixel para Dental</h2>
+              <h2 className="text-headline">Resumo da criação do Pixel</h2>
               <button 
                 onClick={onClose}
                 className="p-2 hover:bg-accent rounded-md transition-colors"
@@ -235,29 +239,24 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
             {/* Conteúdo Step 2 */}
             <div className="p-6 space-y-6">
               <p className="text-body text-muted-foreground">
-                Após gerar o código do Pixel, não será mais possível editar
+                Confirme as informações antes de criar o pixel
               </p>
 
               {/* Informações do resumo */}
               <div className="space-y-4">
                 <div>
-                  <p className="text-label text-muted-foreground mb-1">Sua conta do Gmail</p>
-                  <p className="text-body font-medium">{formData.gmailAccount || 'caioberto10@gmail.com'}</p>
+                  <p className="text-label text-muted-foreground mb-1">Nome do Pixel</p>
+                  <p className="text-body font-medium">{formData.name}</p>
                 </div>
 
                 <div>
-                  <p className="text-label text-muted-foreground mb-1">Sua conta do Google ADS</p>
-                  <p className="text-body font-medium">{formData.googleAdsAccount || 'OP - | 14:04 (845-371-6990)'}</p>
+                  <p className="text-label text-muted-foreground mb-1">Plataforma</p>
+                  <p className="text-body font-medium">{platforms.find(p => p.id === formData.platform)?.name}</p>
                 </div>
 
                 <div>
-                  <p className="text-label text-muted-foreground mb-1">Sua meta de conversão do Google ADS</p>
-                  <p className="text-body font-medium">{formData.conversionAction || 'Dental'}</p>
-                </div>
-
-                <div>
-                  <p className="text-label text-muted-foreground mb-1">Endereço da URL da sua presell</p>
-                  <p className="text-body font-medium break-all">{formData.presellUrl || 'https://lojaonlineproducts.site/lojaonlineproductssite/teste/index.html'}</p>
+                  <p className="text-label text-muted-foreground mb-1">URL da Presell</p>
+                  <p className="text-body font-medium break-all">{formData.presellUrl}</p>
                 </div>
               </div>
 
@@ -271,7 +270,7 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
                     onChange={(e) => setConfirmations({...confirmations, confirmation1: e.target.checked})}
                   />
                   <p className={`text-body transition-colors ${confirmations.confirmation1 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                    Estou ciente que este Pixel só poderá ser instalado na presell que eu defini na etapa anterior.
+                    Estou ciente que este Pixel só funcionará na URL da presell definida acima.
                   </p>
                 </label>
 
@@ -283,7 +282,7 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
                     onChange={(e) => setConfirmations({...confirmations, confirmation2: e.target.checked})}
                   />
                   <p className={`text-body transition-colors ${confirmations.confirmation2 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                    Estou ciente que não poderei instalar mais de um Pixel na mesma presell.
+                    Entendo que os links de afiliado devem ser tags HTML padrão (a href), não links camuflados ou encurtadores.
                   </p>
                 </label>
 
@@ -295,41 +294,21 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
                     onChange={(e) => setConfirmations({...confirmations, confirmation3: e.target.checked})}
                   />
                   <p className={`text-body transition-colors ${confirmations.confirmation3 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                    Estou ciente que o Pixel não funciona com "links camuflados", encurtadores e etc.
+                    Confirmo que minha presell não faz redirecionamento automático para o produtor.
                   </p>
                 </label>
 
-                <div className="p-4 bg-accent/30 rounded-md space-y-3">
-                  <label className="flex items-start gap-3 cursor-pointer hover:bg-accent/20 p-2 rounded transition-colors">
-                    <input 
-                      type="checkbox"
-                      className="w-4 h-4 mt-0.5 accent-foreground cursor-pointer shrink-0"
-                      checked={confirmations.confirmation4}
-                      onChange={(e) => setConfirmations({...confirmations, confirmation4: e.target.checked, confirmation4b: false})}
-                    />
-                    <p className={`text-body transition-colors ${confirmations.confirmation4 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                      O meu link de afiliado precisa estar nos botões da minha presell (não é permitido o uso do "pretty links" e os botão precisam ser do tipo "a href" - links html padrão)
-                    </p>
-                  </label>
-
-                  <label className="flex items-start gap-3 cursor-pointer hover:bg-accent/20 p-2 rounded transition-colors">
-                    <input 
-                      type="checkbox"
-                      className="w-4 h-4 mt-0.5 accent-foreground cursor-pointer shrink-0"
-                      checked={confirmations.confirmation4b}
-                      onChange={(e) => setConfirmations({...confirmations, confirmation4b: e.target.checked, confirmation4: false})}
-                    />
-                    <p className={`text-body transition-colors ${confirmations.confirmation4b ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                      Minha página tem um formulário que acessa a API do produtor
-                    </p>
-                  </label>
-                </div>
-
-                <div className="mt-6">
-                  <p className="text-body text-muted-foreground">
-                    Presell que redireciona automático para o produtor ("presell fantasma") também não é permitido pelo Pixel pois Google ADS repudia essa prática.
+                <label className="flex items-start gap-3 p-4 bg-accent/30 rounded-md cursor-pointer hover:bg-accent/40 transition-colors">
+                  <input 
+                    type="checkbox"
+                    className="w-4 h-4 mt-0.5 accent-foreground cursor-pointer shrink-0"
+                    checked={confirmations.confirmation4}
+                    onChange={(e) => setConfirmations({...confirmations, confirmation4: e.target.checked})}
+                  />
+                  <p className={`text-body transition-colors ${confirmations.confirmation4 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                    Aceito os termos e condições do HubFi Pixel Tracking.
                   </p>
-                </div>
+                </label>
               </div>
 
               {/* Botões de ação */}
@@ -343,14 +322,14 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
                 <div className="flex gap-3">
                   <button 
                     onClick={handleStepAdvance}
-                    disabled={!areAllConfirmationsValid()}
+                    disabled={!areAllConfirmationsValid() || isLoading}
                     className={`px-6 py-2 rounded-md transition-colors ${
-                      areAllConfirmationsValid() 
+                      areAllConfirmationsValid() && !isLoading
                         ? 'bg-white hover:bg-white/90 text-black cursor-pointer' 
                         : 'bg-border text-muted-foreground cursor-not-allowed'
                     }`}
                   >
-                    Gerar código Pixel
+                    {isLoading ? 'Criando...' : 'Criar Pixel'}
                   </button>
                 </div>
               </div>
@@ -401,19 +380,24 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
               </div>
 
               <div className="text-center mb-6">
-                <h3 className="text-title mb-4">Pixel criado, agora vamos instalar na sua Presell</h3>
-                <p className="text-body text-muted-foreground">
-                  Clique em avançar para iniciar a instalação
+                <h3 className="text-title mb-4">Pixel criado com sucesso!</h3>
+                <p className="text-body text-muted-foreground mb-4">
+                  Seu pixel "{createdPixel?.name}" foi criado.
                 </p>
+                <div className="bg-card border border-border rounded-md p-4">
+                  <p className="text-label text-muted-foreground mb-1">ID do Pixel</p>
+                  <p className="text-body font-medium font-mono">{createdPixel?.pixelId}</p>
+                </div>
               </div>
 
               {/* Botão de ação */}
               <div className="flex justify-center">
                 <button 
                   onClick={handleStepAdvance}
+                  disabled={isLoading}
                   className="px-6 py-2 bg-white hover:bg-white/90 text-black rounded-md transition-colors"
                 >
-                  Avançar
+                  {isLoading ? 'Gerando código...' : 'Gerar código de instalação'}
                 </button>
               </div>
             </div>
@@ -424,7 +408,7 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
           <>
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-headline">Instalação Concluída</h2>
+              <h2 className="text-headline">Código de Instalação</h2>
               <button 
                 onClick={onClose}
                 className="p-2 hover:bg-accent rounded-md transition-colors"
@@ -434,32 +418,55 @@ export function CreatePixelModal({ onClose }: CreatePixelModalProps) {
             </div>
 
             {/* Conteúdo Step 4 */}
-            <div className="p-8 text-center">
-              {/* Ícone de sucesso */}
-              <div className="flex justify-center mb-6">
-                <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-8 h-8 text-background" />
-                </div>
+            <div className="p-6 space-y-6">
+              <div className="text-center">
+                <h3 className="text-title mb-4">Instale este código na sua presell</h3>
+                <p className="text-body text-muted-foreground">
+                  Cole o código abaixo antes da tag <code className="bg-accent px-2 py-1 rounded">&lt;/head&gt;</code> da sua presell
+                </p>
               </div>
 
-              {/* Título de sucesso */}
-              <h3 className="text-title text-foreground mb-4">Parabéns, tudo pronto!</h3>
+              {/* Código de tracking */}
+              <div className="relative">
+                <pre className="bg-card border border-border rounded-md p-4 text-sm overflow-x-auto max-h-64 text-foreground">
+                  <code>{trackingCode}</code>
+                </pre>
+                <button 
+                  onClick={copyTrackingCode}
+                  className="absolute top-2 right-2 p-2 bg-background hover:bg-accent rounded-md transition-colors border border-border"
+                  title="Copiar código"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
 
-              {/* Mensagem */}
-              <p className="text-body text-muted-foreground mb-2">
-                Seu <strong>Pixel</strong> foi instalado com sucesso
-              </p>
-              <p className="text-body text-muted-foreground">
-                na sua <strong>Presell</strong>. Agora é só aguardar a sua primeira venda.
-              </p>
+              {/* Instruções */}
+              <div className="bg-accent/30 rounded-md p-4">
+                <h4 className="text-body font-medium mb-2">Instruções importantes:</h4>
+                <ul className="text-label text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Cole o código antes da tag <code>&lt;/head&gt;</code></li>
+                  <li>Funciona apenas na URL: {formData.presellUrl}</li>
+                  <li>Use links de afiliado padrão (a href)</li>
+                  <li>Evite encurtadores e links camuflados</li>
+                </ul>
+              </div>
 
-              {/* Botão para fechar */}
-              <button 
-                onClick={onClose}
-                className="mt-8 px-6 py-2 bg-white hover:bg-white/90 text-black rounded-md transition-colors"
-              >
-                Finalizar
-              </button>
+              {/* Botões de ação */}
+              <div className="flex justify-between">
+                <button 
+                  onClick={copyTrackingCode}
+                  className="flex items-center gap-2 px-4 py-2 border border-border hover:bg-accent rounded-md transition-colors"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copiar código
+                </button>
+                <button 
+                  onClick={onClose}
+                  className="px-6 py-2 bg-white hover:bg-white/90 text-black rounded-md transition-colors"
+                >
+                  Finalizar
+                </button>
+              </div>
             </div>
           </>
         )}
