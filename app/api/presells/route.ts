@@ -61,41 +61,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       userId,
-      domain,
       pageName,
+      domain,
+      slug,
       affiliateLink,
       producerSalesPage,
       presellType,
       presellLanguage
     } = body;
 
-    // Validações
-    if (!userId || !domain || !pageName || !affiliateLink || !producerSalesPage || !presellType || !presellLanguage) {
+
+    // Gerar slug se não fornecido
+    const finalSlug = slug || pageName.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '') // Remove caracteres especiais
+      .replace(/\s+/g, '-') // Substitui espaços por hifens
+      .replace(/^-+|-+$/g, ''); // Remove hifens no início/fim
+
+    // Validações básicas
+    if (!userId || !pageName || !domain || !finalSlug || !affiliateLink || !producerSalesPage || !presellType) {
       return NextResponse.json(
-        { error: 'Todos os campos são obrigatórios' },
+        { error: 'Dados obrigatórios não fornecidos' },
         { status: 400 }
-      );
-    }
-
-    // Gerar slug a partir do nome da página
-    const slug = pageName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-      .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
-      .replace(/\s+/g, '-') // Substitui espaços por hífen
-      .replace(/-+/g, '-') // Remove hífens duplicados
-      .replace(/^-|-$/g, ''); // Remove hífens do início e fim
-
-    // Verificar se o usuário existe
-    const user = await prisma.user.findUnique({
-      where: { id: parseInt(userId) }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Usuário não encontrado' },
-        { status: 404 }
       );
     }
 
@@ -115,7 +101,7 @@ export async function POST(request: NextRequest) {
     const existingPresell = await prisma.presell.findFirst({
       where: {
         domainId: domainRecord.id,
-        slug: slug
+        slug: finalSlug
       }
     });
 
@@ -135,41 +121,21 @@ export async function POST(request: NextRequest) {
     };
 
     const mappedPresellType = presellTypeMap[presellType] || presellType;
-
-    let screenshotDesktop = '/screenshots/temp-desktop.png';
-    let screenshotMobile = '/screenshots/temp-mobile.png';
     
-    try {
-      // Criar promise com timeout de 30 segundos
-      const screenshotPromise = takeScreenshot(producerSalesPage, Date.now());
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Screenshot timeout após 30 segundos')), 30000);
-      });
-      
-      const screenshots = await Promise.race([screenshotPromise, timeoutPromise]);
-      
-      if (screenshots && screenshots.desktop && screenshots.mobile) {
-        screenshotDesktop = screenshots.desktop;
-        screenshotMobile = screenshots.mobile;
-      }
-    } catch (error) {
-      // Usar screenshots temporários
-    }
-
-    // Criar presell COM screenshots já prontos
+    // Criar presell primeiro para ter o ID
     const newPresell = await prisma.presell.create({
       data: {
-        userId: parseInt(userId),
+        userId,
         domainId: domainRecord.id,
         pageName,
-        slug,
+        slug: finalSlug,
         affiliateLink,
         producerSalesPage,
         presellType: mappedPresellType,
-        language: presellLanguage,
+        language: presellLanguage || 'Português',
         status: 'draft',
-        screenshotDesktop: screenshotDesktop,
-        screenshotMobile: screenshotMobile
+        screenshotDesktop: '/screenshots/temp-desktop.png',
+        screenshotMobile: '/screenshots/temp-mobile.png'
       },
       include: {
         domain: true,
@@ -183,12 +149,29 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Capturar screenshots em background
+    setTimeout(async () => {
+      try {
+        const screenshots = await takeScreenshot(producerSalesPage, newPresell.id);
+        
+        // Atualizar presell com screenshots reais
+        await prisma.presell.update({
+          where: { id: newPresell.id },
+          data: {
+            screenshotDesktop: screenshots.desktop,
+            screenshotMobile: screenshots.mobile
+          }
+        });
+      } catch (error) {
+        console.error(`Erro ao capturar screenshots para presell ${newPresell.id}:`, error);
+      }
+    }, 1000);
+
     // Adicionar URL completa
     const presellWithUrl = {
       ...newPresell,
       fullUrl: `https://${newPresell.domain.domainName}/${newPresell.slug}`
     };
-
 
     return NextResponse.json({
       success: true,

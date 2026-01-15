@@ -4,15 +4,35 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TraditionalLogin } from '../components/traditional-login';
 import { MagicLinkLogin } from '../components/magic-link-login';
+import { UserProvider, useUser } from '../hooks/use-user';
 import type { LoginCredentials, MagicLinkRequest, MagicLinkVerification, LoginMethod } from '../types/auth';
 
-export default function Home() {
+function LoginContent() {
   const router = useRouter();
   const [loginMethod, setLoginMethod] = useState<LoginMethod>('traditional');
 
   const handleTraditionalLogin = async (credentials: LoginCredentials) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    router.push('/');
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao fazer login');
+      }
+
+      // Login bem-sucedido, redirecionar
+      router.push('/');
+    } catch (error) {
+      // Re-throw para que o componente TraditionalLogin possa tratar
+      throw error;
+    }
   };
 
   const handleRequestCode = async (request: MagicLinkRequest) => {
@@ -40,8 +60,28 @@ export default function Home() {
               onVerifyCode={handleVerifyCode}
             />
           )}
+
+          <div className="mt-6 text-center">
+            <p className="text-muted-foreground text-sm">
+              Não tem uma conta ainda?{' '}
+              <button 
+                onClick={() => router.push('/register')}
+                className="text-primary hover:underline font-medium"
+              >
+                Criar conta
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <UserProvider>
+      <LoginContent />
+    </UserProvider>
   );
 }

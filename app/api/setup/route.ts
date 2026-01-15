@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcrypt';
 
 export async function POST() {
   try {
-    // Criar usuário de teste
+    // Criar usuário de teste com senha criptografada
+    const hashedPassword = await bcrypt.hash('123456', 12);
+    
     const user = await prisma.user.upsert({
       where: { email: 'admin@hubfi.com' },
-      update: {},
+      update: {
+        password: hashedPassword
+      },
       create: {
         email: 'admin@hubfi.com',
-        name: 'Admin HubFi'
+        name: 'Admin HubFi',
+        password: hashedPassword
       }
     });
 

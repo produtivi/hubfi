@@ -62,6 +62,30 @@ export default function CreatePresell() {
     'Espanhol'
   ];
 
+  const waitForScreenshot = async (presellId: number): Promise<void> => {
+    return new Promise((resolve) => {
+      const checkStatus = async () => {
+        try {
+          const response = await fetch(`/api/presells/${presellId}/screenshot-status`);
+          const result = await response.json();
+
+          if (result.success && !result.data.isProcessing) {
+            resolve();
+          } else {
+            setTimeout(checkStatus, 3000); // Verificar a cada 3 segundos
+          }
+        } catch (error) {
+          console.error('Erro ao verificar status do screenshot:', error);
+          // Continuar mesmo com erro após 30 segundos
+          setTimeout(() => resolve(), 30000);
+        }
+      };
+
+      // Começar a verificar após 2 segundos (dar tempo do processo começar)
+      setTimeout(checkStatus, 2000);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -94,11 +118,15 @@ export default function CreatePresell() {
       }
 
       console.log('Presell criada:', result.data);
+      const presellId = result.data.id;
+      
+      // Aguardar screenshot ficar pronto
+      await waitForScreenshot(presellId);
       
       // Mostrar toast de sucesso
       showSuccess(`Página "${formData.pageName}" criada com sucesso!`);
       
-      // Aguardar um pouco para mostrar o toast antes de navegar
+      // Redirecionar
       setTimeout(() => {
         router.push('/page-builder');
       }, 1000);
@@ -299,6 +327,7 @@ export default function CreatePresell() {
         isVisible={toast.isVisible}
         onClose={hideToast}
       />
+
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogOut, ChevronUp, User, Moon, Sun, Settings } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useUser } from '../hooks/use-user';
 
 interface AccountDropdownProps {
   isExpanded: boolean;
@@ -12,15 +13,11 @@ interface AccountDropdownProps {
 export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { user, setUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const user = {
-    name: 'Caio Calderaro',
-    email: 'caio@hubfi.com',
-  };
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -59,6 +56,17 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen]);
+
+  // Se não há usuário logado, mostrar placeholder
+  if (!user) {
+    return (
+      <div className="p-3">
+        <div className="w-full flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-accent animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isExpanded) {
     return (
@@ -110,8 +118,14 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
               <div className="h-px bg-border opacity-50" />
 
               <button
-                onClick={() => {
-                  router.push('/login');
+                onClick={async () => {
+                  try {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    router.push('/login');
+                  } catch (error) {
+                    console.error('Erro no logout:', error);
+                    router.push('/login');
+                  }
                   setIsOpen(false);
                 }}
                 className="w-full flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
@@ -177,8 +191,15 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
             <div className="h-px bg-border" />
 
             <button
-              onClick={() => {
-                router.push('/login');
+              onClick={async () => {
+                try {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  setUser(null);
+                  router.push('/login');
+                } catch (error) {
+                  console.error('Erro no logout:', error);
+                  router.push('/login');
+                }
                 setIsOpen(false);
               }}
               className="w-full flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"

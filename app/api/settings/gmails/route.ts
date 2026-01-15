@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/auth'
 
 // GET - List all Gmail accounts for a user
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Get userId from authenticated session
-    // For now, using a fixed userId for testing
-    const userId = 1
+    const user = await getAuthUser();
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
+    const userId = user.id;
 
     const googleAccounts = await prisma.googleAccount.findMany({
       where: { userId },
@@ -42,81 +50,26 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Add a new Gmail account
+// POST - Add a new Gmail account (Deprecated - use OAuth flow instead)
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { email } = body
-
-    // Basic validation
-    if (!email) {
-      return NextResponse.json(
-        { success: false, error: 'Email is required' },
-        { status: 400 }
-      )
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@gmail\.com$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid Gmail address' },
-        { status: 400 }
-      )
-    }
-
-    // TODO: Get userId from authenticated session
-    // For now, using a fixed userId for testing
-    const userId = 1
-
-    // Check if the Gmail is already associated with this user
-    const existing = await prisma.googleAccount.findFirst({
-      where: {
-        userId,
-        email
-      }
-    })
-
-    if (existing) {
-      return NextResponse.json(
-        { success: false, error: 'Gmail already associated with this account' },
-        { status: 409 }
-      )
-    }
-
-    // Create the new Google account
-    const googleAccount = await prisma.googleAccount.create({
-      data: {
-        userId,
-        email
-      }
-    })
-
-    // Return with mock data
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: googleAccount.id,
-        email: googleAccount.email,
-        createdAt: googleAccount.createdAt,
-        mccCount: 1,
-        adsAccountCount: 5,
-        conversionActionsCount: 10,
-      }
-    })
-
-  } catch (error) {
-    console.error('Error creating Gmail account:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json(
+    { error: 'Use OAuth flow at /api/auth/google/authorize' },
+    { status: 400 }
+  );
 }
 
 // DELETE - Remove a Gmail account
 export async function DELETE(request: NextRequest) {
   try {
+    const user = await getAuthUser();
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+    
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -128,9 +81,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // TODO: Get userId from authenticated session
-    // For now, using a fixed userId for testing
-    const userId = 1
+    const userId = user.id;
 
     // Check if the account exists and belongs to the user
     const googleAccount = await prisma.googleAccount.findFirst({

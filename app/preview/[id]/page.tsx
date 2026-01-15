@@ -189,47 +189,14 @@ export default function PreviewPage({ params }: PreviewPageProps) {
               )}
             </>
           ) : (
+            // Fundo padrão quando não há screenshot
             <div style={{
               minHeight: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 2,
-              padding: '20px'
+              backgroundColor: '#f3f4f6',
+              position: 'relative',
+              zIndex: 1
             }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                border: '4px solid #e5e7eb',
-                borderTop: '4px solid #3b82f6',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-                marginBottom: '20px'
-              }}></div>
-              <p style={{ 
-                color: '#6b7280', 
-                fontSize: '18px',
-                textAlign: 'center',
-                marginBottom: '10px'
-              }}>
-                Capturando screenshot da página...
-              </p>
-              <p style={{ 
-                color: '#9ca3af', 
-                fontSize: '14px',
-                textAlign: 'center',
-                marginBottom: '10px'
-              }}>
-                Aguarde enquanto geramos a prévia da página de vendas.
-              </p>
-              <p style={{ 
-                color: '#9ca3af', 
-                fontSize: '12px',
-                textAlign: 'center'
-              }}>
-                ⏱️ Tempo estimado: 10-30 segundos
-              </p>
+              {/* Fundo padrão simples sem loading */}
             </div>
           )}
         </div>
