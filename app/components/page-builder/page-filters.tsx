@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { PageType, PAGE_TYPES } from '@/app/types/page-builder';
+import { PageType, PAGE_TYPES } from '@/types/page-builder';
 
 interface PageFiltersProps {
   onFilterTypeChange: (type: PageType | 'all') => void;

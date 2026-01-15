@@ -1,7 +1,7 @@
 'use client';
 
 import { Eye, Trash2, Check } from 'lucide-react';
-import { Domain } from '@/app/types/page-builder';
+import { Domain } from '@/types/page-builder';
 
 interface DomainsListProps {
   domains: Domain[];

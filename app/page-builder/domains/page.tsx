@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Eye, Trash2, Check, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Domain } from '@/app/types/page-builder';
-import { AddDomainModal } from '@/app/components/page-builder/add-domain-modal';
-import { DomainsList } from '@/app/components/page-builder/domains-list';
+import { Domain } from '@/types/page-builder';
+import { AddDomainModal } from '@/components/page-builder/add-domain-modal';
+import { DomainsList } from '@/components/page-builder/domains-list';
 
 export default function DomainsPage() {
   const router = useRouter();

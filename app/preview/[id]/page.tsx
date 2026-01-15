@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Mars, Venus } from 'lucide-react';
-import { getPresellTemplate, CookiesTemplate, AgeTemplate, GenderTemplate, AgeRangeTemplate, NewsletterTemplate, CountryTemplate, VideoTemplate, CaptchaTemplate } from '@/app/lib/presell-templates';
+import { getPresellTemplate, CookiesTemplate, AgeTemplate, GenderTemplate, AgeRangeTemplate, NewsletterTemplate, CountryTemplate, VideoTemplate, CaptchaTemplate } from '@/lib/presell-templates';
 
 interface PreviewPageProps {
   params: Promise<{

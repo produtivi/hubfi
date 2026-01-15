@@ -1,7 +1,7 @@
 'use client';
 
 import { Eye, Pencil, Copy, Trash2, Check } from 'lucide-react';
-import { Page, PAGE_TYPES } from '@/app/types/page-builder';
+import { Page, PAGE_TYPES } from '@/types/page-builder';
 
 interface PagesListProps {
   pages: Page[];
