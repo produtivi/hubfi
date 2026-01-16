@@ -92,8 +92,20 @@ export default function CreatePresell() {
     setError('');
 
     try {
-      // TODO: Pegar userId real da sessão/auth
-      const userId = 1;
+      // Pegar userId do usuário logado
+      let userId;
+      try {
+        const userResponse = await fetch('/api/auth/me');
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          userId = userData.user.id;
+        } else {
+          // Temporário: usar primeiro usuário se não estiver logado
+          userId = 2; // ID do jpteste@gmail.com
+        }
+      } catch {
+        userId = 2; // Fallback
+      }
 
       const response = await fetch('/api/presells', {
         method: 'POST',

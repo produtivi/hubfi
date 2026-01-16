@@ -56,10 +56,19 @@ export default function PageBuilder() {
   const loadPresells = async () => {
     try {
       setIsLoading(true);
-      // TODO: Pegar userId real da sessão/auth
-      const userId = 1;
+      // Tentar pegar userId do usuário logado
+      let queryParam = '';
+      try {
+        const userResponse = await fetch('/api/auth/me');
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          queryParam = `?userId=${userData.user.id}`;
+        }
+      } catch {
+        // Se não estiver logado, buscar todos (em dev)
+      }
       
-      const response = await fetch(`/api/presells?userId=${userId}`);
+      const response = await fetch(`/api/presells${queryParam}`);
       const result = await response.json();
       
       if (result.success) {

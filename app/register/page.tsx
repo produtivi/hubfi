@@ -39,8 +39,8 @@ export default function Register() {
         throw new Error(data.error || 'Erro ao criar conta');
       }
 
-      // Conta criada com sucesso, redirecionar para login
-      router.push('/login?message=Conta criada com sucesso! Faça login para continuar.');
+      // Conta criada com sucesso e usuário já logado automaticamente
+      router.push('/');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Erro ao criar conta');
     } finally {
@@ -128,16 +128,17 @@ export default function Register() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-muted-foreground text-sm">
-              Já tem uma conta?{' '}
-              <button 
-                onClick={() => router.push('/login')}
-                className="text-primary hover:underline font-medium"
-              >
-                Fazer login
-              </button>
-            </p>
+          <div className="mt-6 text-center hover:underline  hover:cursor-pointer">
+
+            <div
+              onClick={() => router.push('/login')}
+              className="text-primary font-medium"
+            >
+              <span className="text-muted-foreground text-sm">
+                Já tem uma conta?
+              </span>
+              <span className='text-sm'> Fazer login </span>
+            </div>
           </div>
         </div>
       </div>

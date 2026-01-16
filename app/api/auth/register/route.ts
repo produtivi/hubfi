@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,11 +56,30 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    return NextResponse.json({
+    // Gerar token JWT para login automático
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Criar resposta com cookie
+    const response = NextResponse.json({
       success: true,
       message: 'Usuário criado com sucesso',
       user
     }, { status: 201 });
+
+    // Definir cookie de autenticação
+    response.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 dias
+      path: '/'
+    });
+
+    return response;
 
   } catch (error) {
     console.error('Erro ao criar usuário:', error);

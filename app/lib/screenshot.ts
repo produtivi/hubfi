@@ -144,8 +144,32 @@ export async function takeScreenshot(url: string, presellId: number) {
     });
     
     
-    // Usar apenas arquivos locais
+    // Upload para DigitalOcean Spaces
+    if (process.env.DO_SPACES_ACCESS_KEY && process.env.DO_SPACES_SECRET_KEY) {
+      try {
+        // Upload desktop
+        const desktopFileName = `presell-${presellId}-desktop.png`;
+        const desktopSpacesUrl = await uploadScreenshotToSpaces(desktopFullPath, desktopFileName);
+        
+        // Upload mobile
+        const mobileFileName = `presell-${presellId}-mobile.png`;
+        const mobileSpacesUrl = await uploadScreenshotToSpaces(mobileFullPath, mobileFileName);
+        
+        // Deletar arquivos locais após upload
+        await fs.unlink(desktopFullPath);
+        await fs.unlink(mobileFullPath);
+        
+        return {
+          desktop: desktopSpacesUrl,
+          mobile: mobileSpacesUrl
+        };
+        
+      } catch (error) {
+        console.error('Erro ao enviar para Spaces, mantendo arquivos locais:', error);
+      }
+    }
     
+    // Fallback: usar arquivos locais se Spaces não estiver configurado
     return {
       desktop: desktopPath,
       mobile: mobilePath

@@ -73,9 +73,52 @@ export default function SettingsPage() {
   const fetchGoogleAccounts = async () => {
     try {
       const response = await fetch('/api/settings/gmails');
-      if (!response.ok) throw new Error('Erro ao buscar contas');
+      
+      if (response.status === 401) {
+        // Usuário não autenticado, redirecionar para login
+        router.push('/login');
+        return;
+      }
+      
+      if (!response.ok) {
+        throw new Error('Erro ao buscar contas');
+      }
+      
       const data = await response.json();
-      setGoogleAccounts(data.data || []);
+      
+      // Para cada conta Google, buscar o resumo do Google Ads
+      const accountsWithSummary = await Promise.all(
+        (data.data || []).map(async (account: any) => {
+          try {
+            const summaryResponse = await fetch(`/api/google-ads/account-summary?googleAccountId=${account.id}`);
+            if (summaryResponse.ok) {
+              const summaryData = await summaryResponse.json();
+              return {
+                ...account,
+                mccCount: summaryData.data?.mccCount || 0,
+                adsAccountCount: summaryData.data?.accountsCount || 0,
+                conversionActionsCount: summaryData.data?.conversionsCount || 0
+              };
+            }
+            return {
+              ...account,
+              mccCount: 0,
+              adsAccountCount: 0,
+              conversionActionsCount: 0
+            };
+          } catch (err) {
+            console.error(`Erro ao buscar resumo para conta ${account.id}:`, err);
+            return {
+              ...account,
+              mccCount: 0,
+              adsAccountCount: 0,
+              conversionActionsCount: 0
+            };
+          }
+        })
+      );
+      
+      setGoogleAccounts(accountsWithSummary);
     } catch (error) {
       console.error('Erro:', error);
       showError('Erro ao carregar contas Google');
@@ -85,10 +128,8 @@ export default function SettingsPage() {
 
   const handleSync = async () => {
     setIsSyncing(true);
-    // Simular sincronização
-    setTimeout(() => {
-      setIsSyncing(false);
-    }, 2000);
+    await fetchGoogleAccounts(); // Recarregar dados reais
+    setIsSyncing(false);
   };
 
   const handleRemoveAccount = async (accountId: string) => {
@@ -126,11 +167,38 @@ export default function SettingsPage() {
     if (!selectedGmail || !selectedMcc || !subAccountName) return;
     
     setIsLoading(true);
-    // TODO: Implementar criação de subconta
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await fetch('/api/google-ads/create-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accountName: subAccountName,
+          currencyCode: 'BRL',
+          timeZone: 'America/Sao_Paulo'
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao criar subconta');
+      }
+
+      showSuccess(`Subconta "${subAccountName}" criada com sucesso!`);
       setSubAccountName('');
-    }, 1500);
+      
+      // Atualizar lista de MCCs/contas
+      // TODO: Implementar refresh da lista
+
+    } catch (error) {
+      console.error('Erro:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar subconta';
+      showError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCreateConversion = async () => {
@@ -216,7 +284,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => fetchGoogleAccounts()}
+                    onClick={handleSync}
                     disabled={isSyncing}
                     className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-md hover:bg-accent transition-colors disabled:opacity-50"
                   >

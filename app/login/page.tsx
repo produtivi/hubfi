@@ -61,16 +61,18 @@ function LoginContent() {
             />
           )}
 
-          <div className="mt-6 text-center">
-            <p className="text-muted-foreground text-sm">
-              Não tem uma conta ainda?{' '}
-              <button 
-                onClick={() => router.push('/register')}
-                className="text-primary hover:underline font-medium"
-              >
-                Criar conta
-              </button>
-            </p>
+          <div className="mt-6 text-center hover:underline hover:cursor-pointer">
+            <div
+              onClick={() => router.push('/register')}
+              className="text-primary font-medium"
+            >
+              <span className="text-muted-foreground text-sm">
+                Não tem uma conta ainda?{' '}
+                
+              </span>
+              <span className="text-primary font-medium  text-sm">Criar conta</span>
+            </div>
+
           </div>
         </div>
       </div>

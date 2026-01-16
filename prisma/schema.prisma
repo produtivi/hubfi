@@ -22,6 +22,7 @@ model User {
   presells      Presell[]
   pixels        Pixel[]
   googleAccounts GoogleAccount[]
+  googleAdsAccounts GoogleAdsAccount[]
   
   @@map("users")
 }
@@ -195,4 +196,20 @@ model GoogleAccount {
   
   @@unique([userId, email])
   @@map("google_accounts")
+}
+
+model GoogleAdsAccount {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  customerId    String    @map("customer_id") @unique
+  accountName   String    @map("account_name")
+  mccAccountId  String?   @map("mcc_account_id")
+  currencyCode  String    @default("BRL") @map("currency_code")
+  timeZone      String    @default("America/Sao_Paulo") @map("time_zone")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("google_ads_accounts")
 }
