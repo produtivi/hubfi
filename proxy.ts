@@ -3,8 +3,9 @@ import { verifyToken } from './app/lib/auth';
 
 // Rotas que precisam de autenticação
 const protectedRoutes = [
+  '/',
   '/pixel-tracker',
-  '/product-finder', 
+  '/product-finder',
   '/ads-analytics',
   '/ranking-hub',
   '/page-builder',

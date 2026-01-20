@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Eye, Trash2, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, AlertCircle } from '@untitledui/icons';
 import { useRouter } from 'next/navigation';
 import { Domain } from '@/types/page-builder';
 import { AddDomainModal } from '@/components/page-builder/add-domain-modal';
 import { DomainsList } from '@/components/page-builder/domains-list';
+import { Button } from '@/components/base/buttons/button';
 
 export default function DomainsPage() {
   const router = useRouter();
@@ -133,21 +134,23 @@ export default function DomainsPage() {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          <button
+          <Button
+            color="primary"
+            size="md"
+            iconLeading={Plus}
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity text-label font-medium"
           >
-            <Plus className="w-5 h-5" />
             Adicionar domínio
-          </button>
+          </Button>
 
-          <button
+          <Button
+            color="secondary"
+            size="sm"
+            iconLeading={AlertCircle}
             onClick={handleVerifyPublication}
-            className="flex items-center gap-2 px-4 py-2 border border-border rounded-md hover:opacity-80 transition-opacity text-label"
           >
-            <AlertCircle className="w-4 h-4" />
             Verificar publicação
-          </button>
+          </Button>
         </div>
       </div>
 

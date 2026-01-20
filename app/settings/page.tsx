@@ -12,6 +12,7 @@ interface GoogleAccount {
   mccCount: number;
   adsAccountCount: number;
   conversionActionsCount: number;
+  adsError?: string | null;
 }
 
 interface SubAccount {
@@ -19,6 +20,15 @@ interface SubAccount {
   name: string;
   parentMcc: string;
   status: 'active' | 'pending' | 'suspended';
+}
+
+interface GoogleAdsAccount {
+  customerId: string;
+  accountName: string;
+  currencyCode: string;
+  timeZone: string;
+  isTestAccount: boolean;
+  isManager: boolean;
 }
 
 type TabType = 'accounts' | 'ads' | 'mcc' | 'subaccount' | 'conversion';
@@ -38,6 +48,8 @@ export default function SettingsPage() {
   const [conversionName, setConversionName] = useState('');
 
   const [googleAccounts, setGoogleAccounts] = useState<GoogleAccount[]>([]);
+  const [googleAdsAccounts, setGoogleAdsAccounts] = useState<GoogleAdsAccount[]>([]);
+  const [isLoadingAdsAccounts, setIsLoadingAdsAccounts] = useState(false);
   const [newGmailEmail, setNewGmailEmail] = useState('');
   const [isAddingGmail, setIsAddingGmail] = useState(false);
   const { toast, showSuccess, showError, hideToast } = useToast();
@@ -91,20 +103,25 @@ export default function SettingsPage() {
         (data.data || []).map(async (account: any) => {
           try {
             const summaryResponse = await fetch(`/api/google-ads/account-summary?googleAccountId=${account.id}`);
-            if (summaryResponse.ok) {
-              const summaryData = await summaryResponse.json();
+            const summaryData = await summaryResponse.json();
+
+            if (summaryResponse.ok && !summaryData.data?.error) {
               return {
                 ...account,
                 mccCount: summaryData.data?.mccCount || 0,
                 adsAccountCount: summaryData.data?.accountsCount || 0,
-                conversionActionsCount: summaryData.data?.conversionsCount || 0
+                conversionActionsCount: summaryData.data?.conversionsCount || 0,
+                adsError: null
               };
             }
+
+            // Se tem erro, guardar a mensagem
             return {
               ...account,
               mccCount: 0,
               adsAccountCount: 0,
-              conversionActionsCount: 0
+              conversionActionsCount: 0,
+              adsError: summaryData.data?.error || summaryData.error || 'Erro ao buscar dados'
             };
           } catch (err) {
             console.error(`Erro ao buscar resumo para conta ${account.id}:`, err);
@@ -112,7 +129,8 @@ export default function SettingsPage() {
               ...account,
               mccCount: 0,
               adsAccountCount: 0,
-              conversionActionsCount: 0
+              conversionActionsCount: 0,
+              adsError: 'Erro de conexão'
             };
           }
         })
@@ -125,6 +143,46 @@ export default function SettingsPage() {
     }
   };
 
+
+  // Buscar contas Google Ads quando um Gmail for selecionado
+  const fetchGoogleAdsAccounts = async (googleAccountId: string) => {
+    if (!googleAccountId) {
+      setGoogleAdsAccounts([]);
+      return;
+    }
+
+    setIsLoadingAdsAccounts(true);
+    try {
+      const response = await fetch(`/api/google-ads/list-accounts?googleAccountId=${googleAccountId}`);
+      const data = await response.json();
+
+      if (response.ok && data.data) {
+        setGoogleAdsAccounts(data.data);
+      } else {
+        setGoogleAdsAccounts([]);
+        if (data.error) {
+          console.error('Erro ao buscar contas:', data.error);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar contas Google Ads:', error);
+      setGoogleAdsAccounts([]);
+    } finally {
+      setIsLoadingAdsAccounts(false);
+    }
+  };
+
+  // Handler para quando o Gmail for selecionado
+  const handleGmailSelect = (gmailId: string) => {
+    setSelectedGmail(gmailId);
+    setSelectedMcc('');
+    setSelectedAccount('');
+    if (gmailId) {
+      fetchGoogleAdsAccounts(gmailId);
+    } else {
+      setGoogleAdsAccounts([]);
+    }
+  };
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -342,9 +400,17 @@ export default function SettingsPage() {
                           </div>
                           <div>
                             <p className="text-body font-medium">{account.email}</p>
-                            <p className="text-label text-muted-foreground">
-                              {account.mccCount} MCC, {account.adsAccountCount} contas Google Ads, {account.conversionActionsCount} ações de conversão
-                            </p>
+                            {account.adsError ? (
+                              <p className="text-label text-destructive">
+                                {account.adsError.includes('DEVELOPER_TOKEN')
+                                  ? 'Developer Token nao configurado no servidor'
+                                  : account.adsError}
+                              </p>
+                            ) : (
+                              <p className="text-label text-muted-foreground">
+                                {account.mccCount} MCC, {account.adsAccountCount} contas Google Ads, {account.conversionActionsCount} ações de conversão
+                              </p>
+                            )}
                           </div>
                         </div>
                         <button
@@ -379,21 +445,25 @@ export default function SettingsPage() {
                   </label>
                   <select
                     value={selectedGmail}
-                    onChange={(e) => setSelectedGmail(e.target.value)}
+                    onChange={(e) => handleGmailSelect(e.target.value)}
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-body focus:ring-1 focus:ring-ring outline-none"
                     required
                   >
                     <option value="">Selecione</option>
                     {googleAccounts.map((account) => (
-                      <option key={account.id} value={account.email}>
+                      <option key={account.id} value={account.id}>
                         {account.email}
                       </option>
                     ))}
                   </select>
                   {!googleAccounts.length && (
-                    <a href="#" className="text-label text-primary hover:underline mt-1 inline-block">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('accounts')}
+                      className="text-label text-primary hover:underline mt-1 inline-block"
+                    >
                       + adicionar uma conta Google
-                    </a>
+                    </button>
                   )}
                 </div>
 
@@ -406,15 +476,22 @@ export default function SettingsPage() {
                     onChange={(e) => setSelectedMcc(e.target.value)}
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-body focus:ring-1 focus:ring-ring outline-none"
                     required
-                    disabled={!selectedGmail}
+                    disabled={!selectedGmail || isLoadingAdsAccounts}
                   >
-                    <option value="">Selecione</option>
-                    <option value="mcc1">MCC Principal - 123-456-7890</option>
-                    <option value="mcc2">MCC Secundária - 098-765-4321</option>
+                    <option value="">
+                      {isLoadingAdsAccounts ? 'Carregando...' : 'Selecione'}
+                    </option>
+                    {googleAdsAccounts
+                      .filter(acc => acc.isManager && !acc.isTestAccount)
+                      .map((account) => (
+                        <option key={account.customerId} value={account.customerId}>
+                          {account.accountName} - {account.customerId}
+                        </option>
+                      ))}
                   </select>
-                  {selectedGmail && (
+                  {selectedGmail && !isLoadingAdsAccounts && googleAdsAccounts.filter(acc => acc.isManager && !acc.isTestAccount).length === 0 && (
                     <p className="text-label text-muted-foreground mt-1">
-                      minha MCC não está aparecendo
+                      Nenhuma MCC encontrada nesta conta
                     </p>
                   )}
                 </div>
@@ -464,21 +541,25 @@ export default function SettingsPage() {
                   </label>
                   <select
                     value={selectedGmail}
-                    onChange={(e) => setSelectedGmail(e.target.value)}
+                    onChange={(e) => handleGmailSelect(e.target.value)}
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-body focus:ring-1 focus:ring-ring outline-none"
                     required
                   >
                     <option value="">Selecione</option>
                     {googleAccounts.map((account) => (
-                      <option key={account.id} value={account.email}>
+                      <option key={account.id} value={account.id}>
                         {account.email}
                       </option>
                     ))}
                   </select>
                   {!googleAccounts.length && (
-                    <a href="#" className="text-label text-primary hover:underline mt-1 inline-block">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('accounts')}
+                      className="text-label text-primary hover:underline mt-1 inline-block"
+                    >
                       + adicionar uma conta Google
-                    </a>
+                    </button>
                   )}
                 </div>
 
@@ -493,7 +574,7 @@ export default function SettingsPage() {
                         name="accountType"
                         value="normal"
                         checked={accountType === 'normal'}
-                        onChange={(e) => setAccountType('normal')}
+                        onChange={() => { setAccountType('normal'); setSelectedAccount(''); }}
                         className="w-4 h-4 text-foreground"
                       />
                       <span className="text-body">Conta normal</span>
@@ -504,7 +585,7 @@ export default function SettingsPage() {
                         name="accountType"
                         value="mcc"
                         checked={accountType === 'mcc'}
-                        onChange={(e) => setAccountType('mcc')}
+                        onChange={() => { setAccountType('mcc'); setSelectedAccount(''); }}
                         className="w-4 h-4 text-foreground"
                       />
                       <span className="text-body">Conta MCC (gerente)</span>
@@ -521,24 +602,22 @@ export default function SettingsPage() {
                     onChange={(e) => setSelectedAccount(e.target.value)}
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-body focus:ring-1 focus:ring-ring outline-none"
                     required
-                    disabled={!selectedGmail}
+                    disabled={!selectedGmail || isLoadingAdsAccounts}
                   >
-                    <option value="">Selecione</option>
-                    {accountType === 'normal' ? (
-                      <>
-                        <option value="acc1">Conta Principal - 123-456-7890</option>
-                        <option value="acc2">Conta Secundária - 098-765-4321</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="mcc1">MCC Principal - 123-456-7890</option>
-                        <option value="mcc2">MCC Secundária - 098-765-4321</option>
-                      </>
-                    )}
+                    <option value="">
+                      {isLoadingAdsAccounts ? 'Carregando...' : 'Selecione'}
+                    </option>
+                    {googleAdsAccounts
+                      .filter(acc => !acc.isTestAccount && (accountType === 'mcc' ? acc.isManager : !acc.isManager))
+                      .map((account) => (
+                        <option key={account.customerId} value={account.customerId}>
+                          {account.accountName} - {account.customerId}
+                        </option>
+                      ))}
                   </select>
-                  {selectedGmail && (
+                  {selectedGmail && !isLoadingAdsAccounts && googleAdsAccounts.filter(acc => !acc.isTestAccount && (accountType === 'mcc' ? acc.isManager : !acc.isManager)).length === 0 && (
                     <p className="text-label text-muted-foreground mt-1">
-                      minha conta não está aparecendo
+                      Nenhuma conta {accountType === 'mcc' ? 'MCC' : 'normal'} encontrada
                     </p>
                   )}
                 </div>

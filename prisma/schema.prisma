@@ -22,8 +22,7 @@ model User {
   presells      Presell[]
   pixels        Pixel[]
   googleAccounts GoogleAccount[]
-  googleAdsAccounts GoogleAdsAccount[]
-  
+
   @@map("users")
 }
 
@@ -74,7 +73,8 @@ model Presell {
   user               User     @relation(fields: [userId], references: [id])
   domain             Domain   @relation(fields: [domainId], references: [id])
   analytics          PresellAnalytics[]
-  
+  pixels             Pixel[]
+
   @@unique([domainId, slug])
   @@map("presells")
 }
@@ -111,10 +111,17 @@ model Pixel {
   userId      Int      @map("user_id")
   name        String
   platform    String   // hotmart, braip, monetizze, etc.
-  presellUrl  String   @map("presell_url")
+  presellUrl  String?  @map("presell_url")
+  presellId   Int?     @map("presell_id") // ID da presell do HubPage (opcional)
   pixelId     String   @unique @map("pixel_id") // ID único para o código de tracking
   status      String   @default("active") // active, inactive
-  
+
+  // Dados do Google Ads
+  googleAccountId      Int      @map("google_account_id") // ID da conta Google (nosso banco)
+  googleAdsCustomerId  String   @map("google_ads_customer_id") // ID da conta/MCC no Google Ads
+  conversionActionId   String   @map("conversion_action_id") // ID da ação de conversão
+  useMcc               Boolean  @default(false) @map("use_mcc") // Se está usando MCC
+
   // Métricas básicas
   visits              Int      @default(0)                    // Total de visitas
   uniqueVisits        Int      @default(0) @map("unique_visits")        // Visitas únicas
@@ -133,10 +140,12 @@ model Pixel {
   updatedAt   DateTime @updatedAt @map("updated_at")
   
   // Relacionamentos
-  user        User     @relation(fields: [userId], references: [id])
-  events      PixelEvent[]
+  user          User          @relation(fields: [userId], references: [id])
+  googleAccount GoogleAccount @relation(fields: [googleAccountId], references: [id])
+  presell       Presell?      @relation(fields: [presellId], references: [id])
+  events        PixelEvent[]
   blockedIpsList BlockedIp[] // Lista de IPs bloqueados
-  
+
   @@map("pixels")
 }
 
@@ -190,26 +199,12 @@ model GoogleAccount {
   expiresAt    DateTime? @map("expires_at")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  
+
   // Relacionamentos
   user         User      @relation(fields: [userId], references: [id])
-  
+  pixels       Pixel[]
+
   @@unique([userId, email])
   @@map("google_accounts")
 }
 
-model GoogleAdsAccount {
-  id            Int       @id @default(autoincrement())
-  userId        Int       @map("user_id")
-  customerId    String    @map("customer_id") @unique
-  accountName   String    @map("account_name")
-  mccAccountId  String?   @map("mcc_account_id")
-  currencyCode  String    @default("BRL") @map("currency_code")
-  timeZone      String    @default("America/Sao_Paulo") @map("time_zone")
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("google_ads_accounts")
-}

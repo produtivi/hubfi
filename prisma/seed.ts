@@ -40,6 +40,37 @@ async function main() {
     console.log('Domínio criado:', domain)
   }
 
+  // Criar tipos de presell
+  const presellTypes = [
+    { name: 'Cookies', type: 'modal' },
+    { name: 'Maior de Idade', type: 'modal' },
+    { name: 'Sexo', type: 'modal' },
+    { name: 'Idade Homem', type: 'modal' },
+    { name: 'Idade Mulher', type: 'modal' },
+    { name: 'Assinar newsletter', type: 'modal' },
+    { name: 'País', type: 'modal' },
+    { name: 'Player de vídeo', type: 'modal' },
+    { name: 'Teste de captcha', type: 'modal' },
+    { name: 'VSL', type: 'page' },
+    { name: 'Carta de Vendas', type: 'page' },
+    { name: 'Landing Page', type: 'page' },
+    { name: 'Página de Captura', type: 'page' }
+  ]
+
+  for (const presellType of presellTypes) {
+    const template = await prisma.presellTemplate.upsert({
+      where: { id: presellTypes.indexOf(presellType) + 1 },
+      update: {},
+      create: {
+        name: presellType.name,
+        type: presellType.type,
+        templateHtml: '',
+        isActive: true
+      }
+    })
+    console.log('Tipo de presell criado:', template.name)
+  }
+
   console.log('Banco de dados configurado com sucesso!')
 }
 
