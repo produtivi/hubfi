@@ -15,13 +15,13 @@ const MALICIOUS_USER_AGENTS = [
   /stratum/i,
 ]
 
-// Padrões de injeção de comando
+// Padrões de injeção de comando e RCE
 const COMMAND_INJECTION_PATTERNS = [
   /\$\(/,
   /`/,
   /&&/,
   /\|\|/,
-  /;/,
+  /;(?![&])/,  // Ponto e vírgula que não seja parte de &&
   /\n/,
   /\r/,
   /exec/i,
@@ -29,6 +29,25 @@ const COMMAND_INJECTION_PATTERNS = [
   /system/i,
   /passthru/i,
   /shell_exec/i,
+  /printenv/i,
+  /\/bin\//i,
+  /\/usr\/bin/i,
+  /wget/i,
+  /curl.*\|/i,
+  /bash.*-c/i,
+  /sh.*-c/i,
+  /\.\.\/\.\.\//,  // Path traversal
+]
+
+// Padrões específicos do ataque XMRig
+const MINING_PATTERNS = [
+  /moneroocean/i,
+  /xmrig/i,
+  /xmr-stak/i,
+  /cryptonight/i,
+  /stratum\+tcp/i,
+  /pool\.minexmr/i,
+  /supportxmr\.com/i,
 ]
 
 // Rate limiting simples (em memória)
@@ -62,6 +81,10 @@ function isRateLimited(ip: string): boolean {
 
 function containsCommandInjection(value: string): boolean {
   return COMMAND_INJECTION_PATTERNS.some(pattern => pattern.test(value))
+}
+
+function containsMiningPattern(value: string): boolean {
+  return MINING_PATTERNS.some(pattern => pattern.test(value))
 }
 
 function checkRequestForInjection(request: NextRequest): boolean {
@@ -110,10 +133,20 @@ export function middleware(request: NextRequest) {
   // 4. Detectar tentativas de injeção de comando
   if (checkRequestForInjection(request)) {
     console.error(`[Security] COMMAND INJECTION ATTEMPT DETECTED - IP: ${ip} - URL: ${request.url}`)
+    // Auto-bloquear IP
+    BLOCKED_IPS.add(ip)
     return new NextResponse('Forbidden', { status: 403 })
   }
 
-  // 5. Bloquear acesso a rotas sensíveis sem autenticação
+  // 5. Detectar padrões de mineração
+  const fullUrl = request.url
+  if (containsMiningPattern(fullUrl) || containsMiningPattern(userAgent)) {
+    console.error(`[Security] CRYPTOMINING ATTEMPT DETECTED - IP: ${ip}`)
+    BLOCKED_IPS.add(ip)
+    return new NextResponse('Forbidden', { status: 403 })
+  }
+
+  // 6. Bloquear acesso a rotas sensíveis sem autenticação
   const sensitiveRoutes = ['/api/presells', '/api/pixels', '/api/hubtitle']
   if (sensitiveRoutes.some(route => pathname.startsWith(route))) {
     const authHeader = request.headers.get('authorization')

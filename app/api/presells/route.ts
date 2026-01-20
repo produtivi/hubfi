@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { takeScreenshot } from '@/lib/screenshot';
+import { validateURL } from '@/lib/url-validator';
 
 // GET - Listar presells do usuário
 export async function GET(request: NextRequest) {
@@ -81,6 +82,25 @@ export async function POST(request: NextRequest) {
     if (!userId || !pageName || !domain || !finalSlug || !affiliateLink || !producerSalesPage || !presellType) {
       return NextResponse.json(
         { error: 'Dados obrigatórios não fornecidos' },
+        { status: 400 }
+      );
+    }
+
+    // SEGURANÇA: Validar URLs antes de processar
+    const producerPageValidation = validateURL(producerSalesPage);
+    if (!producerPageValidation.isValid) {
+      console.warn(`[Security] URL inválida rejeitada: ${producerSalesPage} - Motivo: ${producerPageValidation.error}`);
+      return NextResponse.json(
+        { error: `URL da página do produtor inválida: ${producerPageValidation.error}` },
+        { status: 400 }
+      );
+    }
+
+    const affiliateLinkValidation = validateURL(affiliateLink);
+    if (!affiliateLinkValidation.isValid) {
+      console.warn(`[Security] URL inválida rejeitada: ${affiliateLink} - Motivo: ${affiliateLinkValidation.error}`);
+      return NextResponse.json(
+        { error: `Link de afiliado inválido: ${affiliateLinkValidation.error}` },
         { status: 400 }
       );
     }

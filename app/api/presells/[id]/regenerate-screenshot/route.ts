@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { takeScreenshot } from '@/lib/screenshot';
+import { validateURL } from '@/lib/url-validator';
 
 // POST - Regenerar screenshot para uma presell específica
 export async function POST(
@@ -26,10 +27,21 @@ export async function POST(
     console.log(`📸 Regenerando screenshot para presell ${id}...`);
     console.log(`🔗 URL a ser capturada: ${presell.producerSalesPage}`);
 
+    // SEGURANÇA: Validar URL antes de capturar screenshot
+    const urlValidation = validateURL(presell.producerSalesPage);
+    if (!urlValidation.isValid) {
+      console.error(`[Security] Tentativa de screenshot de URL inválida: ${presell.producerSalesPage}`);
+      console.error(`[Security] Motivo: ${urlValidation.error}`);
+      return NextResponse.json(
+        { error: `URL inválida ou não autorizada: ${urlValidation.error}` },
+        { status: 400 }
+      );
+    }
+
     try {
       console.log(`⏳ Iniciando captura de screenshot...`);
-      // Capturar novos screenshots
-      const screenshots = await takeScreenshot(presell.producerSalesPage, presell.id);
+      // Capturar novos screenshots (URL já validada)
+      const screenshots = await takeScreenshot(urlValidation.sanitized!, presell.id);
       
       console.log(`📷 Screenshots capturados:`, {
         desktop: screenshots.desktop,
