@@ -19,7 +19,7 @@ export default function EditPresell({ params }: EditPresellProps) {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState('');
   const [presellId, setPresellId] = useState<string>('');
-  
+
   const [formData, setFormData] = useState({
     domain: '',
     pageName: '',
@@ -28,7 +28,7 @@ export default function EditPresell({ params }: EditPresellProps) {
     presellType: '',
     presellLanguage: ''
   });
-  
+
   const [originalData, setOriginalData] = useState({
     producerSalesPage: ''
   });
@@ -62,18 +62,18 @@ export default function EditPresell({ params }: EditPresellProps) {
       try {
         const resolvedParams = await params;
         setPresellId(resolvedParams.id);
-        
+
         const response = await fetch(`/api/presells/${resolvedParams.id}`);
         const result = await response.json();
-        
+
         if (result.success) {
           const data = result.data;
-          
+
           // Salvar dados originais para comparação
           setOriginalData({
             producerSalesPage: data.producerSalesPage || ''
           });
-          
+
           setFormData({
             domain: data.domain?.domainName || '',
             pageName: data.pageName || '',
@@ -113,8 +113,8 @@ export default function EditPresell({ params }: EditPresellProps) {
 
     try {
       // Validações
-      if (!formData.domain || !formData.pageName || !formData.affiliateLink || 
-          !formData.producerSalesPage || !formData.presellType || !formData.presellLanguage) {
+      if (!formData.domain || !formData.pageName || !formData.affiliateLink ||
+        !formData.producerSalesPage || !formData.presellType || !formData.presellLanguage) {
         throw new Error('Todos os campos são obrigatórios');
       }
 
@@ -150,12 +150,12 @@ export default function EditPresell({ params }: EditPresellProps) {
       }
 
       showSuccess(`Página "${formData.pageName}" atualizada com sucesso!`);
-      
+
       // Aguardar um pouco para mostrar o toast antes de navegar
       setTimeout(() => {
-        router.push('/page-builder');
+        router.push('/hubpage');
       }, 1000);
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       setError(errorMessage);
@@ -215,7 +215,7 @@ export default function EditPresell({ params }: EditPresellProps) {
                   Domínio <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={formData.domain}
                     disabled
                     className="w-full px-4 py-3 pr-10 bg-accent border border-border rounded-md text-body appearance-none opacity-50 cursor-not-allowed"
@@ -286,7 +286,7 @@ export default function EditPresell({ params }: EditPresellProps) {
                   Tipo de Presell <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={formData.presellType}
                     onChange={handleChange}
                     name="presellType"
@@ -310,7 +310,7 @@ export default function EditPresell({ params }: EditPresellProps) {
                   Idioma da Presell <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={formData.presellLanguage}
                     onChange={handleChange}
                     name="presellLanguage"
@@ -338,7 +338,7 @@ export default function EditPresell({ params }: EditPresellProps) {
               >
                 Cancelar
               </button>
-              
+
               <button
                 type="submit"
                 disabled={isLoading}

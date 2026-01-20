@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { X, ExternalLink } from 'lucide-react';
-import { PageType, PAGE_TYPES } from '@/types/page-builder';
+import { PageType } from '@/types/page-builder';
 
 interface CreatePageModalProps {
   isOpen: boolean;

@@ -32,12 +32,12 @@ export function Sidebar() {
 
   const navItems = [
     { id: 'home', label: 'Início', icon: Home, path: '/' },
-    { id: 'product-finder', label: 'HubFinder', icon: Zap, path: '/product-finder' },
-    { id: 'ads-analytics', label: 'HubAds', icon: BarChart3, path: '/ads-analytics' },
-    { id: 'ranking-hub', label: 'HubRanking', icon: TrendingUp, path: '/ranking-hub' },
-    { id: 'page-builder', label: 'HubPage', icon: Globe, path: '/page-builder' },
-    { id: 'campaign-wizard', label: 'HubCampaign', icon: Sparkles, path: '/campaign-wizard/campaigns' },
-    { id: 'pixel-tracker', label: 'HubPixel', icon: Target, path: '/pixel-tracker' },
+    { id: 'hubfinder', label: 'HubFinder', icon: Zap, path: '/hubfinder' },
+    { id: 'hubads', label: 'HubAds', icon: BarChart3, path: '/hubads' },
+    { id: 'hubranking', label: 'HubRanking', icon: TrendingUp, path: '/hubranking' },
+    { id: 'hubpage', label: 'HubPage', icon: Globe, path: '/hubpage' },
+    { id: 'hubcampaign', label: 'HubCampaign', icon: Sparkles, path: '/hubcampaign/campaigns' },
+    { id: 'hubpixel', label: 'HubPixel', icon: Target, path: '/hubpixel' },
     { id: 'title-generator', label: 'HubTitle', icon: Type, path: '/hubtitle' },
   ];
 

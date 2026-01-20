@@ -1,7 +1,7 @@
-(function() {
+(function () {
   // Obter pixelId do atributo data-pixel-id
   var pixelId = document.currentScript.getAttribute('data-pixel-id');
-  
+
   if (!pixelId) {
     console.error('HubPixel: pixelId não encontrado');
     return;
@@ -9,7 +9,7 @@
 
   // Construir URL da API baseado na origem do script
   var scriptSrc = document.currentScript.src;
-  var baseUrl = scriptSrc.split('?')[0].replace(/\/pixel-tracker\.min\.js$/, '');
+  var baseUrl = scriptSrc.split('?')[0].replace(/\/hubpixel\.min\.js$/, '');
   var apiUrl = baseUrl + '/api/pixels/' + pixelId + '/track';
 
   // Função para enviar eventos
@@ -47,7 +47,7 @@
   sendEvent('visit');
 
   // Rastrear cliques
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     var target = e.target.closest('a[href], button');
     if (target) {
       sendEvent('click', {
@@ -59,14 +59,14 @@
   });
 
   // Rastrear saída
-  window.addEventListener('beforeunload', function() {
+  window.addEventListener('beforeunload', function () {
     sendEvent('exit');
   });
 
   // Expor API global para conversões manuais
   window.hubPixel = window.hubPixel || {};
   window.hubPixel.track = sendEvent;
-  window.hubPixel.conversion = function(data) {
+  window.hubPixel.conversion = function (data) {
     sendEvent('conversion', data);
   };
 })();
