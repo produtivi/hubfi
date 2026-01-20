@@ -5,31 +5,82 @@ import { uploadScreenshotToSpaces } from './spaces';
 
 export async function takeScreenshot(url: string, presellId: number) {
   let browser = null;
-  
+
   try {
     // Validar URL
     new URL(url);
-    
+
+    // SEGURANÇA: Sandbox habilitado por padrão
+    // Apenas desabilitar em ambientes específicos que requerem
+    const useSandbox = process.env.PLAYWRIGHT_USE_SANDBOX !== 'false';
+
+    const launchArgs = [
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--disable-gpu',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--disable-sync',
+      '--disable-translate',
+      '--hide-scrollbars',
+      '--metrics-recording-only',
+      '--mute-audio',
+      '--no-default-browser-check',
+      '--safebrowsing-disable-auto-update'
+    ];
+
+    // Apenas adicionar --no-sandbox se explicitamente configurado
+    if (!useSandbox) {
+      launchArgs.push('--no-sandbox', '--disable-setuid-sandbox');
+    }
+
     browser = await chromium.launch({
       headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-gpu'
-      ]
+      args: launchArgs,
+      timeout: 30000 // Timeout de 30 segundos
     });
     
     const context = await browser.newContext({
       viewport: { width: 1920, height: 1080 },
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      deviceScaleFactor: 1
+      deviceScaleFactor: 1,
+      // SEGURANÇA: Desabilitar JavaScript malicioso
+      javaScriptEnabled: true, // Precisa estar habilitado para sites modernos
+      bypassCSP: false, // Respeitar Content Security Policy
     });
-    
+
     const page = await context.newPage();
+
+    // SEGURANÇA: Bloquear requisições para recursos suspeitos
+    await page.route('**/*', (route) => {
+      const url = route.request().url();
+      const resourceType = route.request().resourceType();
+
+      // Bloquear mineradores conhecidos
+      const blockedPatterns = [
+        /coinhive/i,
+        /crypto-loot/i,
+        /miner/i,
+        /xmrig/i,
+        /monero/i,
+        /cryptonight/i,
+      ];
+
+      if (blockedPatterns.some(pattern => pattern.test(url))) {
+        console.warn(`[Security] Bloqueado recurso suspeito: ${url}`);
+        route.abort();
+        return;
+      }
+
+      // Permitir apenas recursos necessários para screenshot
+      if (['document', 'stylesheet', 'image', 'font'].includes(resourceType)) {
+        route.continue();
+      } else {
+        // Bloquear scripts externos, media, websockets, etc.
+        route.abort();
+      }
+    });
     
     // Screenshots directory
     const screenshotsDir = path.join(process.cwd(), 'public', 'screenshots');

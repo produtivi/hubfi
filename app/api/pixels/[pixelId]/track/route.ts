@@ -122,8 +122,15 @@ export async function POST(
     }
 
     // Validação básica: verificar se a URL corresponde à presell configurada
-    if (url && !url.includes(new URL(pixel.presellUrl).hostname)) {
-      console.warn(`Pixel ${pixelId}: Evento de URL não autorizada: ${url}`)
+    if (url && pixel.presellUrl) {
+      try {
+        const presellHostname = new URL(pixel.presellUrl).hostname
+        if (!url.includes(presellHostname)) {
+          console.warn(`Pixel ${pixelId}: Evento de URL não autorizada: ${url}`)
+        }
+      } catch (error) {
+        console.warn(`Pixel ${pixelId}: URL de presell inválida: ${pixel.presellUrl}`)
+      }
     }
 
     // Registrar evento no banco com flags de análise
