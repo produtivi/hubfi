@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { prisma } from '../../../lib/prisma';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const ACCESS_TOKEN_EXPIRY = 15 * 60; // 15 minutos
 const REFRESH_TOKEN_EXPIRY = 5 * 24 * 60 * 60; // 5 dias
 const MAX_INACTIVITY = 5 * 24 * 60 * 60 * 1000; // 5 dias em ms
@@ -39,22 +42,46 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // TODO: Aqui você deve validar o refreshToken com seu backend/database
-    // Por enquanto, vamos simular a validação
+    // Valida o refresh token
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, JWT_SECRET) as { userId: number; email: string; type: string };
 
-    // Simula validação do refresh token
-    const isValidRefreshToken = true; // Substituir por validação real
-
-    if (!isValidRefreshToken) {
+      if (decoded.type !== 'refresh') {
+        return NextResponse.json(
+          { error: 'Token inválido' },
+          { status: 401 }
+        );
+      }
+    } catch (error) {
       return NextResponse.json(
         { error: 'Refresh token inválido' },
         { status: 401 }
       );
     }
 
+    // Busca o usuário no banco
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuário não encontrado' },
+        { status: 401 }
+      );
+    }
+
     // Gera novo access token
-    // TODO: Implementar geração real de JWT
-    const newAccessToken = `access_${Date.now()}_${Math.random().toString(36)}`;
+    const newAccessToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        type: 'access'
+      },
+      JWT_SECRET,
+      { expiresIn: `${ACCESS_TOKEN_EXPIRY}s` }
+    );
 
     const response = NextResponse.json({
       accessToken: newAccessToken,

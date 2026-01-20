@@ -74,12 +74,12 @@ export async function POST(
       // Incrementar tentativas de acesso
       await prisma.blockedIp.update({
         where: { id: blockedIp.id },
-        data: { 
+        data: {
           attempts: { increment: 1 },
           updatedAt: new Date()
         }
       })
-      
+
       return NextResponse.json(
         { success: false, error: 'IP bloqueado' },
         { status: 403 }
@@ -89,7 +89,7 @@ export async function POST(
     // Análise do evento
     const isBot = detectBot(userAgent || '')
     const isPaid = detectPaidTraffic(referrer || '')
-    
+
     // Verificar se é visita única (baseado em IP + User-Agent nas últimas 24h)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
     const existingEvent = await prisma.pixelEvent.findFirst({
@@ -103,7 +103,7 @@ export async function POST(
         }
       }
     })
-    
+
     const isUnique = eventType === 'visit' && !existingEvent
 
     // Auto-bloqueio de bots suspeitos
@@ -126,10 +126,9 @@ export async function POST(
       try {
         const presellHostname = new URL(pixel.presellUrl).hostname
         if (!url.includes(presellHostname)) {
-          console.warn(`Pixel ${pixelId}: Evento de URL não autorizada: ${url}`)
         }
       } catch (error) {
-        console.warn(`Pixel ${pixelId}: URL de presell inválida: ${pixel.presellUrl}`)
+        console.error(`Pixel ${pixelId}: URL de presell inválida: ${pixel.presellUrl}`)
       }
     }
 
@@ -152,17 +151,17 @@ export async function POST(
 
     // Atualizar contadores do pixel (somente se não for bot)
     const updateData: any = {}
-    
+
     switch (eventType) {
       case 'visit':
         if (!isBot) {
           updateData.visits = { increment: 1 }
           updateData.cleanVisits = { increment: 1 }
-          
+
           if (isUnique) {
             updateData.uniqueVisits = { increment: 1 }
           }
-          
+
           if (isPaid) {
             updateData.paidTrafficVisits = { increment: 1 }
           }
@@ -172,19 +171,19 @@ export async function POST(
           updateData.blockedIps = { increment: 1 }
         }
         break
-        
+
       case 'click':
         if (!isBot) {
           updateData.clicks = { increment: 1 }
         }
         break
-        
+
       case 'checkout':
         if (!isBot) {
           updateData.checkouts = { increment: 1 }
         }
         break
-        
+
       case 'sale':
       case 'conversion':
         if (!isBot) {

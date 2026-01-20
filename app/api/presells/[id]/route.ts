@@ -157,7 +157,7 @@ export async function DELETE(
     const presell = await prisma.presell.findUnique({
       where: { id: parseInt(id) }
     });
-    
+
     if (!presell) {
       return NextResponse.json(
         { error: 'Presell não encontrada' },
@@ -171,10 +171,8 @@ export async function DELETE(
       try {
         // Se for URL do Spaces, não tentar deletar localmente
         if (presell.screenshotDesktop.startsWith('https://produtivi.nyc3.digitaloceanspaces.com/')) {
-          console.log('Screenshot desktop está no Spaces, pulando deleção local');
           // TODO: Implementar deleção no Spaces se necessário
         } else if (presell.screenshotDesktop.includes('/screenshots/temp-')) {
-          console.log('Screenshot desktop é temporário, pulando deleção');
           // Não deletar arquivos temporários compartilhados
         } else {
           // É arquivo local real
@@ -182,7 +180,6 @@ export async function DELETE(
           await fs.unlink(desktopPath);
         }
       } catch (error) {
-        console.warn('Erro ao deletar screenshot desktop:', error);
       }
     }
 
@@ -190,10 +187,8 @@ export async function DELETE(
       try {
         // Se for URL do Spaces, não tentar deletar localmente
         if (presell.screenshotMobile.startsWith('https://produtivi.nyc3.digitaloceanspaces.com/')) {
-          console.log('Screenshot mobile está no Spaces, pulando deleção local');
           // TODO: Implementar deleção no Spaces se necessário
         } else if (presell.screenshotMobile.includes('/screenshots/temp-')) {
-          console.log('Screenshot mobile é temporário, pulando deleção');
           // Não deletar arquivos temporários compartilhados
         } else {
           // É arquivo local real
@@ -201,7 +196,6 @@ export async function DELETE(
           await fs.unlink(mobilePath);
         }
       } catch (error) {
-        console.warn('Erro ao deletar screenshot mobile:', error);
       }
     }
 

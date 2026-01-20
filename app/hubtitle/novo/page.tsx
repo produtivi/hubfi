@@ -1,32 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Star, Copy, Check, Loader2, Link } from 'lucide-react'
+import { ArrowLeft, ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-
-interface GeneratedTitle {
-  id: number
-  content: string
-  isFavorite: boolean
-  createdAt: string
-}
-
-interface GeneratedDescription {
-  id: number
-  content: string
-  isFavorite: boolean
-  createdAt: string
-}
-
-interface Product {
-  id: number
-  name: string
-  description: string
-  links: string | null
-  category: string | null
-  titles: GeneratedTitle[]
-  descriptions: GeneratedDescription[]
-}
 
 const PRODUCT_CATEGORIES = [
   'Saúde e Bem-estar',
@@ -50,9 +26,6 @@ const PRODUCT_CATEGORIES = [
 export default function NovoHubTitle() {
   const router = useRouter()
   const [isCreating, setIsCreating] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [createdProduct, setCreatedProduct] = useState<Product | null>(null)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [showCustomCategory, setShowCustomCategory] = useState(false)
   const [customCategory, setCustomCategory] = useState('')
   const [formData, setFormData] = useState({
@@ -62,7 +35,9 @@ export default function NovoHubTitle() {
     category: ''
   })
 
-  const handleCreateProduct = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     if (!formData.name || !formData.description) {
       alert('Nome e descrição são obrigatórios')
       return
@@ -86,17 +61,13 @@ export default function NovoHubTitle() {
       const newProduct = await response.json()
 
       // Gerar títulos e descrições
-      const generateResponse = await fetch(`/api/hubtitle/products/${newProduct.id}/generate`, {
+      await fetch(`/api/hubtitle/products/${newProduct.id}/generate`, {
         method: 'POST'
       })
 
-      if (!generateResponse.ok) throw new Error('Erro ao gerar conteúdo')
+      // Redirecionar para a listagem
+      router.push('/hubtitle')
 
-      // Buscar produto com títulos e descrições
-      const productResponse = await fetch(`/api/hubtitle/products/${newProduct.id}`)
-      const productWithContent = await productResponse.json()
-
-      setCreatedProduct(productWithContent)
     } catch (error) {
       console.error('Erro:', error)
       alert('Erro ao criar produto')
@@ -105,354 +76,150 @@ export default function NovoHubTitle() {
     }
   }
 
-  const handleGenerateMore = async () => {
-    if (!createdProduct) return
-
-    try {
-      setIsGenerating(true)
-      const response = await fetch(`/api/hubtitle/products/${createdProduct.id}/generate`, {
-        method: 'POST'
-      })
-
-      if (!response.ok) throw new Error('Erro ao gerar conteúdo')
-
-      // Buscar produto atualizado
-      const productResponse = await fetch(`/api/hubtitle/products/${createdProduct.id}`)
-      const updatedProduct = await productResponse.json()
-
-      setCreatedProduct(updatedProduct)
-    } catch (error) {
-      console.error('Erro:', error)
-      alert('Erro ao gerar mais conteúdo')
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  const handleToggleFavoriteTitle = async (titleId: number, currentState: boolean) => {
-    if (!createdProduct) return
-
-    try {
-      await fetch(`/api/hubtitle/titles/${titleId}/favorite`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isFavorite: !currentState })
-      })
-
-      setCreatedProduct({
-        ...createdProduct,
-        titles: createdProduct.titles.map(title =>
-          title.id === titleId ? { ...title, isFavorite: !currentState } : title
-        )
-      })
-    } catch (error) {
-      console.error('Erro ao favoritar:', error)
-    }
-  }
-
-  const handleToggleFavoriteDescription = async (descId: number, currentState: boolean) => {
-    if (!createdProduct) return
-
-    try {
-      await fetch(`/api/hubtitle/descriptions/${descId}/favorite`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isFavorite: !currentState })
-      })
-
-      setCreatedProduct({
-        ...createdProduct,
-        descriptions: createdProduct.descriptions.map(desc =>
-          desc.id === descId ? { ...desc, isFavorite: !currentState } : desc
-        )
-      })
-    } catch (error) {
-      console.error('Erro ao favoritar:', error)
-    }
-  }
-
-  const handleCopy = async (text: string, id: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(null), 2000)
-  }
-
-  const handleCreateAnother = () => {
-    setCreatedProduct(null)
-    setFormData({ name: '', description: '', links: '', category: '' })
-    setShowCustomCategory(false)
-    setCustomCategory('')
+  const handleCancel = () => {
+    router.back()
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+    <div className="min-h-screen p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => router.push('/hubtitle')}
+            onClick={handleCancel}
             className="p-2 hover:bg-accent rounded-md transition-colors"
-            title="Voltar"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-headline">Novo Produto</h1>
-        </div>
-
-        {createdProduct && (
-          <div className="flex gap-2">
-            <button
-              onClick={handleCreateAnother}
-              className="px-4 py-2 bg-background border border-border hover:bg-accent rounded-md transition-colors text-body"
-            >
-              Criar Outro Produto
-            </button>
-            <button
-              onClick={() => router.push('/hubtitle')}
-              className="px-4 py-2 bg-primary text-primary-foreground hover:opacity-80 rounded-md transition-opacity text-body"
-            >
-              Ver Todos os Produtos
-            </button>
+          <div>
+            <h1 className="text-headline">Criar Novo Produto</h1>
+            <p className="text-label text-muted-foreground">
+              Preencha as informações do produto para gerar títulos e descrições
+            </p>
           </div>
-        )}
+        </div>
       </div>
 
-      {!createdProduct ? (
-        <div className="bg-card border border-border rounded-md p-6 max-w-2xl">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-body font-medium mb-2">
-                Nome do Produto *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-body"
-                placeholder="Ex: Curso de Marketing Digital"
-              />
-            </div>
-
-            <div>
-              <label className="block text-body font-medium mb-2">
-                Descrição do Produto *
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-body min-h-[120px]"
-                placeholder="Descreva seu produto em detalhes..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-body font-medium mb-2">
-                Links (opcional)
-              </label>
-              <input
-                type="text"
-                value={formData.links}
-                onChange={(e) => setFormData({ ...formData, links: e.target.value })}
-                className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-body"
-                placeholder="https://..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-body font-medium mb-2">
-                Categoria (opcional)
-              </label>
-              <select
-                value={showCustomCategory ? 'Outra' : formData.category}
-                onChange={(e) => {
-                  if (e.target.value === 'Outra') {
-                    setShowCustomCategory(true)
-                    setFormData({ ...formData, category: '' })
-                  } else {
-                    setShowCustomCategory(false)
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                }}
-                className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-body"
-              >
-                <option value="">Selecione uma categoria</option>
-                {PRODUCT_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {showCustomCategory && (
-              <div>
-                <label className="block text-body font-medium mb-2">
-                  Especifique a categoria
+      {/* Formulário */}
+      <div className="w-full">
+        <div className="bg-card border border-border rounded-lg p-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Grid de campos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Nome do Produto */}
+              <div className="space-y-3">
+                <label className="text-body font-medium">
+                  Nome do Produto <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-body"
-                  placeholder="Digite a categoria..."
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Curso de Marketing Digital"
+                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  required
                 />
               </div>
-            )}
 
-            <button
-              onClick={handleCreateProduct}
-              disabled={isCreating || !formData.name || !formData.description}
-              className="w-full py-3 bg-primary text-primary-foreground hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-opacity text-body font-medium flex items-center justify-center gap-2"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Criando e gerando conteúdo...
-                </>
-              ) : (
-                'Criar e Gerar Títulos/Descrições'
-              )}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Info do Produto */}
-          <div className="bg-card border border-border rounded-md p-6">
-            <h2 className="text-title mb-4">{createdProduct.name}</h2>
-            <p className="text-body text-muted-foreground mb-2">{createdProduct.description}</p>
-            {createdProduct.category && (
-              <p className="text-label text-muted-foreground">
-                Categoria: {createdProduct.category}
-              </p>
-            )}
-            {createdProduct.links && (
-              <p className="text-label text-muted-foreground mt-1 flex gap-1 items-center">
-                <Link className='h-4 w-4 opacity-50' />{createdProduct.links}
-              </p>
-            )}
-          </div>
-
-          {/* Botão Gerar Mais */}
-          <div className="flex justify-center">
-            <button
-              onClick={handleGenerateMore}
-              disabled={isGenerating}
-              className="px-6 py-3 bg-primary text-primary-foreground hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-opacity text-body font-medium flex items-center gap-2"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Gerando...
-                </>
-              ) : (
-                `Gerar Mais 5`
-              )}
-            </button>
-          </div>
-
-          {/* Títulos */}
-          {createdProduct.titles.length > 0 && (
-            <div className="bg-card border border-border rounded-md p-6">
-              <h3 className="text-title mb-4">
-                Títulos ({createdProduct.titles.length})
-              </h3>
-              <div className="space-y-2">
-                {createdProduct.titles
-                  .sort((a, b) => {
-                    if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                  })
-                  .map((title) => (
-                    <div
-                      key={title.id}
-                      className="p-3 bg-background border border-border rounded-md hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-start gap-3">
-                        <p className="flex-1 text-body">{title.content}</p>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleToggleFavoriteTitle(title.id, title.isFavorite)}
-                            className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                            title="Favoritar"
-                          >
-                            <Star
-                              className={`w-4 h-4 ${title.isFavorite
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-muted-foreground'
-                                }`}
-                            />
-                          </button>
-                          <button
-                            onClick={() => handleCopy(title.content, `title-${title.id}`)}
-                            className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                            title="Copiar"
-                          >
-                            {copiedId === `title-${title.id}` ? (
-                              <Check className="w-4 h-4 text-success" />
-                            ) : (
-                              <Copy className="w-4 h-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              {/* Categoria */}
+              <div className="space-y-3">
+                <label className="text-body font-medium">
+                  Categoria
+                </label>
+                <div className="relative">
+                  <select
+                    value={showCustomCategory ? 'Outra' : formData.category}
+                    onChange={(e) => {
+                      if (e.target.value === 'Outra') {
+                        setShowCustomCategory(true)
+                        setFormData({ ...formData, category: '' })
+                      } else {
+                        setShowCustomCategory(false)
+                        setFormData({ ...formData, category: e.target.value })
+                      }
+                    }}
+                    className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {PRODUCT_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                </div>
               </div>
-            </div>
-          )}
 
-          {/* Descrições */}
-          {createdProduct.descriptions.length > 0 && (
-            <div className="bg-card border border-border rounded-md p-6">
-              <h3 className="text-title mb-4">
-                Descrições ({createdProduct.descriptions.length})
-              </h3>
-              <div className="space-y-2">
-                {createdProduct.descriptions
-                  .sort((a, b) => {
-                    if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                  })
-                  .map((desc) => (
-                    <div
-                      key={desc.id}
-                      className="p-3 bg-background border border-border rounded-md hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-start gap-3">
-                        <p className="flex-1 text-body">{desc.content}</p>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleToggleFavoriteDescription(desc.id, desc.isFavorite)}
-                            className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                            title="Favoritar"
-                          >
-                            <Star
-                              className={`w-4 h-4 ${desc.isFavorite
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-muted-foreground'
-                                }`}
-                            />
-                          </button>
-                          <button
-                            onClick={() => handleCopy(desc.content, `desc-${desc.id}`)}
-                            className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                            title="Copiar"
-                          >
-                            {copiedId === `desc-${desc.id}` ? (
-                              <Check className="w-4 h-4 text-success" />
-                            ) : (
-                              <Copy className="w-4 h-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              {/* Descrição do Produto - Span 2 colunas */}
+              <div className="space-y-3 md:col-span-2">
+                <label className="text-body font-medium">
+                  Descrição do Produto <span className="text-destructive">*</span>
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Descreva seu produto em detalhes para gerar títulos e descrições mais precisos..."
+                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all min-h-[120px] resize-none"
+                  required
+                />
               </div>
+
+              {/* Links */}
+              <div className="space-y-3 md:col-span-2">
+                <label className="text-body font-medium">
+                  Links do Produto
+                </label>
+                <input
+                  type="url"
+                  value={formData.links}
+                  onChange={(e) => setFormData({ ...formData, links: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                />
+              </div>
+
+              {/* Categoria customizada - condicional */}
+              {showCustomCategory && (
+                <div className="space-y-3 md:col-span-2">
+                  <label className="text-body font-medium">
+                    Especifique a categoria
+                  </label>
+                  <input
+                    type="text"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Digite a categoria..."
+                    className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Botões de ação */}
+            <div className="flex justify-between items-center pt-8 border-t border-border">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-6 py-3 border border-border bg-background hover:bg-accent text-foreground rounded-md transition-colors"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                disabled={isCreating || !formData.name || !formData.description}
+                className="flex items-center gap-2 px-8 py-3 rounded-md transition-colors font-medium bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white"
+              >
+                {isCreating && (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                )}
+                <span>{isCreating ? 'Criando e gerando...' : 'Criar e Gerar Conteúdo'}</span>
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
     </div>
   )
 }

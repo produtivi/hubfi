@@ -426,28 +426,23 @@ export default function RankingHub() {
 			try {
 				setIsLoading(true);
 				setError('');
-				
-				console.log('🔍 Buscando dados do ranking...');
-				
+
+
 				// Buscar dados da ClickBank primeiro
 				const response = await fetch('/api/ranking/clickbank');
 				const result = await response.json();
-				
-				console.log('📊 Resposta da API:', result);
-				
+
+
 				if (result.success && result.data && result.data.length > 0) {
 					const transformedProducts = transformApiData(result.data);
 					setProducts(transformedProducts);
-					console.log(`✅ ${transformedProducts.length} produtos carregados!`);
-					
+
 					// Mostrar warning se usar dados mock
 					if (result.source === 'mock-data-temporary') {
-						console.log('⚠️', result.warning);
 					}
 				} else {
 					// Usar dados mockados como fallback
 					setProducts(RANKED_PRODUCTS);
-					console.log(`⚠️ API não disponível, usando ${RANKED_PRODUCTS.length} produtos mockados`);
 					if (result.source === 'system-rebuild') {
 						setError('🚀 Sistema de inteligência de mercado em desenvolvimento - Exibindo dados demonstrativos');
 					} else {
@@ -471,7 +466,6 @@ export default function RankingHub() {
 	useEffect(() => {
 		if (selectedPlatform !== 'all') {
 			// TODO: Implementar busca específica por plataforma
-			console.log(`Filtro alterado para: ${selectedPlatform}`);
 		}
 	}, [selectedPlatform]);
 
