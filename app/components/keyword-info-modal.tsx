@@ -162,9 +162,11 @@ export function KeywordInfoModal({
                                                                  fontSize: '12px',
                                                                  color: 'hsl(var(--foreground))'
                                                             }}
-                                                            formatter={(value: number) => {
-                                                                 if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-                                                                 return value.toString();
+                                                            formatter={(value) => {
+                                                                 if (value === undefined) return '';
+                                                                 const num = Number(value);
+                                                                 if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+                                                                 return num.toString();
                                                             }}
                                                        />
                                                        <Legend

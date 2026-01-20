@@ -128,7 +128,7 @@ export function TrafficDashboardModal({
                                                             fontSize: '12px',
                                                             color: 'hsl(var(--foreground))'
                                                        }}
-                                                       formatter={(value: number) => formatNumber(value)}
+                                                       formatter={(value) => value !== undefined ? formatNumber(Number(value)) : ''}
                                                   />
                                                   <Bar dataKey="traffic" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
                                              </BarChart>
