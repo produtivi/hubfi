@@ -19,9 +19,10 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
   
   // Relacionamentos
-  presells      Presell[]
-  pixels        Pixel[]
-  googleAccounts GoogleAccount[]
+  presells          Presell[]
+  pixels            Pixel[]
+  googleAccounts    GoogleAccount[]
+  googleAdsAccounts GoogleAdsAccount[]
 
   @@map("users")
 }
