@@ -7,13 +7,11 @@ export async function POST() {
       message: 'Logout realizado com sucesso'
     });
 
-    // Remover o cookie de autenticação
-    response.cookies.set('auth-token', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0 // Expira imediatamente
-    });
+    // Remove todos os cookies de autenticação
+    response.cookies.delete('accessToken');
+    response.cookies.delete('refreshToken');
+    response.cookies.delete('lastActivity');
+    response.cookies.delete('auth-token'); // Cookie antigo
 
     return response;
 

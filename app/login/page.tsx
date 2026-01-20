@@ -1,15 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TraditionalLogin } from '../components/traditional-login';
-import { MagicLinkLogin } from '../components/magic-link-login';
-import { UserProvider, useUser } from '../hooks/use-user';
-import type { LoginCredentials, MagicLinkRequest, MagicLinkVerification, LoginMethod } from '../types/auth';
+import { UserProvider } from '../hooks/use-user';
+import Image from 'next/image';
+import type { LoginCredentials } from '../types/auth';
 
 function LoginContent() {
   const router = useRouter();
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>('traditional');
 
   const handleTraditionalLogin = async (credentials: LoginCredentials) => {
     try {
@@ -27,52 +25,72 @@ function LoginContent() {
         throw new Error(data.error || 'Erro ao fazer login');
       }
 
-      // Login bem-sucedido, redirecionar
       router.push('/');
     } catch (error) {
-      // Re-throw para que o componente TraditionalLogin possa tratar
       throw error;
     }
   };
 
-  const handleRequestCode = async (request: MagicLinkRequest) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  };
-
-  const handleVerifyCode = async (verification: MagicLinkVerification) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    router.push('/');
-  };
-
   return (
-    <div className="flex items-center justify-center min-h-screen px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-lg shadow-lg p-8">
-          <h1 className="text-2xl font-bold text-foreground text-center mb-8">
-            Bem-vindo ao Hubfi
-          </h1>
-
-          {loginMethod === 'traditional' ? (
-            <TraditionalLogin onSubmit={handleTraditionalLogin} />
-          ) : (
-            <MagicLinkLogin
-              onRequestCode={handleRequestCode}
-              onVerifyCode={handleVerifyCode}
-            />
-          )}
-
-          <div className="mt-6 text-center hover:underline hover:cursor-pointer">
-            <div
-              onClick={() => router.push('/register')}
-              className="text-primary font-medium"
-            >
-              <span className="text-muted-foreground text-sm">
-                Não tem uma conta ainda?{' '}
-                
-              </span>
-              <span className="text-primary font-medium  text-sm">Criar conta</span>
+    <div className="min-h-screen flex">
+      {/* Left side - Login Form */}
+      <div className="flex-1 flex items-center justify-center px-8 py-12 bg-background">
+        <div className="w-full max-w-md">
+          <div className="bg-card border border-border rounded-lg p-8 shadow-sm dark:shadow-lg dark:border-[#3A3A3A]">
+            <div className="mb-8">
+              <h1 className="text-headline mb-2">Entrar</h1>
+              <p className="text-body-muted">
+                Acesse sua conta para continuar
+              </p>
             </div>
 
+            <TraditionalLogin onSubmit={handleTraditionalLogin} />
+
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => router.push('/register')}
+                className="text-label text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Não tem uma conta?{' '}
+                <span className="text-foreground font-medium">Criar conta</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side - Logo (always inverted theme for contrast) */}
+      <div className="hidden lg:flex flex-1 items-center justify-center relative bg-[#0A0A0A] dark:bg-[#FAFAFA] shadow-[-12px_0_40px_rgba(255,255,255,0.15)] dark:shadow-[-12px_0_40px_rgba(0,0,0,0.3)]">
+
+        <div className="w-full max-w-md px-8 text-center">
+          {/* Light mode: black background with white logo */}
+          <div className="dark:hidden">
+            <Image
+              src="/logo/logo-branca.png"
+              alt="Hubfi"
+              width={400}
+              height={120}
+              className="w-full h-auto mb-4"
+              priority
+            />
+            <p className="text-title text-[#E5E5E5]">
+              Tudo que você precisa em um só lugar
+            </p>
+          </div>
+
+          {/* Dark mode: white background with black logo */}
+          <div className="hidden dark:block">
+            <Image
+              src="/logo/logo-preta.png"
+              alt="Hubfi"
+              width={400}
+              height={120}
+              className="w-full h-auto mb-4"
+              priority
+            />
+            <p className="text-title text-[#181818]">
+              Tudo que você precisa em um só lugar
+            </p>
           </div>
         </div>
       </div>
