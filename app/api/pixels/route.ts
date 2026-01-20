@@ -1,37 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Não autenticado' },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
-    const { name, platform, presellUrl } = body
+    const {
+      name,
+      platform,
+      googleAccountId,
+      googleAdsCustomerId,
+      conversionActionId,
+      useMcc,
+      presellId,
+      presellUrl
+    } = body
 
     // Validações básicas
-    if (!name || !platform || !presellUrl) {
+    if (!platform || !googleAccountId || !googleAdsCustomerId || !conversionActionId) {
       return NextResponse.json(
-        { success: false, error: 'Campos obrigatórios: name, platform, presellUrl' },
+        { success: false, error: 'Campos obrigatórios: platform, googleAccountId, googleAdsCustomerId, conversionActionId' },
         { status: 400 }
+      )
+    }
+
+    // Verificar se a conta Google pertence ao usuário
+    const googleAccount = await prisma.googleAccount.findFirst({
+      where: {
+        id: parseInt(googleAccountId),
+        userId: user.id
+      }
+    })
+
+    if (!googleAccount) {
+      return NextResponse.json(
+        { success: false, error: 'Conta Google não encontrada' },
+        { status: 404 }
       )
     }
 
     // Gerar ID único para o pixel
     const pixelId = `px_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-    // TODO: Obter userId da sessão autenticada
-    // Por enquanto, vamos usar um userId fixo para teste
-    const userId = 1
+    // Gerar nome automático se não fornecido
+    const pixelName = name || `Pixel ${platform} - ${new Date().toLocaleDateString('pt-BR')}`
 
     // Criar pixel no banco
     const pixel = await prisma.pixel.create({
       data: {
-        userId,
-        name,
+        userId: user.id,
+        name: pixelName,
         platform,
-        presellUrl,
         pixelId,
-        status: 'active'
+        status: 'active',
+        googleAccountId: parseInt(googleAccountId),
+        googleAdsCustomerId,
+        conversionActionId,
+        useMcc: useMcc || false,
+        presellId: presellId ? parseInt(presellId) : null,
+        presellUrl: presellUrl || null
       }
     })
 
@@ -42,7 +78,8 @@ export async function POST(request: NextRequest) {
         pixelId: pixel.pixelId,
         name: pixel.name,
         platform: pixel.platform,
-        presellUrl: pixel.presellUrl,
+        googleAdsCustomerId: pixel.googleAdsCustomerId,
+        conversionActionId: pixel.conversionActionId,
         status: pixel.status,
         createdAt: pixel.createdAt
       }
@@ -59,13 +96,30 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Obter userId da sessão autenticada
-    const userId = 1
+    const user = await getAuthUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Não autenticado' },
+        { status: 401 }
+      )
+    }
 
     const pixels = await prisma.pixel.findMany({
-      where: { userId },
+      where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
       include: {
+        googleAccount: {
+          select: {
+            email: true
+          }
+        },
+        presell: {
+          select: {
+            pageName: true,
+            slug: true
+          }
+        },
         _count: {
           select: {
             events: true
@@ -82,6 +136,11 @@ export async function GET(request: NextRequest) {
         name: pixel.name,
         platform: pixel.platform,
         presellUrl: pixel.presellUrl,
+        presell: pixel.presell,
+        googleAccountEmail: pixel.googleAccount.email,
+        googleAdsCustomerId: pixel.googleAdsCustomerId,
+        conversionActionId: pixel.conversionActionId,
+        useMcc: pixel.useMcc,
         status: pixel.status,
         visits: pixel.visits,
         uniqueVisits: pixel.uniqueVisits,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, RefreshCw, Settings } from 'lucide-react';
+import { Plus, RefreshCw05, Settings01 } from '@untitledui/icons';
 import { useRouter } from 'next/navigation';
 import { CreatePageModal } from '../components/page-builder/create-page-modal';
 import { DeleteConfirmationModal } from '../components/page-builder/delete-confirmation-modal';
@@ -9,6 +9,9 @@ import { PagesList } from '../components/page-builder/pages-table';
 import { Page, PageType, PAGE_TYPES } from '../types/page-builder';
 import { Toast } from '../components/ui/toast';
 import { useToast } from '../hooks/useToast';
+import { Button } from '@/components/base/buttons/button';
+import { Select } from '@/components/base/select/select';
+import type { Key } from 'react-aria-components';
 
 interface Presell {
   id: number;
@@ -207,78 +210,72 @@ export default function PageBuilder() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              color="secondary"
+              size="sm"
+              iconLeading={Settings01}
               onClick={() => router.push('/page-builder/domains')}
-              className="flex items-center gap-2 px-4 py-2 border border-border rounded-md hover:opacity-80 transition-opacity"
             >
-              <Settings className="w-4 h-4" />
-              <span className="text-label font-medium">Gerenciar Domínios</span>
-            </button>
-            <button
-              onClick={loadPresells}
-              disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-foreground text-foreground border border-border rounded-md hover:opacity-80 transition-opacity disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className="text-label font-medium">{isLoading ? 'Carregando...' : 'Atualizar'}</span>
-            </button>
+              Gerenciar Domínios
+            </Button>
           </div>
         </div>
 
         {/* Create Button */}
-        <button
+        <Button
+          color="primary"
+          size="md"
+          iconLeading={Plus}
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity text-label font-medium"
         >
-          <Plus className="w-5 h-5" />
           Criar Página
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
       <div className="bg-card border border-border rounded-md p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-label mb-2">Tipo de página</label>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as PageType | 'all')}
-              className="w-full px-3 py-2 bg-background border border-border rounded-md text-body focus:ring-1 focus:ring-ring outline-none"
+          <div className="space-y-1">
+            <label className="block text-label">Tipo de página</label>
+            <Select
+              placeholder="Todos os tipos"
+              selectedKey={filterType}
+              onSelectionChange={(key: Key | null) => setFilterType((key as PageType | 'all') || 'all')}
+              items={[
+                { id: 'all', label: 'Todos os tipos' },
+                ...Object.entries(PAGE_TYPES).map(([key, value]) => ({ id: key, label: value.label }))
+              ]}
             >
-              <option value="all">Todos os tipos</option>
-              {Object.entries(PAGE_TYPES).map(([key, value]) => (
-                <option key={key} value={key}>
-                  {value.label}
-                </option>
-              ))}
-            </select>
+              {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+            </Select>
           </div>
-          <div>
-            <label className="block text-label mb-2">Domínio</label>
-            <select
-              value={filterDomain}
-              onChange={(e) => setFilterDomain(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border rounded-md text-body focus:ring-1 focus:ring-ring outline-none"
+          <div className="space-y-1">
+            <label className="block text-label">Domínio</label>
+            <Select
+              placeholder="Todos os domínios"
+              selectedKey={filterDomain}
+              onSelectionChange={(key: Key | null) => setFilterDomain((key as string) || 'all')}
+              items={[
+                { id: 'all', label: 'Todos os domínios' },
+                ...uniqueDomains.map((domain) => ({ id: domain, label: domain }))
+              ]}
             >
-              <option value="all">Todos os domínios</option>
-              {uniqueDomains.map((domain) => (
-                <option key={domain} value={domain}>
-                  {domain}
-                </option>
-              ))}
-            </select>
+              {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+            </Select>
           </div>
         </div>
 
-        <button
-          className="mt-4 text-label text-muted-foreground hover:text-foreground transition-colors"
+        <Button
+          color="link-gray"
+          size="sm"
+          className="mt-4"
           onClick={() => {
             setFilterType('all');
             setFilterDomain('all');
           }}
         >
           Limpar Filtros
-        </button>
+        </Button>
       </div>
 
       {/* Results Count */}
@@ -292,7 +289,7 @@ export default function PageBuilder() {
       {isLoading ? (
         <div className="bg-card border border-border rounded-md p-12 text-center">
           <div className="inline-flex items-center gap-2 text-muted-foreground">
-            <RefreshCw className="w-5 h-5 animate-spin" />
+            <RefreshCw05 className="w-5 h-5 animate-spin" />
             <span className="text-body">Carregando páginas...</span>
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, Trash2, Check } from 'lucide-react';
+import { Eye, Trash01, Check } from '@untitledui/icons';
 import { Domain } from '@/types/page-builder';
 
 interface DomainsListProps {
@@ -50,7 +50,7 @@ export function DomainsList({ domains, onView, onDelete }: DomainsListProps) {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => onView(domain.domain)}
-                className="p-2 hover:bg-accent rounded-md transition-colors"
+                className="p-2 hover:bg-green-500/20 rounded-md transition-colors"
                 aria-label="Visualizar"
                 title="Visualizar"
               >
@@ -62,7 +62,7 @@ export function DomainsList({ domains, onView, onDelete }: DomainsListProps) {
                 aria-label="Excluir"
                 title="Excluir"
               >
-                <Trash2 className="w-4 h-4 text-destructive" />
+                <Trash01 className="w-4 h-4 text-foreground" />
               </button>
             </div>
           </div>

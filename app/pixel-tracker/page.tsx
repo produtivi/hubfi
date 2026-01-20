@@ -249,7 +249,7 @@ export default function PixelTracker() {
             }`}
           >
             <Filter className="w-5 h-5" />
-            <span>{showInactive ? 'Inativos' : 'Ativos'}</span>
+            <span>{showInactive ? 'Ver Ativos' : 'Ver Inativos'}</span>
           </button>
           
           <button
@@ -391,20 +391,6 @@ export default function PixelTracker() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-label text-muted-foreground mb-1">Visitas</p>
-                      <p className="text-body font-semibold">{pixel.visits}</p>
-                    </div>
-                    <div>
-                      <p className="text-label text-muted-foreground mb-1">Cliques</p>
-                      <p className="text-body font-semibold">{pixel.clicks}</p>
-                    </div>
-                    <div>
-                      <p className="text-label text-muted-foreground mb-1">Criado em</p>
-                      <p className="text-body">{pixel.createdAt}</p>
-                    </div>
-                  </div>
 
                   {/* Ações adicionais */}
                   <div className="flex flex-row justify-between mt-4 pt-4 border-t border-border">

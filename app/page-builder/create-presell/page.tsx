@@ -1,10 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Toast } from '../../components/ui/toast';
 import { useToast } from '../../hooks/useToast';
+import { TooltipHelp } from '../../components/ui/tooltip-help';
+import { Input } from '@/components/base/input/input';
+import { Select } from '@/components/base/select/select';
+import { Button } from '@/components/base/buttons/button';
+import type { Key } from 'react-aria-components';
 
 export default function CreatePresell() {
   const router = useRouter();
@@ -197,135 +202,126 @@ export default function CreatePresell() {
             {/* Grid de campos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Domínio */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
+              <div className="space-y-1">
+                <label className="text-body font-medium flex items-center gap-2">
                   Domínio <span className="text-destructive">*</span>
+                  <TooltipHelp text="Selecione o domínio onde sua presell será publicada." />
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.domain}
-                    onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                    className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                    required
-                  >
-                    <option value="">Escolha o domínio</option>
-                    {domains.map((domain) => (
-                      <option key={domain} value={domain}>{domain}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                </div>
+                <Select
+                  placeholder="Escolha o domínio"
+                  selectedKey={formData.domain || null}
+                  onSelectionChange={(key: Key | null) => setFormData({...formData, domain: key as string || ''})}
+                  items={domains.map((domain) => ({ id: domain, label: domain }))}
+                  isRequired
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
               </div>
 
               {/* Nome da página */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
+              <div className="space-y-1">
+                <label className="text-body font-medium flex items-center gap-2">
                   Nome da página <span className="text-destructive">*</span>
+                  <TooltipHelp
+                    text="Este nome aparece na aba do navegador quando o visitante abre sua presell."
+                    imageSrc="/Captura de tela de 2026-01-20 14-33-05.png"
+                    imageAlt="Exemplo de nome da página na aba do navegador"
+                  />
                 </label>
-                <input
-                  type="text"
+                <Input
                   value={formData.pageName}
-                  onChange={(e) => setFormData({ ...formData, pageName: e.target.value })}
+                  onChange={(value) => setFormData({...formData, pageName: value})}
                   placeholder="Informe o nome da sua página"
-                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                  required
+                  isRequired
                 />
               </div>
 
               {/* Link de Afiliado */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
+              <div className="space-y-1">
+                <label className="text-body font-medium flex items-center gap-2">
                   Link de Afiliado <span className="text-destructive">*</span>
+                  <TooltipHelp text="Link para onde o visitante será redirecionado ao clicar no botão de compra." />
                 </label>
-                <input
+                <Input
                   type="url"
                   value={formData.affiliateLink}
-                  onChange={(e) => setFormData({ ...formData, affiliateLink: e.target.value })}
+                  onChange={(value) => setFormData({...formData, affiliateLink: value})}
                   placeholder="Informe o link de afiliado"
-                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                  required
+                  isRequired
                 />
               </div>
 
               {/* Página de vendas do produtor */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
+              <div className="space-y-1">
+                <label className="text-body font-medium flex items-center gap-2">
                   Página de vendas do produtor <span className="text-destructive">*</span>
+                  <TooltipHelp text="URL da página de vendas original. Usada para capturar screenshots e elementos visuais." />
                 </label>
-                <input
+                <Input
                   type="url"
                   value={formData.producerSalesPage}
-                  onChange={(e) => setFormData({ ...formData, producerSalesPage: e.target.value })}
+                  onChange={(value) => setFormData({...formData, producerSalesPage: value})}
                   placeholder="Informe a página de vendas"
-                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                  required
+                  isRequired
                 />
               </div>
 
               {/* Tipo de Presell */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
+              <div className="space-y-1">
+                <label className="text-body font-medium flex items-center gap-2">
                   Tipo de Presell <span className="text-destructive">*</span>
+                  <TooltipHelp text="Escolha o formato da sua presell: quiz, artigo, VSL, entre outros." />
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.presellType}
-                    onChange={(e) => setFormData({ ...formData, presellType: e.target.value })}
-                    className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                    required
-                  >
-                    <option value="">Selecione o tipo</option>
-                    {presellTypes.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                </div>
+                <Select
+                  placeholder="Selecione o tipo"
+                  selectedKey={formData.presellType || null}
+                  onSelectionChange={(key: Key | null) => setFormData({...formData, presellType: key as string || ''})}
+                  items={presellTypes.map((type) => ({ id: type, label: type }))}
+                  isRequired
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
               </div>
 
               {/* Idioma da Presell */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
+              <div className="space-y-1">
+                <label className="text-body font-medium flex items-center gap-2">
                   Idioma <span className="text-destructive">*</span>
+                  <TooltipHelp text="Define o idioma dos textos e botões da sua presell." />
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.presellLanguage}
-                    onChange={(e) => setFormData({ ...formData, presellLanguage: e.target.value })}
-                    className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                    required
-                  >
-                    <option value="">Selecione o idioma</option>
-                    {languages.map((language) => (
-                      <option key={language} value={language}>{language}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                </div>
+                <Select
+                  placeholder="Selecione o idioma"
+                  selectedKey={formData.presellLanguage || null}
+                  onSelectionChange={(key: Key | null) => setFormData({...formData, presellLanguage: key as string || ''})}
+                  items={languages.map((language) => ({ id: language, label: language }))}
+                  isRequired
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
               </div>
             </div>
 
 
             {/* Botões de ação */}
             <div className="flex justify-between items-center pt-8 border-t border-border">
-              <button
+              <Button
                 type="button"
+                color="secondary"
+                size="lg"
                 onClick={() => router.back()}
-                className="px-6 py-3 border border-border bg-background hover:bg-accent text-foreground rounded-md transition-colors"
               >
                 Cancelar
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="submit"
-                disabled={isLoading}
-                className="flex items-center gap-2 px-8 py-3 rounded-md transition-colors font-medium bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                color="primary"
+                size="lg"
+                isDisabled={isLoading}
+                isLoading={isLoading}
               >
-                {isLoading && (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                )}
-                <span>{isLoading ? 'Criando...' : 'Criar Presell'}</span>
-              </button>
+                {isLoading ? 'Criando...' : 'Criar Presell'}
+              </Button>
             </div>
           </form>
         </div>

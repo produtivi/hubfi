@@ -62,19 +62,6 @@ export async function createSubAccount({
     // Extrair o ID da nova conta
     const newCustomerId = createResponse.resource_name?.split('/').pop();
 
-    // Salvar no banco de dados
-    await prisma.googleAdsAccount.create({
-      data: {
-        userId,
-        customerId: newCustomerId!,
-        accountName,
-        mccAccountId: mccCustomerId,
-        currencyCode,
-        timeZone,
-        isActive: true
-      }
-    });
-
     return {
       success: true,
       customerId: newCustomerId,
@@ -122,7 +109,7 @@ export async function getGoogleAdsAccountsSummary(googleAccountId: number) {
       developer_token: process.env.GOOGLE_ADS_DEVELOPER_TOKEN!
     });
 
-    // Listar todas as contas acessíveis
+    // Listar todas as contas acessíveis (geralmente MCCs)
     const resourceNames = await client.listAccessibleCustomers(googleAccount.refreshToken);
 
     let mccCount = 0;
@@ -153,16 +140,61 @@ export async function getGoogleAdsAccountsSummary(googleAccountId: number) {
 
         if (customerResult && customerResult.customer && !customerResult.customer.test_account) {
           if (customerResult.customer.manager) {
+            // É uma MCC - contar e buscar subcontas
             mccCount++;
-          } else {
-            accountsCount++;
 
-            // Buscar conversões desta conta
+            // Buscar subcontas da MCC
+            try {
+              const subAccountsQuery = `
+                SELECT
+                  customer_client.id,
+                  customer_client.manager,
+                  customer_client.test_account,
+                  customer_client.hidden
+                FROM customer_client
+                WHERE customer_client.hidden = false
+              `;
+
+              const subAccountsResults = await customer.query(subAccountsQuery);
+
+              for (const subResult of subAccountsResults) {
+                if (subResult.customer_client &&
+                    !subResult.customer_client.test_account &&
+                    !subResult.customer_client.manager) {
+                  accountsCount++;
+
+                  // Buscar conversões da subconta
+                  try {
+                    const subCustomerId = String(subResult.customer_client.id);
+                    const subCustomer = client.Customer({
+                      customer_id: subCustomerId,
+                      refresh_token: googleAccount.refreshToken,
+                      login_customer_id: customerId // Usar MCC como login
+                    });
+
+                    const conversionQuery = `
+                      SELECT
+                        conversion_action.id
+                      FROM conversion_action
+                      WHERE conversion_action.status = 'ENABLED'
+                    `;
+
+                    const conversionResults = await subCustomer.query(conversionQuery);
+                    conversionsCount += conversionResults.length;
+                  } catch (convErr) {
+                    // Ignorar erro de conversão em subcontas
+                  }
+                }
+              }
+            } catch (subErr) {
+              console.error(`Erro ao buscar subcontas da MCC ${customerId}:`, subErr);
+            }
+
+            // Buscar conversões da própria MCC
             try {
               const conversionQuery = `
                 SELECT
-                  conversion_action.id,
-                  conversion_action.name
+                  conversion_action.id
                 FROM conversion_action
                 WHERE conversion_action.status = 'ENABLED'
               `;
@@ -170,7 +202,25 @@ export async function getGoogleAdsAccountsSummary(googleAccountId: number) {
               const conversionResults = await customer.query(conversionQuery);
               conversionsCount += conversionResults.length;
             } catch (err) {
-              console.error(`Erro ao buscar conversões da conta ${customerId}:`, err);
+              // Ignorar erro
+            }
+          } else {
+            // Conta normal (não MCC)
+            accountsCount++;
+
+            // Buscar conversões
+            try {
+              const conversionQuery = `
+                SELECT
+                  conversion_action.id
+                FROM conversion_action
+                WHERE conversion_action.status = 'ENABLED'
+              `;
+
+              const conversionResults = await customer.query(conversionQuery);
+              conversionsCount += conversionResults.length;
+            } catch (err) {
+              // Ignorar erro
             }
           }
         }

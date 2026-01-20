@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, Pencil, Copy, Trash2, Check } from 'lucide-react';
+import { Eye, Edit02, Copy01, Trash01, Check } from '@untitledui/icons';
 import { Page, PAGE_TYPES } from '@/types/page-builder';
 
 interface PagesListProps {
@@ -53,15 +53,15 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
             <div className="flex items-center gap-1">
               <button
                 onClick={() => onEdit(page.id)}
-                className="p-2 hover:bg-accent rounded-md transition-colors"
+                className="p-2 hover:bg-blue-500/20 rounded-md transition-colors"
                 aria-label="Editar"
                 title="Editar"
               >
-                <Pencil className="w-4 h-4 text-foreground" />
+                <Edit02 className="w-4 h-4 text-foreground" />
               </button>
               <button
                 onClick={() => onView(page.id)}
-                className="p-2 hover:bg-accent rounded-md transition-colors"
+                className="p-2 hover:bg-green-500/20 rounded-md transition-colors"
                 aria-label="Visualizar"
                 title="Visualizar"
               >
@@ -69,11 +69,11 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
               </button>
               <button
                 onClick={() => onCopy(page.id)}
-                className="p-2 hover:bg-accent rounded-md transition-colors"
+                className="p-2 hover:bg-amber-500/20 rounded-md transition-colors"
                 aria-label="Copiar"
                 title="Copiar"
               >
-                <Copy className="w-4 h-4 text-foreground" />
+                <Copy01 className="w-4 h-4 text-foreground" />
               </button>
               <button
                 onClick={() => onDelete(page.id)}
@@ -81,7 +81,7 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
                 aria-label="Excluir"
                 title="Excluir"
               >
-                <Trash2 className="w-4 h-4 text-destructive" />
+                <Trash01 className="w-4 h-4 text-foreground" />
               </button>
             </div>
           </div>

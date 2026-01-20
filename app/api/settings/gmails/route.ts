@@ -26,19 +26,9 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Add mock data for MCC count, ads account count, and conversion actions
-    const accountsWithMockData = googleAccounts.map((account: typeof googleAccounts[number]) => ({
-      id: account.id,
-      email: account.email,
-      createdAt: account.createdAt,
-      mccCount: Math.floor(Math.random() * 5) + 1, // Random 1-5
-      adsAccountCount: Math.floor(Math.random() * 20) + 5, // Random 5-25
-      conversionActionsCount: Math.floor(Math.random() * 50) + 10, // Random 10-60
-    }))
-
     return NextResponse.json({
       success: true,
-      data: accountsWithMockData
+      data: googleAccounts
     })
 
   } catch (error) {

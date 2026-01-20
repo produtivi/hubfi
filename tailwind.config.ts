@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+import tailwindcssReactAria from "tailwindcss-react-aria-components";
 
 const config: Config = {
   darkMode: "class",
@@ -89,7 +91,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [tailwindcssAnimate, tailwindcssReactAria],
 };
 
 export default config;

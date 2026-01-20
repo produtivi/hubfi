@@ -106,12 +106,11 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
                 }}
                 className="w-full flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
               >
-                <span className="inline dark:hidden">
-                  <Moon className="mr-2 h-4 w-4" />
-                </span>
-                <span className="hidden dark:inline">
+                {isDark ? (
                   <Sun className="mr-2 h-4 w-4" />
-                </span>
+                ) : (
+                  <Moon className="mr-2 h-4 w-4" />
+                )}
                 <span>Tema</span>
               </button>
 
@@ -179,12 +178,11 @@ export function AccountDropdown({ isExpanded }: AccountDropdownProps) {
               }}
               className="w-full flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
             >
-              <span className="inline dark:hidden">
-                <Moon className="mr-2 h-4 w-4" />
-              </span>
-              <span className="hidden dark:inline">
+              {isDark ? (
                 <Sun className="mr-2 h-4 w-4" />
-              </span>
+              ) : (
+                <Moon className="mr-2 h-4 w-4" />
+              )}
               <span>Tema</span>
             </button>
 
