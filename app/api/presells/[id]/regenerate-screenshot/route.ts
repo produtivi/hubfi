@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { takeScreenshot } from '@/lib/screenshot';
+import { validateURL } from '@/lib/url-validator';
 
 // POST - Regenerar screenshot para uma presell específica
 export async function POST(
@@ -23,19 +24,23 @@ export async function POST(
       );
     }
 
-    console.log(`📸 Regenerando screenshot para presell ${id}...`);
-    console.log(`🔗 URL a ser capturada: ${presell.producerSalesPage}`);
+
+    // SEGURANÇA: Validar URL antes de capturar screenshot
+    const urlValidation = validateURL(presell.producerSalesPage);
+    if (!urlValidation.isValid) {
+      console.error(`[Security] Tentativa de screenshot de URL inválida: ${presell.producerSalesPage}`);
+      console.error(`[Security] Motivo: ${urlValidation.error}`);
+      return NextResponse.json(
+        { error: `URL inválida ou não autorizada: ${urlValidation.error}` },
+        { status: 400 }
+      );
+    }
 
     try {
-      console.log(`⏳ Iniciando captura de screenshot...`);
-      // Capturar novos screenshots
-      const screenshots = await takeScreenshot(presell.producerSalesPage, presell.id);
-      
-      console.log(`📷 Screenshots capturados:`, {
-        desktop: screenshots.desktop,
-        mobile: screenshots.mobile
-      });
-      
+      // Capturar novos screenshots (URL já validada)
+      const screenshots = await takeScreenshot(urlValidation.sanitized!, presell.id);
+
+
       // Atualizar presell com novos screenshots
       const updatedPresell = await prisma.presell.update({
         where: { id: parseInt(id) },
@@ -44,13 +49,9 @@ export async function POST(
           screenshotMobile: screenshots.mobile
         }
       });
-      
-      console.log(`✅ Screenshots salvos no banco para presell ${id}`);
-      console.log(`💾 Screenshots salvos:`, {
-        desktop: updatedPresell.screenshotDesktop,
-        mobile: updatedPresell.screenshotMobile
-      });
-      
+
+
+
       return NextResponse.json({
         success: true,
         message: 'Screenshots regenerados com sucesso',
@@ -59,7 +60,7 @@ export async function POST(
           screenshotMobile: screenshots.mobile
         }
       });
-      
+
     } catch (screenshotError) {
       console.error('Erro ao capturar screenshots:', screenshotError);
       return NextResponse.json(

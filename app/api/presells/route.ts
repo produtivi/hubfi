@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { takeScreenshot } from '@/lib/screenshot';
+import { validateURL } from '@/lib/url-validator';
 
 // GET - Listar presells do usuário
 export async function GET(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Adicionar URL completa para cada presell
-    const presellsWithUrl = presells.map(presell => ({
+    const presellsWithUrl = presells.map((presell: typeof presells[number]) => ({
       ...presell,
       fullUrl: presell.domain ? `https://${presell.domain.domainName}/${presell.slug}` : presell.slug
     }));
@@ -41,13 +42,13 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro ao buscar presells:', error);
-    
+
     let errorMessage = 'Erro interno do servidor';
     if (error instanceof Error) {
       errorMessage = `Erro: ${error.message}`;
       console.error('Stack trace:', error.stack);
     }
-    
+
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -81,6 +82,23 @@ export async function POST(request: NextRequest) {
     if (!userId || !pageName || !domain || !finalSlug || !affiliateLink || !producerSalesPage || !presellType) {
       return NextResponse.json(
         { error: 'Dados obrigatórios não fornecidos' },
+        { status: 400 }
+      );
+    }
+
+    // SEGURANÇA: Validar URLs antes de processar
+    const producerPageValidation = validateURL(producerSalesPage);
+    if (!producerPageValidation.isValid) {
+      return NextResponse.json(
+        { error: `URL da página do produtor inválida: ${producerPageValidation.error}` },
+        { status: 400 }
+      );
+    }
+
+    const affiliateLinkValidation = validateURL(affiliateLink);
+    if (!affiliateLinkValidation.isValid) {
+      return NextResponse.json(
+        { error: `Link de afiliado inválido: ${affiliateLinkValidation.error}` },
         { status: 400 }
       );
     }
@@ -121,7 +139,7 @@ export async function POST(request: NextRequest) {
     };
 
     const mappedPresellType = presellTypeMap[presellType] || presellType;
-    
+
     // Criar presell primeiro para ter o ID
     const newPresell = await prisma.presell.create({
       data: {
@@ -153,7 +171,7 @@ export async function POST(request: NextRequest) {
     setTimeout(async () => {
       try {
         const screenshots = await takeScreenshot(producerSalesPage, newPresell.id);
-        
+
         // Atualizar presell com screenshots reais
         await prisma.presell.update({
           where: { id: newPresell.id },
@@ -181,14 +199,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro ao criar presell:', error);
-    
+
     // Dar mais detalhes sobre o erro para debug
     let errorMessage = 'Erro interno do servidor';
     if (error instanceof Error) {
       errorMessage = `Erro: ${error.message}`;
       console.error('Stack trace:', error.stack);
     }
-    
+
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

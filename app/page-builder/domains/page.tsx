@@ -24,7 +24,7 @@ export default function DomainsPage() {
       setIsLoading(true);
       const response = await fetch('/api/domains');
       const result = await response.json();
-      
+
       if (result.success) {
         // Mapear dados do banco para o formato esperado pelo componente
         const mappedDomains: Domain[] = result.data.map((domain: any) => ({
@@ -33,7 +33,7 @@ export default function DomainsPage() {
           status: domain.isActive ? 'published' : 'draft',
           createdAt: new Date(domain.createdAt)
         }));
-        
+
         setDomains(mappedDomains);
       } else {
         console.error('Erro ao carregar domínios:', result.error);
@@ -57,18 +57,29 @@ export default function DomainsPage() {
   };
 
   const handleVerifyPublication = () => {
-    console.log('Verificar publicação de domínios');
-    // Implementar verificação de publicação
+    // TODO: Implementar verificação de publicação
+    console.log('Verificar publicação');
   };
 
   const handleView = (domain: string) => {
-    console.log('Visualizar domínio:', domain);
-    // Implementar visualização
+    // TODO: Implementar visualização
+    window.open(`https://${domain}`, '_blank');
   };
 
-  const handleDelete = (id: string) => {
-    console.log('Excluir domínio:', id);
-    // Implementar exclusão
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja deletar este domínio?')) return;
+
+    try {
+      const response = await fetch(`/api/domains/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        loadDomains();
+      }
+    } catch (error) {
+      console.error('Erro ao deletar domínio:', error);
+    }
   };
 
   const handleAddDomain = async (domain: string, registrar: 'godaddy' | 'hostinger' | 'already-have') => {
@@ -90,7 +101,6 @@ export default function DomainsPage() {
         // Recarregar lista de domínios
         await loadDomains();
         setIsAddModalOpen(false);
-        console.log('Domínio adicionado com sucesso!');
       } else {
         console.error('Erro ao adicionar domínio:', result.error);
       }

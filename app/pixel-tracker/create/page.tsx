@@ -319,14 +319,12 @@ export default function CreatePixel() {
                 />
                 <label
                   htmlFor="useFiltermagic"
-                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors ${
-                    formData.useFiltermagic ? 'bg-primary' : 'bg-border'
-                  }`}
+                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors ${formData.useFiltermagic ? 'bg-primary' : 'bg-border'
+                    }`}
                 >
                   <span
-                    className={`block w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      formData.useFiltermagic ? 'translate-x-6' : 'translate-x-0.5'
-                    } translate-y-0.5`}
+                    className={`block w-5 h-5 bg-white rounded-full shadow transition-transform ${formData.useFiltermagic ? 'translate-x-6' : 'translate-x-0.5'
+                      } translate-y-0.5`}
                   />
                 </label>
               </div>
@@ -382,7 +380,7 @@ export default function CreatePixel() {
                       !formData.selectedGmail || isLoadingAdsAccounts
                         ? 'bg-accent/50 border-border text-muted-foreground cursor-not-allowed opacity-60'
                         : 'bg-background border-border focus:ring-2 focus:ring-primary focus:border-transparent'
-                    }`}
+                      }`}
                     required
                     disabled={!formData.selectedGmail || isLoadingAdsAccounts}
                   >
@@ -403,9 +401,8 @@ export default function CreatePixel() {
                         </option>
                       ))}
                   </select>
-                  <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                    !formData.selectedGmail ? 'text-muted-foreground/50' : 'text-muted-foreground'
-                  }`} />
+                  <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${!formData.selectedGmail ? 'text-muted-foreground/50' : 'text-muted-foreground'
+                    }`} />
                 </div>
                 {formData.selectedGmail && !isLoadingAdsAccounts &&
                   googleAdsAccounts.filter(acc => !acc.isTestAccount && (formData.useFiltermagic ? acc.isManager : !acc.isManager)).length === 0 && (
@@ -430,7 +427,7 @@ export default function CreatePixel() {
                       !formData.selectedGoogleAds || isLoadingConversions
                         ? 'bg-accent/50 border-border text-muted-foreground cursor-not-allowed opacity-60'
                         : 'bg-background border-border focus:ring-2 focus:ring-primary focus:border-transparent'
-                    }`}
+                      }`}
                     required
                     disabled={!formData.selectedGoogleAds || isLoadingConversions}
                   >
@@ -443,9 +440,8 @@ export default function CreatePixel() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
-                    !formData.selectedGoogleAds ? 'text-muted-foreground/50' : 'text-muted-foreground'
-                  }`} />
+                  <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${!formData.selectedGoogleAds ? 'text-muted-foreground/50' : 'text-muted-foreground'
+                    }`} />
                 </div>
                 {formData.selectedGoogleAds && !isLoadingConversions && conversionActions.length === 0 && (
                   <p className="text-label text-muted-foreground">
@@ -524,7 +520,7 @@ export default function CreatePixel() {
                   Plataforma <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={formData.selectedPlatform}
                     onChange={(e) => handleInputChange('selectedPlatform', e.target.value)}
                     className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
@@ -542,7 +538,7 @@ export default function CreatePixel() {
               {/* Checkboxes mutuamente exclusivos */}
               <div className="space-y-4">
                 <label className="text-body font-medium">Configuração da página</label>
-                
+
                 {/* Utilizar estrutura do produto */}
                 <div className="flex items-start gap-3 mt-2">
                   <div className="relative flex items-center">
@@ -559,13 +555,12 @@ export default function CreatePixel() {
                           handleInputChange('selectedPresell', '');
                         }
                       }}
-                      className={`w-5 h-5 border-2 rounded transition-colors ${
-                        !formData.selectedPlatform 
+                      className={`w-5 h-5 border-2 rounded transition-colors ${!formData.selectedPlatform
                           ? 'border-border bg-accent/50 cursor-not-allowed opacity-60'
-                          : formData.useHubPage 
+                          : formData.useHubPage
                             ? 'border-border bg-accent/50 opacity-60 cursor-pointer'
                             : 'border-border bg-background focus:ring-2 focus:ring-primary checked:bg-primary checked:border-primary cursor-pointer'
-                      }`}
+                        }`}
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       {formData.useProductStructure && (
@@ -575,9 +570,8 @@ export default function CreatePixel() {
                       )}
                     </div>
                   </div>
-                  <label htmlFor="useProductStructure" className={`cursor-pointer ${
-                    !formData.selectedPlatform ? 'text-muted-foreground' : formData.useHubPage ? 'text-muted-foreground' : 'text-body'
-                  }`}>
+                  <label htmlFor="useProductStructure" className={`cursor-pointer ${!formData.selectedPlatform ? 'text-muted-foreground' : formData.useHubPage ? 'text-muted-foreground' : 'text-body'
+                    }`}>
                     Utilizar a estrutura do produto
                   </label>
                 </div>
@@ -599,13 +593,12 @@ export default function CreatePixel() {
                           handleInputChange('selectedPresell', '');
                         }
                       }}
-                      className={`w-5 h-5 border-2 rounded transition-colors ${
-                        !formData.selectedPlatform 
+                      className={`w-5 h-5 border-2 rounded transition-colors ${!formData.selectedPlatform
                           ? 'border-border bg-accent/50 cursor-not-allowed opacity-60'
-                          : formData.useProductStructure 
+                          : formData.useProductStructure
                             ? 'border-border bg-accent/50 opacity-60 cursor-pointer'
                             : 'border-border bg-background focus:ring-2 focus:ring-primary checked:bg-primary checked:border-primary cursor-pointer'
-                      }`}
+                        }`}
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       {formData.useHubPage && (
@@ -615,9 +608,8 @@ export default function CreatePixel() {
                       )}
                     </div>
                   </div>
-                  <label htmlFor="useHubPage" className={`cursor-pointer ${
-                    !formData.selectedPlatform ? 'text-muted-foreground' : formData.useProductStructure ? 'text-muted-foreground' : 'text-body'
-                  }`}>
+                  <label htmlFor="useHubPage" className={`cursor-pointer ${!formData.selectedPlatform ? 'text-muted-foreground' : formData.useProductStructure ? 'text-muted-foreground' : 'text-body'
+                    }`}>
                     Utilizar página do HubPage
                   </label>
                 </div>
@@ -629,7 +621,7 @@ export default function CreatePixel() {
                       Selecione a presell <span className="text-destructive">*</span>
                     </label>
                     <div className="relative">
-                      <select 
+                      <select
                         value={formData.selectedPresell}
                         onChange={(e) => handleInputChange('selectedPresell', e.target.value)}
                         className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
@@ -660,7 +652,7 @@ export default function CreatePixel() {
               >
                 Cancelar
               </button>
-              
+
               <button
                 type="submit"
                 disabled={isLoading || (!formData.useProductStructure && !formData.useHubPage) || (formData.useHubPage && !formData.selectedPresell)}

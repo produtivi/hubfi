@@ -5,6 +5,7 @@ import { SidebarProvider } from "./sidebar-layout";
 import { Sidebar } from "./sidebar";
 import { MainContent } from "./main-content";
 import { UserProvider } from "../hooks/use-user";
+import { AuthProvider } from "./auth-provider";
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,13 +18,15 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <UserProvider>
-      <SidebarProvider>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <MainContent>{children}</MainContent>
-        </div>
-      </SidebarProvider>
-    </UserProvider>
+    <AuthProvider>
+      <UserProvider>
+        <SidebarProvider>
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <MainContent>{children}</MainContent>
+          </div>
+        </SidebarProvider>
+      </UserProvider>
+    </AuthProvider>
   );
 }

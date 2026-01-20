@@ -36,23 +36,23 @@ export default function CreatePresell() {
   const loadDomainsAndTypes = async () => {
     try {
       setIsLoadingData(true);
-      
+
       // Carregar domínios
       const domainsResponse = await fetch('/api/domains');
       const domainsResult = await domainsResponse.json();
-      
+
       if (domainsResult.success) {
         setDomains(domainsResult.data.map((domain: any) => domain.domainName));
       }
-      
+
       // Carregar tipos de presell
       const typesResponse = await fetch('/api/presell-templates');
       const typesResult = await typesResponse.json();
-      
+
       if (typesResult.success) {
         setPresellTypes(typesResult.data.map((template: any) => template.name));
       }
-      
+
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       showError('Erro ao carregar dados do formulário');
@@ -134,20 +134,19 @@ export default function CreatePresell() {
         throw new Error(result.error || 'Erro ao criar presell');
       }
 
-      console.log('Presell criada:', result.data);
       const presellId = result.data.id;
-      
+
       // Aguardar screenshot ficar pronto
       await waitForScreenshot(presellId);
-      
+
       // Mostrar toast de sucesso
       showSuccess(`Página "${formData.pageName}" criada com sucesso!`);
-      
+
       // Redirecionar
       setTimeout(() => {
         router.push('/page-builder');
       }, 1000);
-      
+
     } catch (error) {
       console.error('Erro:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';

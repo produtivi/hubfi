@@ -208,3 +208,64 @@ model GoogleAccount {
   @@map("google_accounts")
 }
 
+model GoogleAdsAccount {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  customerId    String    @map("customer_id") @unique
+  accountName   String    @map("account_name")
+  mccAccountId  String?   @map("mcc_account_id")
+  currencyCode  String    @default("BRL") @map("currency_code")
+  timeZone      String    @default("America/Sao_Paulo") @map("time_zone")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("google_ads_accounts")
+}
+
+// HubTitle - Gerador de Títulos e Descrições
+model TitleProduct {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  name        String   // Nome do produto
+  description String   @db.Text // Descrição completa
+  links       String?  // Links do produto
+  category    String?  // Categoria
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  titles      GeneratedTitle[]
+  descriptions GeneratedDescription[]
+
+  @@map("title_products")
+}
+
+model GeneratedTitle {
+  id          Int      @id @default(autoincrement())
+  productId   Int      @map("product_id")
+  content     String   @db.Text
+  isFavorite  Boolean  @default(false) @map("is_favorite")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  product     TitleProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("generated_titles")
+  @@index([productId, isFavorite])
+}
+
+model GeneratedDescription {
+  id          Int      @id @default(autoincrement())
+  productId   Int      @map("product_id")
+  content     String   @db.Text
+  isFavorite  Boolean  @default(false) @map("is_favorite")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  product     TitleProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("generated_descriptions")
+  @@index([productId, isFavorite])
+}

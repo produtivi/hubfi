@@ -70,10 +70,10 @@ export default function PageBuilder() {
       } catch {
         // Se não estiver logado, buscar todos (em dev)
       }
-      
+
       const response = await fetch(`/api/presells${queryParam}`);
       const result = await response.json();
-      
+
       if (result.success) {
         setPresells(result.data);
       } else {
@@ -119,9 +119,6 @@ export default function PageBuilder() {
       router.push('/page-builder/create-presell');
     } else if (type === 'review') {
       router.push('/page-builder/create-review');
-    } else {
-      console.log('Criar página do tipo:', type);
-      // Implementar lógica para outros tipos de página
     }
   };
 
@@ -167,9 +164,9 @@ export default function PageBuilder() {
       const response = await fetch(`/api/presells/${deleteModal.pageId}`, {
         method: 'DELETE'
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         // Recarregar a lista de presells após exclusão
         await loadPresells();

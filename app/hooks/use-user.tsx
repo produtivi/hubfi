@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface User {
   id: number;
@@ -19,25 +20,45 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Verificar se há um usuário logado ao carregar a página
     const checkUser = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        let response = await fetch('/api/auth/me');
+
+        if (response.status === 401) {
+          const refreshResponse = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+          });
+
+          if (refreshResponse.ok) {
+            response = await fetch('/api/auth/me');
+          }
+        }
+
         if (response.ok) {
           const userData = await response.json();
           setUser(userData.user);
+        } else if (response.status === 401) {
+          setUser(null);
+          const isPublicRoute = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password';
+          if (!isPublicRoute) {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            router.push('/login');
+          }
         }
       } catch (error) {
-        console.error('Erro ao verificar usuário:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
     checkUser();
-  }, []);
+  }, [pathname, router]);
 
   return (
     <UserContext.Provider value={{ user, setUser, isLoading }}>
