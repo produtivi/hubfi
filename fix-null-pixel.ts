@@ -9,7 +9,6 @@ async function main() {
     WHERE presell_url IS NULL
   `
 
-  console.log(`Atualizados ${result} registros`)
 }
 
 main()

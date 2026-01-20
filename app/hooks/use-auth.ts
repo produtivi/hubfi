@@ -35,7 +35,6 @@ export function useAuth() {
       }
 
       const data = await response.json();
-      console.log('Token renovado com sucesso');
       return true;
     } catch (error) {
       console.error('Erro ao renovar token:', error);
@@ -50,7 +49,6 @@ export function useAuth() {
     const MAX_INACTIVITY = 5 * 24 * 60 * 60 * 1000; // 5 dias
 
     if (inactiveTime > MAX_INACTIVITY) {
-      console.log('Usuário inativo por mais de 5 dias, fazendo logout...');
       clearInterval(refreshIntervalRef.current!);
       clearInterval(activityCheckRef.current!);
 
@@ -92,7 +90,7 @@ export function useAuth() {
     }, CHECK_ACTIVITY_INTERVAL);
 
     // Faz refresh imediato ao montar
-    refreshToken();
+    //     refreshToken();
 
     // Cleanup
     return () => {

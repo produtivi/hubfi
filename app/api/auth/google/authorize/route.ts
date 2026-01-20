@@ -6,7 +6,7 @@ export async function GET() {
   try {
     // Verificar se usuário está autenticado
     const user = await getAuthUser();
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Não autenticado' },
@@ -16,11 +16,10 @@ export async function GET() {
 
     // Gerar URL de autorização
     const authUrl = getAuthUrl(user.id);
-    
+
     return NextResponse.json({ authUrl });
 
   } catch (error) {
-    console.error('Erro ao gerar URL de autorização:', error);
     return NextResponse.json(
       { error: 'Erro ao gerar URL de autorização' },
       { status: 500 }

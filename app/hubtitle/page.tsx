@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Copy, Check, Star, Trash2, Link } from 'lucide-react'
+import { Plus, Loader2, Copy, Check, Star, Trash2, Link, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Product {
   id: number
@@ -35,6 +36,8 @@ export default function HubTitlePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showFavorites, setShowFavorites] = useState(false)
 
   useEffect(() => {
     loadProducts()
@@ -53,6 +56,16 @@ export default function HubTitlePage() {
       setIsLoading(false)
     }
   }
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    if (showFavorites) {
+      const hasFavoriteTitles = product.titles.some(t => t.isFavorite)
+      const hasFavoriteDescriptions = product.descriptions.some(d => d.isFavorite)
+      return matchesSearch && (hasFavoriteTitles || hasFavoriteDescriptions)
+    }
+    return matchesSearch
+  })
 
   const handleGenerateMore = async (productId: number) => {
     try {
@@ -166,46 +179,88 @@ export default function HubTitlePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-headline">HubTitle - Gerador de Títulos</h1>
-        <button
-          onClick={() => router.push('/hubtitle/novo')}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:opacity-80 rounded-md transition-opacity"
-        >
-          <Plus className="w-5 h-5" />
-          Novo Produto
-        </button>
+    <div className="min-h-screen p-8">
+      <div className="mb-8">
+        <h1 className="text-headline mb-2">HubTitle</h1>
+        <p className="text-body-muted">
+          Gerencie e gere títulos e descrições para seus produtos
+        </p>
       </div>
 
+      {/* Barra de busca e ações */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4">
+        {/* Input de busca */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Buscar produtos por nome..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-md text-body placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
+        {/* Botões de ação */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowFavorites(!showFavorites)}
+            className={`flex items-center gap-2 px-4 py-3 rounded-md transition-colors ${
+              showFavorites
+                ? 'bg-accent text-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
+            }`}
+          >
+            <Star className="w-5 h-5" />
+            <span>{showFavorites ? 'Favoritos' : 'Todos'}</span>
+          </button>
+
+          <button
+            onClick={() => router.push('/hubtitle/novo')}
+            className="flex items-center gap-2 px-4 py-3 bg-foreground text-background hover:bg-foreground/90 rounded-md transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Criar novo produto</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Layout principal */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="bg-card border border-border rounded-md p-12 text-center">
+          <p className="text-body text-muted-foreground">
+            Carregando produtos...
+          </p>
         </div>
       ) : (
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Sidebar - Lista de Produtos */}
-          <div className="lg:col-span-1 sticky top-6 self-start">
+          <div className="lg:col-span-1 lg:sticky lg:top-6 lg:self-start">
             <div className="bg-card border border-border rounded-md p-4">
               <h2 className="text-title mb-4">Meus Produtos</h2>
 
-              {products.length === 0 ? (
+              {filteredProducts.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-body-muted">Nenhum produto criado ainda</p>
-                  <p className="text-label text-muted-foreground mt-2">
-                    Clique em &quot;Novo Produto&quot; para começar
+                  <p className="text-body-muted">
+                    {showFavorites ? 'Nenhum favorito encontrado' : 'Nenhum produto criado ainda'}
                   </p>
+                  {!showFavorites && (
+                    <p className="text-label text-muted-foreground mt-2">
+                      Clique em &quot;Criar novo produto&quot; para começar
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {products.map((product) => (
+                  {filteredProducts.map((product) => (
                     <div
                       key={product.id}
                       onClick={() => setSelectedProduct(product)}
-                      className={`w-full text-left p-3 rounded-md border transition-colors cursor-pointer ${selectedProduct?.id === product.id
-                        ? 'bg-accent border-primary'
-                        : 'bg-background border-border hover:bg-accent'
-                        }`}
+                      className={`w-full text-left p-3 rounded-md border transition-colors cursor-pointer ${
+                        selectedProduct?.id === product.id
+                          ? 'bg-accent border-primary'
+                          : 'bg-background border-border hover:bg-accent'
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -214,7 +269,10 @@ export default function HubTitlePage() {
                             {product.titles.length} títulos • {product.descriptions.length} descrições
                           </p>
                           <p className="text-label text-muted-foreground flex items-center gap-1 mt-1">
-                            <Star className='text-yellow-400 w-4 h-4 ' /> {product.titles.filter(t => t.isFavorite).length} favoritos
+                            <Star className="text-yellow-400 w-4 h-4" />{' '}
+                            {product.titles.filter((t) => t.isFavorite).length +
+                              product.descriptions.filter((d) => d.isFavorite).length}{' '}
+                            favoritos
                           </p>
                         </div>
                         <button
@@ -250,14 +308,21 @@ export default function HubTitlePage() {
                   <h2 className="text-title mb-2">{selectedProduct.name}</h2>
                   <p className="text-body text-muted-foreground">{selectedProduct.description}</p>
                   {selectedProduct.category && (
-                    <p className="text-label text-muted-foreground mt-2">
-                      Categoria: {selectedProduct.category}
-                    </p>
+                    <p className="text-label text-muted-foreground mt-2">Categoria: {selectedProduct.category}</p>
                   )}
                   {selectedProduct.links && (
-                    <p className="text-label text-muted-foreground w-full word-break mt-1 flex gap-1 items-center">
-                      <Link className='h-4 w-4 opacity-50' /> <span className=' w-full truncate'> {selectedProduct.links}</span>
-                    </p>
+                    <div className="flex items-center gap-1 mt-2">
+                      <Link className="w-4 h-4 text-muted-foreground" />
+                      <a
+                        href={selectedProduct.links}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-label text-muted-foreground hover:text-foreground transition-colors truncate"
+                        title={selectedProduct.links}
+                      >
+                        {selectedProduct.links}
+                      </a>
+                    </div>
                   )}
                 </div>
 
@@ -266,7 +331,7 @@ export default function HubTitlePage() {
                   <button
                     onClick={() => handleGenerateMore(selectedProduct.id)}
                     disabled={isGenerating}
-                    className="px-6 py-3 bg-primary text-primary-foreground hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-opacity text-body font-medium flex items-center gap-2"
+                    className="px-6 py-3 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-opacity text-body font-medium flex items-center gap-2"
                   >
                     {isGenerating ? (
                       <>
@@ -282,50 +347,65 @@ export default function HubTitlePage() {
                 {/* Títulos */}
                 {selectedProduct.titles.length > 0 && (
                   <div className="bg-card border border-border rounded-md p-6">
-                    <h3 className="text-title mb-4">
-                      Títulos ({selectedProduct.titles.length})
-                    </h3>
+                    <h3 className="text-title mb-4">Títulos ({selectedProduct.titles.length})</h3>
                     <div className="space-y-2">
-                      {selectedProduct.titles
-                        .sort((a, b) => {
-                          if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
-                          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                        })
-                        .map((title) => (
-                          <div
-                            key={title.id}
-                            className="p-3 bg-background border border-border rounded-md hover:border-primary/50 transition-colors"
-                          >
-                            <div className="flex items-start gap-3">
-                              <p className="flex-1 text-body">{title.content}</p>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => handleToggleFavoriteTitle(title.id, title.isFavorite)}
-                                  className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                                  title="Favoritar"
-                                >
-                                  <Star
-                                    className={`w-4 h-4 ${title.isFavorite
-                                      ? 'fill-yellow-400 text-yellow-400'
-                                      : 'text-muted-foreground'
-                                      }`}
-                                  />
-                                </button>
-                                <button
-                                  onClick={() => handleCopy(title.content, `title-${title.id}`)}
-                                  className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                                  title="Copiar"
-                                >
-                                  {copiedId === `title-${title.id}` ? (
-                                    <Check className="w-4 h-4 text-success" />
-                                  ) : (
-                                    <Copy className="w-4 h-4 text-muted-foreground" />
-                                  )}
-                                </button>
+                      <AnimatePresence mode="popLayout">
+                        {selectedProduct.titles
+                          .sort((a, b) => {
+                            if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
+                            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                          })
+                          .map((title) => (
+                            <motion.div
+                              key={title.id}
+                              layout
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{
+                                layout: { type: 'spring', stiffness: 300, damping: 30 },
+                                opacity: { duration: 0.2 },
+                                y: { duration: 0.2 }
+                              }}
+                              className="p-3 bg-background border border-border rounded-md hover:border-primary/50 transition-colors"
+                            >
+                              <div className="flex items-start gap-3">
+                                <p className="flex-1 text-body">{title.content}</p>
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => handleToggleFavoriteTitle(title.id, title.isFavorite)}
+                                    className="p-1.5 hover:bg-accent rounded-md transition-colors"
+                                    title="Favoritar"
+                                  >
+                                    <motion.div
+                                      key={title.isFavorite ? 'filled' : 'empty'}
+                                      initial={{ scale: 0.8, rotate: -30 }}
+                                      animate={{ scale: 1, rotate: 0 }}
+                                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                                    >
+                                      <Star
+                                        className={`w-4 h-4 ${
+                                          title.isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
+                                        }`}
+                                      />
+                                    </motion.div>
+                                  </button>
+                                  <button
+                                    onClick={() => handleCopy(title.content, `title-${title.id}`)}
+                                    className="p-1.5 hover:bg-accent rounded-md transition-colors"
+                                    title="Copiar"
+                                  >
+                                    {copiedId === `title-${title.id}` ? (
+                                      <Check className="w-4 h-4 text-success" />
+                                    ) : (
+                                      <Copy className="w-4 h-4 text-muted-foreground" />
+                                    )}
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        ))}
+                            </motion.div>
+                          ))}
+                      </AnimatePresence>
                     </div>
                   </div>
                 )}
@@ -333,50 +413,65 @@ export default function HubTitlePage() {
                 {/* Descrições */}
                 {selectedProduct.descriptions.length > 0 && (
                   <div className="bg-card border border-border rounded-md p-6">
-                    <h3 className="text-title mb-4">
-                      Descrições ({selectedProduct.descriptions.length})
-                    </h3>
+                    <h3 className="text-title mb-4">Descrições ({selectedProduct.descriptions.length})</h3>
                     <div className="space-y-2">
-                      {selectedProduct.descriptions
-                        .sort((a, b) => {
-                          if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
-                          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                        })
-                        .map((desc) => (
-                          <div
-                            key={desc.id}
-                            className="p-3 bg-background border border-border rounded-md hover:border-primary/50 transition-colors"
-                          >
-                            <div className="flex items-start gap-3">
-                              <p className="flex-1 text-body">{desc.content}</p>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => handleToggleFavoriteDescription(desc.id, desc.isFavorite)}
-                                  className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                                  title="Favoritar"
-                                >
-                                  <Star
-                                    className={`w-4 h-4 ${desc.isFavorite
-                                      ? 'fill-yellow-400 text-yellow-400'
-                                      : 'text-muted-foreground'
-                                      }`}
-                                  />
-                                </button>
-                                <button
-                                  onClick={() => handleCopy(desc.content, `desc-${desc.id}`)}
-                                  className="p-1.5 hover:bg-accent rounded-md transition-colors"
-                                  title="Copiar"
-                                >
-                                  {copiedId === `desc-${desc.id}` ? (
-                                    <Check className="w-4 h-4 text-success" />
-                                  ) : (
-                                    <Copy className="w-4 h-4 text-muted-foreground" />
-                                  )}
-                                </button>
+                      <AnimatePresence mode="popLayout">
+                        {selectedProduct.descriptions
+                          .sort((a, b) => {
+                            if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
+                            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                          })
+                          .map((desc) => (
+                            <motion.div
+                              key={desc.id}
+                              layout
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{
+                                layout: { type: 'spring', stiffness: 300, damping: 30 },
+                                opacity: { duration: 0.2 },
+                                y: { duration: 0.2 }
+                              }}
+                              className="p-3 bg-background border border-border rounded-md hover:border-primary/50 transition-colors"
+                            >
+                              <div className="flex items-start gap-3">
+                                <p className="flex-1 text-body">{desc.content}</p>
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => handleToggleFavoriteDescription(desc.id, desc.isFavorite)}
+                                    className="p-1.5 hover:bg-accent rounded-md transition-colors"
+                                    title="Favoritar"
+                                  >
+                                    <motion.div
+                                      key={desc.isFavorite ? 'filled' : 'empty'}
+                                      initial={{ scale: 0.8, rotate: -30 }}
+                                      animate={{ scale: 1, rotate: 0 }}
+                                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                                    >
+                                      <Star
+                                        className={`w-4 h-4 ${
+                                          desc.isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
+                                        }`}
+                                      />
+                                    </motion.div>
+                                  </button>
+                                  <button
+                                    onClick={() => handleCopy(desc.content, `desc-${desc.id}`)}
+                                    className="p-1.5 hover:bg-accent rounded-md transition-colors"
+                                    title="Copiar"
+                                  >
+                                    {copiedId === `desc-${desc.id}` ? (
+                                      <Check className="w-4 h-4 text-success" />
+                                    ) : (
+                                      <Copy className="w-4 h-4 text-muted-foreground" />
+                                    )}
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        ))}
+                            </motion.div>
+                          ))}
+                      </AnimatePresence>
                     </div>
                   </div>
                 )}

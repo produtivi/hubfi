@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Add mock data for MCC count, ads account count, and conversion actions
-    const accountsWithMockData = googleAccounts.map(account => ({
+    const accountsWithMockData = googleAccounts.map((account: typeof googleAccounts[number]) => ({
       id: account.id,
       email: account.email,
       createdAt: account.createdAt,

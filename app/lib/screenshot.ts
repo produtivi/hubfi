@@ -40,7 +40,7 @@ export async function takeScreenshot(url: string, presellId: number) {
       args: launchArgs,
       timeout: 30000 // Timeout de 30 segundos
     });
-    
+
     const context = await browser.newContext({
       viewport: { width: 1920, height: 1080 },
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -68,7 +68,6 @@ export async function takeScreenshot(url: string, presellId: number) {
       ];
 
       if (blockedPatterns.some(pattern => pattern.test(url))) {
-        console.warn(`[Security] Bloqueado recurso suspeito: ${url}`);
         route.abort();
         return;
       }
@@ -81,20 +80,20 @@ export async function takeScreenshot(url: string, presellId: number) {
         route.abort();
       }
     });
-    
+
     // Screenshots directory
     const screenshotsDir = path.join(process.cwd(), 'public', 'screenshots');
     await fs.mkdir(screenshotsDir, { recursive: true });
-    
+
     // Desktop screenshot - timeout mais agressivo
-    await page.goto(url, { 
+    await page.goto(url, {
       waitUntil: 'domcontentloaded',
       timeout: 15000
     });
-    
+
     // Aguardar apenas 3 segundos para renderização
     await page.waitForTimeout(3000);
-    
+
     // Estratégia mais rápida - aguardar navbar ou timeout rápido
     try {
       await page.waitForFunction(() => {
@@ -102,31 +101,31 @@ export async function takeScreenshot(url: string, presellId: number) {
         const topElements = Array.from(document.querySelectorAll('*')).filter(el => {
           const rect = el.getBoundingClientRect();
           const styles = window.getComputedStyle(el);
-          
-          return rect.top <= 100 && 
-                 rect.width > 300 && 
-                 rect.height > 20 && 
-                 styles.visibility === 'visible' && 
-                 styles.display !== 'none';
+
+          return rect.top <= 100 &&
+            rect.width > 300 &&
+            rect.height > 20 &&
+            styles.visibility === 'visible' &&
+            styles.display !== 'none';
         });
-        
+
         return topElements.length > 0;
       }, { timeout: 3000 });
-      
+
       await page.waitForTimeout(1000);
     } catch (e) {
       await page.waitForTimeout(500);
     }
-    
+
     // Scroll para o topo (crítico para elementos fixed)
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
-    
+
     // Aguardar um pouco após scroll
     await page.waitForTimeout(1000);
-    
-    
+
+
     // Aguardar apenas fonts básicas (sem imagens pesadas)
     await page.evaluate(async () => {
       if (document.fonts) {
@@ -140,21 +139,21 @@ export async function takeScreenshot(url: string, presellId: number) {
         }
       }
     });
-    
+
     // Screenshot direto sem delays extras
-    
+
     const desktopPath = `/screenshots/presell-${presellId}-desktop.png`;
     const desktopFullPath = path.join(process.cwd(), 'public', desktopPath);
-    
+
     // Estratégia específica para navbar sticky/fixed - scroll up/down
     await page.evaluate(() => {
       // Scroll down um pouco e depois volta ao topo (ativa navbars sticky)
       window.scrollTo(0, 200);
       setTimeout(() => window.scrollTo(0, 0), 100);
     });
-    
+
     await page.waitForTimeout(500);
-    
+
     // Última verificação dos elementos fixed antes da captura
     await page.evaluate(() => {
       const fixedElements = Array.from(document.querySelectorAll('*')).filter(el => {
@@ -162,70 +161,70 @@ export async function takeScreenshot(url: string, presellId: number) {
         return style.position === 'fixed' || style.position === 'sticky';
       });
     });
-    
+
     // CRITICAL: fullPage: false é essencial para capturar elementos fixed!
-    await page.screenshot({ 
+    await page.screenshot({
       path: desktopFullPath,
       fullPage: false, // NUNCA usar true com elementos fixed!
       type: 'png'
       // quality não é suportado para PNG
     });
-    
-    
+
+
     // Mobile screenshot - sem reload demorado
     await page.setViewportSize({ width: 375, height: 667 });
-    
+
     // Aguardar viewport change apenas
     await page.waitForTimeout(1000);
-    
+
     // Scroll para o topo
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
-    
+
     // Aguardar um pouco
     await page.waitForTimeout(1000);
-    
+
     const mobilePath = `/screenshots/presell-${presellId}-mobile.png`;
     const mobileFullPath = path.join(process.cwd(), 'public', mobilePath);
-    
-    await page.screenshot({ 
+
+    await page.screenshot({
       path: mobileFullPath,
       fullPage: false
     });
-    
-    
+
+
     // Upload para DigitalOcean Spaces
     if (process.env.DO_SPACES_ACCESS_KEY && process.env.DO_SPACES_SECRET_KEY) {
       try {
         // Upload desktop
         const desktopFileName = `presell-${presellId}-desktop.png`;
         const desktopSpacesUrl = await uploadScreenshotToSpaces(desktopFullPath, desktopFileName);
-        
+
         // Upload mobile
         const mobileFileName = `presell-${presellId}-mobile.png`;
         const mobileSpacesUrl = await uploadScreenshotToSpaces(mobileFullPath, mobileFileName);
-        
+
         // Deletar arquivos locais após upload
         await fs.unlink(desktopFullPath);
         await fs.unlink(mobileFullPath);
-        
+
         return {
           desktop: desktopSpacesUrl,
           mobile: mobileSpacesUrl
         };
-        
+
       } catch (error) {
         console.error('Erro ao enviar para Spaces, mantendo arquivos locais:', error);
       }
     }
-    
+
     // Fallback: usar arquivos locais se Spaces não estiver configurado
     return {
       desktop: desktopPath,
       mobile: mobilePath
     };
-    
+
   } catch (error) {
     console.error('Erro ao capturar screenshot:', error);
     throw new Error(`Falha ao capturar screenshot: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);

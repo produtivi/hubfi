@@ -43,8 +43,6 @@ export default function CreateReview() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Dados do formulário:', formData);
-    // Navegar de volta para page-builder
     router.push('/page-builder');
   };
 
@@ -78,9 +76,9 @@ export default function CreateReview() {
                   Domínio <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={formData.domain}
-                    onChange={(e) => setFormData({...formData, domain: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                     className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   >
                     <option value="">Escolha o domínio</option>
@@ -100,7 +98,7 @@ export default function CreateReview() {
                 <input
                   type="text"
                   value={formData.pageName}
-                  onChange={(e) => setFormData({...formData, pageName: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, pageName: e.target.value })}
                   placeholder="Informe o nome da sua página"
                   className="w-full px-4 py-3 bg-background border border-border rounded-md text-body placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 />
@@ -114,7 +112,7 @@ export default function CreateReview() {
                 <input
                   type="text"
                   value={formData.productName}
-                  onChange={(e) => setFormData({...formData, productName: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
                   placeholder="Informe o nome do produto"
                   className="w-full px-4 py-3 bg-background border border-border rounded-md text-body placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 />
@@ -128,7 +126,7 @@ export default function CreateReview() {
                 <input
                   type="url"
                   value={formData.affiliateLink}
-                  onChange={(e) => setFormData({...formData, affiliateLink: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, affiliateLink: e.target.value })}
                   placeholder="Informe o link de afiliado"
                   className="w-full px-4 py-3 bg-background border border-border rounded-md text-body placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 />
@@ -142,7 +140,7 @@ export default function CreateReview() {
                 <input
                   type="url"
                   value={formData.producerSalesPage}
-                  onChange={(e) => setFormData({...formData, producerSalesPage: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, producerSalesPage: e.target.value })}
                   placeholder="Informe a página de vendas"
                   className="w-full px-4 py-3 bg-background border border-border rounded-md text-body placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 />
@@ -154,9 +152,9 @@ export default function CreateReview() {
                   Tipo de produto <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={formData.productType}
-                    onChange={(e) => setFormData({...formData, productType: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
                     className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   >
                     <option value="">Escolha a categoria</option>
@@ -174,9 +172,9 @@ export default function CreateReview() {
                   Nicho <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={formData.niche}
-                    onChange={(e) => setFormData({...formData, niche: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
                     className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   >
                     <option value="">Escolha o Nicho</option>
@@ -192,7 +190,7 @@ export default function CreateReview() {
             {/* Confirmação IA */}
             <div className="mt-6 border-t border-border">
               <label className="flex items-start gap-3 cursor-pointer pt-10">
-                <input 
+                <input
                   type="checkbox"
                   checked={isAwareOfAI}
                   onChange={(e) => setIsAwareOfAI(e.target.checked)}
@@ -213,15 +211,14 @@ export default function CreateReview() {
               >
                 Cancelar
               </button>
-              
+
               <button
                 type="submit"
                 disabled={!isAwareOfAI}
-                className={`px-8 py-3 rounded-md transition-colors font-medium ${
-                  isAwareOfAI
+                className={`px-8 py-3 rounded-md transition-colors font-medium ${isAwareOfAI
                     ? 'bg-gray-800 hover:bg-gray-700 text-white'
                     : 'bg-border text-muted-foreground cursor-not-allowed'
-                }`}
+                  }`}
               >
                 Salvar
               </button>

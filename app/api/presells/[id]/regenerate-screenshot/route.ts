@@ -24,8 +24,6 @@ export async function POST(
       );
     }
 
-    console.log(`📸 Regenerando screenshot para presell ${id}...`);
-    console.log(`🔗 URL a ser capturada: ${presell.producerSalesPage}`);
 
     // SEGURANÇA: Validar URL antes de capturar screenshot
     const urlValidation = validateURL(presell.producerSalesPage);
@@ -39,15 +37,10 @@ export async function POST(
     }
 
     try {
-      console.log(`⏳ Iniciando captura de screenshot...`);
       // Capturar novos screenshots (URL já validada)
       const screenshots = await takeScreenshot(urlValidation.sanitized!, presell.id);
-      
-      console.log(`📷 Screenshots capturados:`, {
-        desktop: screenshots.desktop,
-        mobile: screenshots.mobile
-      });
-      
+
+
       // Atualizar presell com novos screenshots
       const updatedPresell = await prisma.presell.update({
         where: { id: parseInt(id) },
@@ -56,13 +49,9 @@ export async function POST(
           screenshotMobile: screenshots.mobile
         }
       });
-      
-      console.log(`✅ Screenshots salvos no banco para presell ${id}`);
-      console.log(`💾 Screenshots salvos:`, {
-        desktop: updatedPresell.screenshotDesktop,
-        mobile: updatedPresell.screenshotMobile
-      });
-      
+
+
+
       return NextResponse.json({
         success: true,
         message: 'Screenshots regenerados com sucesso',
@@ -71,7 +60,7 @@ export async function POST(
           screenshotMobile: screenshots.mobile
         }
       });
-      
+
     } catch (screenshotError) {
       console.error('Erro ao capturar screenshots:', screenshotError);
       return NextResponse.json(
