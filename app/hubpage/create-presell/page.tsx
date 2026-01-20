@@ -144,7 +144,7 @@ export default function CreatePresell() {
 
       // Redirecionar
       setTimeout(() => {
-        router.push('/page-builder');
+        router.push('/hubpage');
       }, 1000);
 
     } catch (error) {
@@ -210,7 +210,7 @@ export default function CreatePresell() {
                 <Select
                   placeholder="Escolha o domínio"
                   selectedKey={formData.domain || null}
-                  onSelectionChange={(key: Key | null) => setFormData({...formData, domain: key as string || ''})}
+                  onSelectionChange={(key: Key | null) => setFormData({ ...formData, domain: key as string || '' })}
                   items={domains.map((domain) => ({ id: domain, label: domain }))}
                   isRequired
                 >
@@ -230,7 +230,7 @@ export default function CreatePresell() {
                 </label>
                 <Input
                   value={formData.pageName}
-                  onChange={(value) => setFormData({...formData, pageName: value})}
+                  onChange={(value) => setFormData({ ...formData, pageName: value })}
                   placeholder="Informe o nome da sua página"
                   isRequired
                 />
@@ -245,7 +245,7 @@ export default function CreatePresell() {
                 <Input
                   type="url"
                   value={formData.affiliateLink}
-                  onChange={(value) => setFormData({...formData, affiliateLink: value})}
+                  onChange={(value) => setFormData({ ...formData, affiliateLink: value })}
                   placeholder="Informe o link de afiliado"
                   isRequired
                 />
@@ -260,7 +260,7 @@ export default function CreatePresell() {
                 <Input
                   type="url"
                   value={formData.producerSalesPage}
-                  onChange={(value) => setFormData({...formData, producerSalesPage: value})}
+                  onChange={(value) => setFormData({ ...formData, producerSalesPage: value })}
                   placeholder="Informe a página de vendas"
                   isRequired
                 />
@@ -275,7 +275,7 @@ export default function CreatePresell() {
                 <Select
                   placeholder="Selecione o tipo"
                   selectedKey={formData.presellType || null}
-                  onSelectionChange={(key: Key | null) => setFormData({...formData, presellType: key as string || ''})}
+                  onSelectionChange={(key: Key | null) => setFormData({ ...formData, presellType: key as string || '' })}
                   items={presellTypes.map((type) => ({ id: type, label: type }))}
                   isRequired
                 >
@@ -292,7 +292,7 @@ export default function CreatePresell() {
                 <Select
                   placeholder="Selecione o idioma"
                   selectedKey={formData.presellLanguage || null}
-                  onSelectionChange={(key: Key | null) => setFormData({...formData, presellLanguage: key as string || ''})}
+                  onSelectionChange={(key: Key | null) => setFormData({ ...formData, presellLanguage: key as string || '' })}
                   items={languages.map((language) => ({ id: language, label: language }))}
                   isRequired
                 >

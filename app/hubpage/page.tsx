@@ -116,9 +116,9 @@ export default function PageBuilder() {
 
   const handleCreatePage = (type: PageType) => {
     if (type === 'presell') {
-      router.push('/page-builder/create-presell');
+      router.push('/hubpage/create-presell');
     } else if (type === 'review') {
-      router.push('/page-builder/create-review');
+      router.push('/hubpage/create-review');
     }
   };
 
@@ -126,7 +126,7 @@ export default function PageBuilder() {
   // (removido auto-reload no focus para evitar conflito com preview)
 
   const handleEdit = (id: string) => {
-    router.push(`/page-builder/edit-presell/${id}`);
+    router.push(`/hubpage/edit-presell/${id}`);
   };
 
   const handleView = (id: string) => {
@@ -214,7 +214,7 @@ export default function PageBuilder() {
               color="secondary"
               size="sm"
               iconLeading={Settings01}
-              onClick={() => router.push('/page-builder/domains')}
+              onClick={() => router.push('/hubpage/domains')}
             >
               Gerenciar Domínios
             </Button>

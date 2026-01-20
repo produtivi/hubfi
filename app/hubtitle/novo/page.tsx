@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, ChevronDown } from 'lucide-react'
+import { ArrowLeft } from '@untitledui/icons'
 import { useRouter } from 'next/navigation'
+import { Input } from '@/components/base/input/input'
+import { Button } from '@/components/base/buttons/button'
+import { Select } from '@/components/base/select/select'
+import { Label } from '@/components/base/input/label'
 
 const PRODUCT_CATEGORIES = [
   'Saúde e Bem-estar',
@@ -85,12 +89,12 @@ export default function NovoHubTitle() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <button
+          <Button
+            size="md"
+            color="tertiary"
+            iconLeading={ArrowLeft}
             onClick={handleCancel}
-            className="p-2 hover:bg-accent rounded-md transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          />
           <div>
             <h1 className="text-headline">Criar Novo Produto</h1>
             <p className="text-label text-muted-foreground">
@@ -107,90 +111,73 @@ export default function NovoHubTitle() {
             {/* Grid de campos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Nome do Produto */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
-                  Nome do Produto <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              <div>
+                <Input
+                  size="md"
+                  label="Nome do Produto"
                   placeholder="Ex: Curso de Marketing Digital"
-                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                  required
+                  value={formData.name}
+                  onChange={(value) => setFormData({ ...formData, name: value })}
+                  isRequired
                 />
               </div>
 
               {/* Categoria */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
-                  Categoria
-                </label>
-                <div className="relative">
-                  <select
-                    value={showCustomCategory ? 'Outra' : formData.category}
-                    onChange={(e) => {
-                      if (e.target.value === 'Outra') {
-                        setShowCustomCategory(true)
-                        setFormData({ ...formData, category: '' })
-                      } else {
-                        setShowCustomCategory(false)
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                    }}
-                    className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                  >
-                    <option value="">Selecione uma categoria</option>
-                    {PRODUCT_CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                </div>
+              <div>
+                <Select
+                  size="md"
+                  label="Categoria"
+                  placeholder="Selecione uma categoria"
+                  selectedKey={showCustomCategory ? 'Outra' : formData.category || ''}
+                  onSelectionChange={(key) => {
+                    const value = key?.toString() || ''
+                    if (value === 'Outra') {
+                      setShowCustomCategory(true)
+                      setFormData({ ...formData, category: '' })
+                    } else {
+                      setShowCustomCategory(false)
+                      setFormData({ ...formData, category: value })
+                    }
+                  }}
+                  items={PRODUCT_CATEGORIES.map(cat => ({ id: cat, label: cat }))}
+                >
+                  {(item) => <Select.Item>{item.label}</Select.Item>}
+                </Select>
               </div>
 
               {/* Descrição do Produto - Span 2 colunas */}
-              <div className="space-y-3 md:col-span-2">
-                <label className="text-body font-medium">
-                  Descrição do Produto <span className="text-destructive">*</span>
-                </label>
+              <div className="md:col-span-2">
+                <Label isRequired>Descrição do Produto</Label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descreva seu produto em detalhes para gerar títulos e descrições mais precisos..."
-                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all min-h-[120px] resize-none"
+                  className="mt-1.5 w-full px-3.5 py-2.5 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all min-h-[120px] resize-none shadow-xs"
                   required
                 />
               </div>
 
               {/* Links */}
-              <div className="space-y-3 md:col-span-2">
-                <label className="text-body font-medium">
-                  Links do Produto
-                </label>
-                <input
+              <div className="md:col-span-2">
+                <Input
+                  size="md"
+                  label="Links do Produto"
                   type="url"
-                  value={formData.links}
-                  onChange={(e) => setFormData({ ...formData, links: e.target.value })}
                   placeholder="https://..."
-                  className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  value={formData.links}
+                  onChange={(value) => setFormData({ ...formData, links: value })}
                 />
               </div>
 
               {/* Categoria customizada - condicional */}
               {showCustomCategory && (
-                <div className="space-y-3 md:col-span-2">
-                  <label className="text-body font-medium">
-                    Especifique a categoria
-                  </label>
-                  <input
-                    type="text"
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
+                <div className="md:col-span-2">
+                  <Input
+                    size="md"
+                    label="Especifique a categoria"
                     placeholder="Digite a categoria..."
-                    className="w-full px-4 py-3 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                    value={customCategory}
+                    onChange={(value) => setCustomCategory(value)}
                   />
                 </div>
               )}
@@ -198,24 +185,24 @@ export default function NovoHubTitle() {
 
             {/* Botões de ação */}
             <div className="flex justify-between items-center pt-8 border-t border-border">
-              <button
+              <Button
+                size="lg"
+                color="secondary"
                 type="button"
                 onClick={handleCancel}
-                className="px-6 py-3 border border-border bg-background hover:bg-accent text-foreground rounded-md transition-colors"
               >
                 Cancelar
-              </button>
+              </Button>
 
-              <button
+              <Button
+                size="lg"
+                color="primary"
                 type="submit"
-                disabled={isCreating || !formData.name || !formData.description}
-                className="flex items-center gap-2 px-8 py-3 rounded-md transition-colors font-medium bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                isDisabled={isCreating || !formData.name || !formData.description}
+                isLoading={isCreating}
               >
-                {isCreating && (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                )}
-                <span>{isCreating ? 'Criando e gerando...' : 'Criar e Gerar Conteúdo'}</span>
-              </button>
+                Criar e Gerar Conteúdo
+              </Button>
             </div>
           </form>
         </div>

@@ -12,7 +12,7 @@ Produtive ads is a Next.js application for managing digital product affiliate ma
 - **React**: 19.2.0
 - **TypeScript**: 5.x with strict mode enabled
 - **Styling**: Tailwind CSS v4 with PostCSS
-- **Icons**: Lucide React
+- **Icons**: untitled Ui icons
 - **Fonts**: STIX Two Text (serif) and Acumin Pro (sans-serif) - custom fonts loaded via next/font/local
 - **Theme**: next-themes for dark mode support
 
@@ -40,9 +40,9 @@ npm run lint
 - `/product-finder` - HubFinder: Main product discovery and filtering interface
 - `/ads-analytics` - HubAds: Ads performance analytics
 - `/ranking-hub` - HubRanking: Product rankings and market trends
-- `/page-builder` - HubPage: Landing page builder
+- `/hubpage` - HubPage: Landing page builder
 - `/campaign-wizard` - HubCampaign: Campaign automation wizard
-- `/pixel-tracker` - HubPixel: Pixel tracking management
+- `/hubpixel` - HubPixel: Pixel tracking management
 
 ### Core Components (`/app/components`)
 - `sidebar.tsx` - Fixed sidebar navigation with all app modules
@@ -110,7 +110,7 @@ The project follows a strict monochromatic design with typography as the protago
 - `.text-label` - Small labels and captions (0.875rem, 14px)
 
 ### Icon Guidelines
-- Use icons from **Lucide React** only
+- Use icons from **untitled Ui icons** only
 - Standard sizes: `w-4 h-4`, `w-5 h-5`, `w-6 h-6`, `w-8 h-8`
 - Always use semantic color classes for icon colors
 

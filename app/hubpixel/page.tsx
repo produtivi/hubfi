@@ -52,7 +52,7 @@ export default function PixelTracker() {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {}
+    onConfirm: () => { }
   })
 
   // Carregar pixels da API
@@ -61,7 +61,7 @@ export default function PixelTracker() {
       setIsLoading(true)
       const response = await fetch('/api/pixels')
       const result = await response.json()
-      
+
       if (result.success) {
         // Transformar dados da API para o formato da interface
         const transformedPixels = result.data.map((pixel: any) => ({
@@ -149,7 +149,7 @@ export default function PixelTracker() {
     try {
       const response = await fetch(`/api/pixels/${pixelId}/code`)
       const result = await response.json()
-      
+
       if (result.success) {
         await navigator.clipboard.writeText(result.data.trackingCode)
         showToast('Código copiado para a área de transferência!', 'success')
@@ -167,13 +167,13 @@ export default function PixelTracker() {
   const handleTogglePixelStatus = (pixel: Pixel) => {
     const action = pixel.status === 'active' ? 'desativar' : 'ativar'
     const actionPast = pixel.status === 'active' ? 'desativado' : 'ativado'
-    
+
     // Se for ativar, executa direto sem modal
     if (pixel.status === 'inactive') {
       executeTogglePixelStatus(pixel, actionPast)
       return
     }
-    
+
     // Se for desativar, mostra modal de confirmação
     setConfirmationModal({
       isOpen: true,
@@ -193,14 +193,14 @@ export default function PixelTracker() {
       const response = await fetch(`/api/pixels/${pixel.pixelId}/toggle`, {
         method: 'PATCH'
       })
-      
+
       const result = await response.json()
-      
+
       if (result.success) {
         loadPixels() // Recarregar lista
         setOpenDropdownId(null) // Fechar dropdown
         setConfirmationModal(prev => ({ ...prev, isOpen: false, isLoading: false }))
-        
+
         // Se ativou um pixel, mostrar ativos
         if (pixel.status === 'inactive') {
           setShowInactive(false)
@@ -242,18 +242,17 @@ export default function PixelTracker() {
         <div className="flex gap-3">
           <button
             onClick={() => setShowInactive(!showInactive)}
-            className={`flex items-center gap-2 px-4 py-3 rounded-md transition-colors ${
-              showInactive 
-                ? 'bg-accent text-foreground' 
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
-            }`}
+            className={`flex items-center gap-2 px-4 py-3 rounded-md transition-colors ${showInactive
+              ? 'bg-accent text-foreground'
+              : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
+              }`}
           >
             <Filter className="w-5 h-5" />
             <span>{showInactive ? 'Ver Ativos' : 'Ver Inativos'}</span>
           </button>
-          
+
           <button
-            onClick={() => router.push('/pixel-tracker/create')}
+            onClick={() => router.push('/hubpixel/create')}
             className="flex items-center gap-2 px-4 py-3 bg-foreground text-background hover:bg-foreground/90 rounded-md transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -307,7 +306,7 @@ export default function PixelTracker() {
                           </>
                         )}
                       </div>
-                      
+
                       {/* Link da presell */}
                       <div className="flex items-center gap-2">
                         <ExternalLink className="w-4 h-4 text-muted-foreground" />
@@ -322,13 +321,13 @@ export default function PixelTracker() {
                         </a>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <span
                         className={`flex items-center gap-1 px-2 py-1 rounded-full text-label ${pixel.status === 'active'
                           ? 'bg-success/10 text-success'
                           : 'bg-destructive/10 text-destructive'
-                        }`}
+                          }`}
                       >
                         {pixel.status === 'active' ? (
                           <>
@@ -345,7 +344,7 @@ export default function PixelTracker() {
 
                       {/* Botão Dashboard */}
                       <button
-                        onClick={() => router.push(`/pixel-tracker/dashboard/${pixel.pixelId}`)}
+                        onClick={() => router.push(`/hubpixel/dashboard/${pixel.pixelId}`)}
                         className="flex items-center gap-1 px-2 py-1 hover:bg-accent rounded-md transition-colors"
                         title="Dashboard"
                       >
@@ -365,13 +364,12 @@ export default function PixelTracker() {
                         {/* Dropdown menu */}
                         {openDropdownId === pixel.id && (
                           <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-md shadow-lg z-10">
-                            <button 
+                            <button
                               onClick={() => handleTogglePixelStatus(pixel)}
-                              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${
-                                pixel.status === 'active' 
-                                  ? 'text-destructive hover:bg-destructive/10' 
-                                  : 'text-success hover:bg-success/10'
-                              }`}
+                              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${pixel.status === 'active'
+                                ? 'text-destructive hover:bg-destructive/10'
+                                : 'text-success hover:bg-success/10'
+                                }`}
                             >
                               {pixel.status === 'active' ? (
                                 <>
@@ -401,7 +399,7 @@ export default function PixelTracker() {
                       <Copy className="w-4 h-4" />
                       <span>Copiar código</span>
                     </button>
-                    
+
                     <div className="flex gap-4">
                       <button
                         onClick={() => console.log('Testar instalação', pixel.pixelId)}
@@ -411,7 +409,7 @@ export default function PixelTracker() {
                         <FlaskConical className="w-4 h-4" />
                         <span>Testar instalação</span>
                       </button>
-                      
+
                       <button
                         onClick={() => console.log('Bloqueador de IPs', pixel.pixelId)}
                         className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm"
@@ -420,7 +418,7 @@ export default function PixelTracker() {
                         <Shield className="w-4 h-4" />
                         <span>Bloqueador de IPs</span>
                       </button>
-                      
+
                       <button
                         onClick={() => console.log('Configurar checkout', pixel.pixelId)}
                         className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm"
@@ -442,7 +440,7 @@ export default function PixelTracker() {
             Nenhum pixel encontrado
           </p>
           <button
-            onClick={() => router.push('/pixel-tracker/create')}
+            onClick={() => router.push('/hubpixel/create')}
             className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-black hover:bg-accent/80 rounded-md transition-colors"
           >
             <Plus className="w-4 h-4" />

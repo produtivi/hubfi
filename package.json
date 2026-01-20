@@ -1,5 +1,5 @@
 {
-  "name": "filtrify",
+  "name": "hubfi",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -47,7 +47,6 @@
     "playwright": "^1.57.0",
     "prisma": "^6.19.2",
     "react": "^19.2.3",
-    "react-aria": "^3.45.0",
     "react-aria-components": "^1.14.0",
     "react-dom": "^19.2.3",
     "react-stately": "^3.43.0",

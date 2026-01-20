@@ -24,11 +24,11 @@ export async function GET(
 
     // Obter URL base do ambiente
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    
+
     // Gerar código de tracking profissional
     const trackingCode = `<!-- Início HubPixel Tracking (hubpixel.min.js) -->
 <!-- Adicione antes da tag </head> -->
-<script data-pixel-id="${pixelId}" src="${baseUrl}/pixel-tracker.min.js?pixelId=${pixelId}"></script>
+<script data-pixel-id="${pixelId}" src="${baseUrl}/hubpixel.min.js?pixelId=${pixelId}"></script>
 <!-- Fim HubPixel Tracking (hubpixel.min.js) -->
 
 <!-- Opcional: Para rastrear conversões manualmente -->

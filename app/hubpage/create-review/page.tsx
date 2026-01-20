@@ -43,7 +43,7 @@ export default function CreateReview() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/page-builder');
+    router.push('/hubpage');
   };
 
   return (
@@ -52,7 +52,7 @@ export default function CreateReview() {
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-2">
           <button
-            onClick={() => router.push('/page-builder')}
+            onClick={() => router.push('/hubpage')}
             className="p-2 hover:bg-accent rounded-md transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -216,8 +216,8 @@ export default function CreateReview() {
                 type="submit"
                 disabled={!isAwareOfAI}
                 className={`px-8 py-3 rounded-md transition-colors font-medium ${isAwareOfAI
-                    ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                    : 'bg-border text-muted-foreground cursor-not-allowed'
+                  ? 'bg-gray-800 hover:bg-gray-700 text-white'
+                  : 'bg-border text-muted-foreground cursor-not-allowed'
                   }`}
               >
                 Salvar

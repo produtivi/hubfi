@@ -39,7 +39,7 @@ export const styles = sortCx({
 
     colors: {
         primary: {
-            root: "bg-gray-800 text-white shadow-sm hover:bg-gray-700",
+            root: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/80",
         },
         secondary: {
             root: "bg-background text-foreground shadow-sm ring-1 ring-border ring-inset hover:bg-accent",

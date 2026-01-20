@@ -1,9 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Copy, Check, Star, Trash2, Link, Search } from 'lucide-react'
+import { Plus, Copy07 as Copy, Check, Star01 as Star, Trash03 as Trash2, Link03 as Link, SearchLg as Search } from '@untitledui/icons'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Input } from '@/components/base/input/input'
+import { Button } from '@/components/base/buttons/button'
+import { Select } from '@/components/base/select/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Toast } from '@/components/ui/toast'
 
 interface Product {
   id: number
@@ -37,7 +42,10 @@ export default function HubTitlePage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [showFavorites, setShowFavorites] = useState(false)
+  const [sortBy, setSortBy] = useState('recent')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<number | null>(null)
+  const [toasts, setToasts] = useState<{ id: string, type: 'success' | 'error' | 'info', message: string }[]>([])
 
   useEffect(() => {
     loadProducts()
@@ -57,15 +65,39 @@ export default function HubTitlePage() {
     }
   }
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    if (showFavorites) {
-      const hasFavoriteTitles = product.titles.some(t => t.isFavorite)
-      const hasFavoriteDescriptions = product.descriptions.some(d => d.isFavorite)
-      return matchesSearch && (hasFavoriteTitles || hasFavoriteDescriptions)
-    }
-    return matchesSearch
-  })
+  const filteredAndSortedProducts = products
+    .filter(product =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'recent':
+          return b.id - a.id // Mais recentes primeiro
+        case 'oldest':
+          return a.id - b.id // Mais antigos primeiro
+        case 'most-titles':
+          return b.titles.length - a.titles.length // Mais títulos primeiro
+        case 'most-favorites':
+          const aFavs = a.titles.filter(t => t.isFavorite).length + a.descriptions.filter(d => d.isFavorite).length
+          const bFavs = b.titles.filter(t => t.isFavorite).length + b.descriptions.filter(d => d.isFavorite).length
+          return bFavs - aFavs // Mais favoritos primeiro
+        case 'name-az':
+          return a.name.localeCompare(b.name) // A-Z
+        case 'name-za':
+          return b.name.localeCompare(a.name) // Z-A
+        default:
+          return 0
+      }
+    })
+
+  const showToast = (type: 'success' | 'error' | 'info', message: string) => {
+    const id = Date.now().toString() + Math.random().toString()
+    setToasts(prev => [...prev, { id, type, message }])
+  }
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }
 
   const handleGenerateMore = async (productId: number) => {
     try {
@@ -89,10 +121,12 @@ export default function HubTitlePage() {
         if (selectedProduct?.id === productId) {
           setSelectedProduct(updatedProduct)
         }
+
+        showToast('success', '5 novos títulos e descrições gerados com sucesso!')
       }
     } catch (error) {
       console.error('Erro ao gerar mais:', error)
-      alert('Erro ao gerar conteúdo')
+      showToast('error', 'Erro ao gerar conteúdo. Tente novamente.')
     } finally {
       setIsGenerating(false)
     }
@@ -154,28 +188,42 @@ export default function HubTitlePage() {
     }
   }
 
-  const handleDeleteProduct = async (productId: number) => {
-    if (!confirm('Tem certeza que deseja deletar este produto?')) return
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return
 
     try {
-      await fetch(`/api/hubtitle/products/${productId}`, {
+      await fetch(`/api/hubtitle/products/${productToDelete}`, {
         method: 'DELETE'
       })
 
-      setProducts(products.filter(p => p.id !== productId))
-      if (selectedProduct?.id === productId) {
+      setProducts(products.filter(p => p.id !== productToDelete))
+      if (selectedProduct?.id === productToDelete) {
         setSelectedProduct(null)
       }
+      setDeleteDialogOpen(false)
+      setProductToDelete(null)
+      showToast('success', 'Produto deletado com sucesso!')
     } catch (error) {
       console.error('Erro ao deletar:', error)
-      alert('Erro ao deletar produto')
+      showToast('error', 'Erro ao deletar produto. Tente novamente.')
     }
   }
 
+  const openDeleteDialog = (productId: number) => {
+    setProductToDelete(productId)
+    setDeleteDialogOpen(true)
+  }
+
   const handleCopy = async (text: string, id: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(null), 2000)
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 2000)
+      showToast('success', 'Copiado para a área de transferência!')
+    } catch (error) {
+      console.error('Erro ao copiar:', error)
+      showToast('error', 'Erro ao copiar. Tente novamente.')
+    }
   }
 
   return (
@@ -190,38 +238,45 @@ export default function HubTitlePage() {
       {/* Barra de busca e ações */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         {/* Input de busca */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-          <input
-            type="text"
+        <div className="flex-1">
+          <Input
+            icon={Search}
+            size="md"
             placeholder="Buscar produtos por nome..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-md text-body placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            onChange={(value) => setSearchQuery(value)}
           />
         </div>
 
-        {/* Botões de ação */}
+        {/* Ordenação e botão criar */}
         <div className="flex gap-3">
-          <button
-            onClick={() => setShowFavorites(!showFavorites)}
-            className={`flex items-center gap-2 px-4 py-3 rounded-md transition-colors ${
-              showFavorites
-                ? 'bg-accent text-foreground'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
-            }`}
-          >
-            <Star className="w-5 h-5" />
-            <span>{showFavorites ? 'Favoritos' : 'Todos'}</span>
-          </button>
+          <div className="w-full md:w-[200px]">
+            <Select
+              size="md"
+              placeholder="Ordenar por"
+              defaultSelectedKey={sortBy}
+              onSelectionChange={(key) => setSortBy(key?.toString() || 'recent')}
+              items={[
+                { id: 'recent', label: 'Mais recentes' },
+                { id: 'oldest', label: 'Mais antigos' },
+                { id: 'most-titles', label: 'Mais títulos' },
+                { id: 'most-favorites', label: 'Mais favoritos' },
+                { id: 'name-az', label: 'Nome (A-Z)' },
+                { id: 'name-za', label: 'Nome (Z-A)' }
+              ]}
+            >
+              {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+            </Select>
+          </div>
 
-          <button
+          <Button
+            size="md"
+            color="primary"
+            iconLeading={Plus}
             onClick={() => router.push('/hubtitle/novo')}
-            className="flex items-center gap-2 px-4 py-3 bg-foreground text-background hover:bg-foreground/90 rounded-md transition-colors"
           >
-            <Plus className="w-5 h-5" />
-            <span>Criar novo produto</span>
-          </button>
+            Criar novo produto
+          </Button>
         </div>
       </div>
 
@@ -239,12 +294,12 @@ export default function HubTitlePage() {
             <div className="bg-card border border-border rounded-md p-4">
               <h2 className="text-title mb-4">Meus Produtos</h2>
 
-              {filteredProducts.length === 0 ? (
+              {filteredAndSortedProducts.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-body-muted">
-                    {showFavorites ? 'Nenhum favorito encontrado' : 'Nenhum produto criado ainda'}
+                    {searchQuery ? 'Nenhum produto encontrado' : 'Nenhum produto criado ainda'}
                   </p>
-                  {!showFavorites && (
+                  {!searchQuery && (
                     <p className="text-label text-muted-foreground mt-2">
                       Clique em &quot;Criar novo produto&quot; para começar
                     </p>
@@ -252,7 +307,7 @@ export default function HubTitlePage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredProducts.map((product) => (
+                  {filteredAndSortedProducts.map((product) => (
                     <div
                       key={product.id}
                       onClick={() => setSelectedProduct(product)}
@@ -269,7 +324,7 @@ export default function HubTitlePage() {
                             {product.titles.length} títulos • {product.descriptions.length} descrições
                           </p>
                           <p className="text-label text-muted-foreground flex items-center gap-1 mt-1">
-                            <Star className="text-yellow-400 w-4 h-4" />{' '}
+                            <Star className="text-yellow-400 size-4" />{' '}
                             {product.titles.filter((t) => t.isFavorite).length +
                               product.descriptions.filter((d) => d.isFavorite).length}{' '}
                             favoritos
@@ -278,12 +333,12 @@ export default function HubTitlePage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleDeleteProduct(product.id)
+                            openDeleteDialog(product.id)
                           }}
                           className="p-1.5 hover:bg-destructive/10 rounded-md transition-colors"
                           title="Deletar produto"
                         >
-                          <Trash2 className="w-4 h-4 text-destructive" />
+                          <Trash2 className="size-4 text-destructive" />
                         </button>
                       </div>
                     </div>
@@ -312,7 +367,7 @@ export default function HubTitlePage() {
                   )}
                   {selectedProduct.links && (
                     <div className="flex items-center gap-1 mt-2">
-                      <Link className="w-4 h-4 text-muted-foreground" />
+                      <Link className="size-4 text-muted-foreground" />
                       <a
                         href={selectedProduct.links}
                         target="_blank"
@@ -328,20 +383,15 @@ export default function HubTitlePage() {
 
                 {/* Botão Gerar Mais */}
                 <div className="flex justify-center">
-                  <button
+                  <Button
+                    size="lg"
+                    color="primary"
                     onClick={() => handleGenerateMore(selectedProduct.id)}
-                    disabled={isGenerating}
-                    className="px-6 py-3 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-opacity text-body font-medium flex items-center gap-2"
+                    isDisabled={isGenerating}
+                    isLoading={isGenerating}
                   >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Gerando...
-                      </>
-                    ) : (
-                      `Gerar Mais 5`
-                    )}
-                  </button>
+                    Gerar Mais 5
+                  </Button>
                 </div>
 
                 {/* Títulos */}
@@ -384,7 +434,7 @@ export default function HubTitlePage() {
                                       transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                                     >
                                       <Star
-                                        className={`w-4 h-4 ${
+                                        className={`size-4 ${
                                           title.isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
                                         }`}
                                       />
@@ -396,9 +446,9 @@ export default function HubTitlePage() {
                                     title="Copiar"
                                   >
                                     {copiedId === `title-${title.id}` ? (
-                                      <Check className="w-4 h-4 text-success" />
+                                      <Check className="size-4 text-success" />
                                     ) : (
-                                      <Copy className="w-4 h-4 text-muted-foreground" />
+                                      <Copy className="size-4 text-muted-foreground" />
                                     )}
                                   </button>
                                 </div>
@@ -450,7 +500,7 @@ export default function HubTitlePage() {
                                       transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                                     >
                                       <Star
-                                        className={`w-4 h-4 ${
+                                        className={`size-4 ${
                                           desc.isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
                                         }`}
                                       />
@@ -462,9 +512,9 @@ export default function HubTitlePage() {
                                     title="Copiar"
                                   >
                                     {copiedId === `desc-${desc.id}` ? (
-                                      <Check className="w-4 h-4 text-success" />
+                                      <Check className="size-4 text-success" />
                                     ) : (
-                                      <Copy className="w-4 h-4 text-muted-foreground" />
+                                      <Copy className="size-4 text-muted-foreground" />
                                     )}
                                   </button>
                                 </div>
@@ -480,6 +530,66 @@ export default function HubTitlePage() {
           </div>
         </div>
       )}
+
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deletar Produto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-body text-muted-foreground">
+              Tem certeza que deseja deletar este produto? Esta ação não pode ser desfeita e todos os títulos e descrições gerados serão perdidos.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                size="md"
+                color="secondary"
+                onClick={() => {
+                  setDeleteDialogOpen(false)
+                  setProductToDelete(null)
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                size="md"
+                color="primary-destructive"
+                onClick={handleDeleteProduct}
+              >
+                Deletar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Toast notifications */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+        <AnimatePresence>
+          {toasts.map((toast) => (
+            <motion.div
+              key={toast.id}
+              initial={{ opacity: 0, x: 100, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 100, scale: 0.8 }}
+              transition={{
+                type: 'spring',
+                stiffness: 500,
+                damping: 30
+              }}
+            >
+              <Toast
+                type={toast.type}
+                message={toast.message}
+                isVisible={true}
+                onClose={() => removeToast(toast.id)}
+                duration={4000}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

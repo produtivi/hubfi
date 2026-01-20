@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart3, TrendingUp, DollarSign, MousePointerClick, Play, Lightbulb, BookOpen, TrendingDown } from 'lucide-react';
+import { BarChart03 as BarChart3, TrendUp02 as TrendingUp, CurrencyDollarCircle as DollarSign, CursorClick02 as MousePointerClick, PlayCircle as Play, Lightbulb02 as Lightbulb, TrendDown02 as TrendingDown } from '@untitledui/icons';
 
 export default function Home() {
   const [dateFilter, setDateFilter] = useState('7days');
@@ -129,8 +129,8 @@ export default function Home() {
                 </div>
                 <span
                   className={`text-label font-medium ${stat.changeType === 'positive'
-                      ? 'text-success'
-                      : 'text-destructive'
+                    ? 'text-success'
+                    : 'text-destructive'
                     }`}
                 >
                   {stat.change}
@@ -193,20 +193,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-md p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-accent rounded-md">
-                <BookOpen className="w-5 h-5 text-foreground" />
-              </div>
-              <h2 className="text-title">Documentação</h2>
-            </div>
-            <p className="text-body-muted mb-4">
-              Acesse nossa documentação completa para aprender mais sobre todas as funcionalidades.
-            </p>
-            <button className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 transition-colors text-label font-medium">
-              Acessar Documentação
-            </button>
-          </div>
+
         </div>
       </div>
     </div>

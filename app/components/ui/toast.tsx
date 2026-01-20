@@ -25,8 +25,8 @@ export function Toast({ type, message, isVisible, onClose, duration = 4000 }: To
   if (!isVisible) return null;
 
   const getToastStyles = () => {
-    const baseStyles = "fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border text-body font-medium transition-all duration-300 transform";
-    
+    const baseStyles = "flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border text-body font-medium transition-all duration-300 transform animate-in slide-in-from-right";
+
     switch (type) {
       case 'success':
         return `${baseStyles} bg-card border-success/20 text-success`;

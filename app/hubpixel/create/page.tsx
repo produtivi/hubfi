@@ -376,8 +376,7 @@ export default function CreatePixel() {
                   <select
                     value={formData.selectedGoogleAds}
                     onChange={(e) => handleGoogleAdsSelect(e.target.value)}
-                    className={`w-full px-4 py-3 pr-10 border rounded-md text-body appearance-none outline-none transition-all ${
-                      !formData.selectedGmail || isLoadingAdsAccounts
+                    className={`w-full px-4 py-3 pr-10 border rounded-md text-body appearance-none outline-none transition-all ${!formData.selectedGmail || isLoadingAdsAccounts
                         ? 'bg-accent/50 border-border text-muted-foreground cursor-not-allowed opacity-60'
                         : 'bg-background border-border focus:ring-2 focus:ring-primary focus:border-transparent'
                       }`}
@@ -406,12 +405,12 @@ export default function CreatePixel() {
                 </div>
                 {formData.selectedGmail && !isLoadingAdsAccounts &&
                   googleAdsAccounts.filter(acc => !acc.isTestAccount && (formData.useFiltermagic ? acc.isManager : !acc.isManager)).length === 0 && (
-                  <p className="text-label text-muted-foreground">
-                    {formData.useFiltermagic
-                      ? 'Nenhuma MCC encontrada para este Gmail'
-                      : 'Nenhuma subconta encontrada para este Gmail'}
-                  </p>
-                )}
+                    <p className="text-label text-muted-foreground">
+                      {formData.useFiltermagic
+                        ? 'Nenhuma MCC encontrada para este Gmail'
+                        : 'Nenhuma subconta encontrada para este Gmail'}
+                    </p>
+                  )}
               </div>
 
               {/* Suas ações de conversão do Google ADS */}
@@ -423,8 +422,7 @@ export default function CreatePixel() {
                   <select
                     value={formData.selectedConversionAction}
                     onChange={(e) => handleInputChange('selectedConversionAction', e.target.value)}
-                    className={`w-full px-4 py-3 pr-10 border rounded-md text-body appearance-none outline-none transition-all ${
-                      !formData.selectedGoogleAds || isLoadingConversions
+                    className={`w-full px-4 py-3 pr-10 border rounded-md text-body appearance-none outline-none transition-all ${!formData.selectedGoogleAds || isLoadingConversions
                         ? 'bg-accent/50 border-border text-muted-foreground cursor-not-allowed opacity-60'
                         : 'bg-background border-border focus:ring-2 focus:ring-primary focus:border-transparent'
                       }`}
@@ -472,14 +470,12 @@ export default function CreatePixel() {
                     />
                     <label
                       htmlFor="useConversionName"
-                      className={`block w-10 h-5 rounded-full transition-colors ${
-                        !formData.selectedConversionAction ? 'cursor-not-allowed' : 'cursor-pointer'
-                      } ${formData.useConversionName ? 'bg-primary' : 'bg-border'}`}
+                      className={`block w-10 h-5 rounded-full transition-colors ${!formData.selectedConversionAction ? 'cursor-not-allowed' : 'cursor-pointer'
+                        } ${formData.useConversionName ? 'bg-primary' : 'bg-border'}`}
                     >
                       <span
-                        className={`block w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                          formData.useConversionName ? 'translate-x-5' : 'translate-x-0.5'
-                        } translate-y-0.5`}
+                        className={`block w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.useConversionName ? 'translate-x-5' : 'translate-x-0.5'
+                          } translate-y-0.5`}
                       />
                     </label>
                   </div>
@@ -503,11 +499,10 @@ export default function CreatePixel() {
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="Digite o nome do pixel"
-                    className={`w-full px-4 py-3 border rounded-md text-body outline-none transition-all ${
-                      !formData.selectedConversionAction
+                    className={`w-full px-4 py-3 border rounded-md text-body outline-none transition-all ${!formData.selectedConversionAction
                         ? 'bg-accent/50 border-border text-muted-foreground cursor-not-allowed opacity-60'
                         : 'bg-background border-border focus:ring-2 focus:ring-primary focus:border-transparent'
-                    }`}
+                      }`}
                     disabled={!formData.selectedConversionAction}
                     required={!formData.useConversionName}
                   />
@@ -556,10 +551,10 @@ export default function CreatePixel() {
                         }
                       }}
                       className={`w-5 h-5 border-2 rounded transition-colors ${!formData.selectedPlatform
-                          ? 'border-border bg-accent/50 cursor-not-allowed opacity-60'
-                          : formData.useHubPage
-                            ? 'border-border bg-accent/50 opacity-60 cursor-pointer'
-                            : 'border-border bg-background focus:ring-2 focus:ring-primary checked:bg-primary checked:border-primary cursor-pointer'
+                        ? 'border-border bg-accent/50 cursor-not-allowed opacity-60'
+                        : formData.useHubPage
+                          ? 'border-border bg-accent/50 opacity-60 cursor-pointer'
+                          : 'border-border bg-background focus:ring-2 focus:ring-primary checked:bg-primary checked:border-primary cursor-pointer'
                         }`}
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -594,10 +589,10 @@ export default function CreatePixel() {
                         }
                       }}
                       className={`w-5 h-5 border-2 rounded transition-colors ${!formData.selectedPlatform
-                          ? 'border-border bg-accent/50 cursor-not-allowed opacity-60'
-                          : formData.useProductStructure
-                            ? 'border-border bg-accent/50 opacity-60 cursor-pointer'
-                            : 'border-border bg-background focus:ring-2 focus:ring-primary checked:bg-primary checked:border-primary cursor-pointer'
+                        ? 'border-border bg-accent/50 cursor-not-allowed opacity-60'
+                        : formData.useProductStructure
+                          ? 'border-border bg-accent/50 opacity-60 cursor-pointer'
+                          : 'border-border bg-background focus:ring-2 focus:ring-primary checked:bg-primary checked:border-primary cursor-pointer'
                         }`}
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -676,7 +671,7 @@ export default function CreatePixel() {
           onSuccess={() => {
             setShowConfirmationModal(false);
             showSuccess('Pixel criado com sucesso!');
-            router.push('/pixel-tracker');
+            router.push('/hubpixel');
           }}
           onError={(message) => {
             showError(message);

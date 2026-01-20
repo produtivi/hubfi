@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, AlertCircle } from '@untitledui/icons';
 import { useRouter } from 'next/navigation';
-import { Domain } from '@/types/page-builder';
-import { AddDomainModal } from '@/components/page-builder/add-domain-modal';
-import { DomainsList } from '@/components/page-builder/domains-list';
+import { Domain } from '@/types/hubpage';
+import { AddDomainModal } from '@/components/hubpage/add-domain-modal';
+import { DomainsList } from '@/components/hubpage/domains-list';
 import { Button } from '@/components/base/buttons/button';
 
 export default function DomainsPage() {
