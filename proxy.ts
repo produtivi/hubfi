@@ -1,69 +1,71 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from './app/lib/auth';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Rotas que precisam de autenticação
-const protectedRoutes = [
-  '/pixel-tracker',
-  '/product-finder', 
-  '/ads-analytics',
-  '/ranking-hub',
-  '/page-builder',
-  '/campaign-wizard',
-  '/settings'
-];
+// Rotas públicas que não precisam de autenticação
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password'];
 
-// Rotas públicas (não precisam de autenticação)
-const publicRoutes = [
-  '/login',
-  '/register',
-  '/api/auth/login',
-  '/api/auth/register',
-  '/api/auth/logout',
-  '/api/auth/google/authorize',
-  '/api/auth/google/callback'
-];
+// Rotas de API públicas
+const PUBLIC_API_ROUTES = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Permitir acesso a rotas públicas e rotas de callback OAuth
-  if (publicRoutes.includes(pathname) || pathname.startsWith('/api/auth/')) {
+  // Permite acesso a arquivos estáticos e assets
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname.startsWith('/logo') ||
+    pathname.startsWith('/logos') ||
+    pathname.startsWith('/platforms') ||
+    pathname.endsWith('.ico') ||
+    pathname.endsWith('.png') ||
+    pathname.endsWith('.jpg') ||
+    pathname.endsWith('.svg')
+  ) {
     return NextResponse.next();
   }
 
-  // Permitir acesso temporário ao /settings se vier de OAuth callback
-  if (pathname === '/settings' && request.nextUrl.searchParams.get('success') === 'account_connected') {
+  // Verifica se é rota pública - deve vir ANTES da verificação de tokens
+  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'));
+  const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'));
+
+  if (isPublicRoute || isPublicApiRoute) {
     return NextResponse.next();
   }
-  
-  // Permitir acesso temporário ao /settings se houver erro de OAuth
-  if (pathname === '/settings' && request.nextUrl.searchParams.has('error')) {
-    return NextResponse.next();
-  }
 
-  // Verificar se é uma rota protegida
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname === route || pathname.startsWith(route + '/')
-  );
+  // Verifica token no cookie
+  const accessToken = request.cookies.get('accessToken')?.value;
+  const refreshToken = request.cookies.get('refreshToken')?.value;
 
-  if (isProtectedRoute) {
-    const token = request.cookies.get('auth-token')?.value;
-
-    if (!token) {
-      // Redirecionar para login se não houver token
-      return NextResponse.redirect(new URL('/login', request.url));
+  // Para rotas de API, retorna 401 em vez de redirect
+  if (pathname.startsWith('/api/')) {
+    if (!accessToken && !refreshToken) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
     }
 
-    // Verificar se o token é válido
-    const decoded = verifyToken(token);
-    if (!decoded) {
-      // Token inválido, redirecionar para login
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('auth-token');
-      return response;
+    // Verifica se tem pelo menos um token válido
+    if (!accessToken && !refreshToken) {
+      return NextResponse.json(
+        { error: 'Token expirado' },
+        { status: 401 }
+      );
     }
+
+    return NextResponse.next();
   }
 
+  // Para rotas de páginas, redireciona para login se não tiver NENHUM token
+  if (!accessToken && !refreshToken) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Se tem refresh token mas não tem access, permite passar
+  // O client-side vai fazer refresh automático
   return NextResponse.next();
 }
 
@@ -74,8 +76,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public files
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\..*|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

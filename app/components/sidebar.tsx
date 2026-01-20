@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Home, Zap, BarChart3, TrendingUp, Globe, Sparkles, Target, Menu } from 'lucide-react';
+import { Home, Zap, BarChart3, TrendingUp, Globe, Sparkles, Target, Menu, Type } from 'lucide-react';
 import Image from 'next/image';
 import { AccountDropdown } from './account-dropdown';
 import { useSidebar } from './sidebar-layout';
@@ -38,6 +38,7 @@ export function Sidebar() {
     { id: 'page-builder', label: 'HubPage', icon: Globe, path: '/page-builder' },
     { id: 'campaign-wizard', label: 'HubCampaign', icon: Sparkles, path: '/campaign-wizard/campaigns' },
     { id: 'pixel-tracker', label: 'HubPixel', icon: Target, path: '/pixel-tracker' },
+    { id: 'title-generator', label: 'HubTitle', icon: Type, path: '/hubtitle' },
   ];
 
   const isActive = (path: string) => pathname === path;

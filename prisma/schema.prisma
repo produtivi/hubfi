@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -111,7 +110,7 @@ model Pixel {
   userId      Int      @map("user_id")
   name        String
   platform    String   // hotmart, braip, monetizze, etc.
-  presellUrl  String   @map("presell_url")
+  presellUrl  String?  @map("presell_url")
   pixelId     String   @unique @map("pixel_id") // ID único para o código de tracking
   status      String   @default("active") // active, inactive
   
@@ -212,4 +211,50 @@ model GoogleAdsAccount {
   user User @relation(fields: [userId], references: [id])
 
   @@map("google_ads_accounts")
+}
+
+// HubTitle - Gerador de Títulos e Descrições
+model TitleProduct {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  name        String   // Nome do produto
+  description String   @db.Text // Descrição completa
+  links       String?  // Links do produto
+  category    String?  // Categoria
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  titles      GeneratedTitle[]
+  descriptions GeneratedDescription[]
+
+  @@map("title_products")
+}
+
+model GeneratedTitle {
+  id          Int      @id @default(autoincrement())
+  productId   Int      @map("product_id")
+  content     String   @db.Text
+  isFavorite  Boolean  @default(false) @map("is_favorite")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  product     TitleProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("generated_titles")
+  @@index([productId, isFavorite])
+}
+
+model GeneratedDescription {
+  id          Int      @id @default(autoincrement())
+  productId   Int      @map("product_id")
+  content     String   @db.Text
+  isFavorite  Boolean  @default(false) @map("is_favorite")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  product     TitleProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("generated_descriptions")
+  @@index([productId, isFavorite])
 }
