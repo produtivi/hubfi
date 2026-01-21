@@ -241,7 +241,6 @@ export default function HubTitlePage() {
         <div className="flex-1">
           <Input
             icon={Search}
-            size="md"
             placeholder="Buscar produtos por nome..."
             value={searchQuery}
             onChange={(value) => setSearchQuery(value)}
@@ -252,7 +251,6 @@ export default function HubTitlePage() {
         <div className="flex gap-3">
           <div className="w-full md:w-[200px]">
             <Select
-              size="md"
               placeholder="Ordenar por"
               defaultSelectedKey={sortBy}
               onSelectionChange={(key) => setSortBy(key?.toString() || 'recent')}
@@ -270,8 +268,8 @@ export default function HubTitlePage() {
           </div>
 
           <Button
-            size="md"
             color="primary"
+            size="md"
             iconLeading={Plus}
             onClick={() => router.push('/hubtitle/novo')}
           >

@@ -1,13 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { TraditionalLogin } from '../components/traditional-login';
 import { UserProvider } from '../hooks/use-user';
+import { ThemeToggle } from '../components/theme-toggle';
 import Image from 'next/image';
 import type { LoginCredentials } from '../types/auth';
 
 function LoginContent() {
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
 
   const handleTraditionalLogin = async (credentials: LoginCredentials) => {
     try {
@@ -36,10 +39,16 @@ function LoginContent() {
       {/* Left side - Login Form */}
       <div className="flex-1 flex items-center justify-center px-8 py-12 bg-background">
         <div className="w-full max-w-md">
-          <div className="bg-card border border-border rounded-lg p-8 shadow-sm dark:shadow-lg dark:border-[#3A3A3A]">
+          <div
+              className="bg-card rounded-lg p-8 shadow-sm dark:shadow-lg"
+              style={{ border: resolvedTheme === 'dark' ? '1px solid #3A3A3A' : '1px solid #D1D5DB' }}
+            >
             <div className="mb-8">
-              <h1 className="text-headline mb-2">Entrar</h1>
-              <p className="text-body-muted">
+              <div className="flex items-center justify-between">
+                <h1 className="text-headline">Entrar</h1>
+                <ThemeToggle />
+              </div>
+              <p className="text-body-muted mt-2">
                 Acesse sua conta para continuar
               </p>
             </div>
@@ -59,39 +68,31 @@ function LoginContent() {
         </div>
       </div>
 
-      {/* Right side - Logo (always inverted theme for contrast) */}
-      <div className="hidden lg:flex flex-1 items-center justify-center relative bg-[#0A0A0A] dark:bg-[#FAFAFA] shadow-[-12px_0_40px_rgba(255,255,255,0.15)] dark:shadow-[-12px_0_40px_rgba(0,0,0,0.3)]">
-
+      {/* Right side - Logo (inverted theme for contrast) */}
+      <div
+        className="hidden lg:flex flex-1 items-center justify-center relative"
+        style={{
+          backgroundColor: resolvedTheme === 'dark' ? '#FFFFFF' : '#000000',
+          boxShadow: resolvedTheme === 'dark'
+            ? '-12px 0 40px rgba(0,0,0,0.3)'
+            : '-12px 0 40px rgba(255,255,255,0.15)'
+        }}
+      >
         <div className="w-full max-w-md px-8 text-center">
-          {/* Light mode: black background with white logo */}
-          <div className="dark:hidden">
-            <Image
-              src="/logo/logo-branca.png"
-              alt="Hubfi"
-              width={400}
-              height={120}
-              className="w-full h-auto mb-4"
-              priority
-            />
-            <p className="text-title text-[#E5E5E5]">
-              Tudo que você precisa em um só lugar
-            </p>
-          </div>
-
-          {/* Dark mode: white background with black logo */}
-          <div className="hidden dark:block">
-            <Image
-              src="/logo/logo-preta.png"
-              alt="Hubfi"
-              width={400}
-              height={120}
-              className="w-full h-auto mb-4"
-              priority
-            />
-            <p className="text-title text-[#181818]">
-              Tudo que você precisa em um só lugar
-            </p>
-          </div>
+          <Image
+            src={resolvedTheme === 'dark' ? '/logo/logo-preta.png' : '/logo/logo-branca.png'}
+            alt="Hubfi"
+            width={400}
+            height={120}
+            className="w-full h-auto mb-4"
+            priority
+          />
+          <p
+            className="text-title"
+            style={{ color: resolvedTheme === 'dark' ? '#181818' : '#E5E5E5' }}
+          >
+            Tudo que você precisa em um só lugar
+          </p>
         </div>
       </div>
     </div>

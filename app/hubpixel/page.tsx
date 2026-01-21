@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Plus, Filter, Activity, Eye, EyeOff, MoreVertical, Copy, Trash2, Edit2, X, ExternalLink, LayoutDashboard, FlaskConical, Shield, ShoppingCart } from 'lucide-react'
+import { Activity, Eye, EyeOff, MoreVertical, Copy, Trash2, Edit2, X, ExternalLink, LayoutDashboard, FlaskConical, Shield, ShoppingCart, CheckCircle } from 'lucide-react'
+import { SearchLg, Plus, FilterLines } from '@untitledui/icons'
 import { useRouter } from 'next/navigation'
 import { ConfirmationModal } from '../components/confirmation-modal'
 import { Toast } from '../components/ui/toast'
+import { Button } from '@/components/base/buttons/button'
+import { Input } from '@/components/base/input/input'
 
 interface Pixel {
   id: string
@@ -54,6 +57,15 @@ export default function PixelTracker() {
     message: '',
     onConfirm: () => { }
   })
+  const [successModal, setSuccessModal] = useState<{
+    isOpen: boolean
+    pixelName: string
+    pixelId: string
+  }>({
+    isOpen: false,
+    pixelName: '',
+    pixelId: ''
+  })
 
   // Carregar pixels da API
   const loadPixels = async () => {
@@ -95,6 +107,24 @@ export default function PixelTracker() {
 
   useEffect(() => {
     loadPixels()
+
+    // Verificar se há pixel recém-criado no sessionStorage
+    const pixelCreated = sessionStorage.getItem('pixelCreated')
+    if (pixelCreated) {
+      try {
+        const pixel = JSON.parse(pixelCreated)
+        setSuccessModal({
+          isOpen: true,
+          pixelName: pixel.name,
+          pixelId: pixel.pixelId
+        })
+        // Limpar sessionStorage após ler
+        sessionStorage.removeItem('pixelCreated')
+      } catch (e) {
+        console.error('Erro ao ler pixel do sessionStorage:', e)
+        sessionStorage.removeItem('pixelCreated')
+      }
+    }
   }, [])
 
   // Recarregar pixels quando a página ficar visível novamente (voltando da criação)
@@ -227,37 +257,34 @@ export default function PixelTracker() {
       {/* Barra de busca e ações */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         {/* Input de busca */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-          <input
-            type="text"
+        <div className="flex-1">
+          <Input
             placeholder="Buscar pixels por nome ou plataforma..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-md text-body placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            onChange={(value: string) => setSearchQuery(value)}
+            icon={SearchLg}
           />
         </div>
 
         {/* Botões de ação */}
         <div className="flex gap-3">
-          <button
+          <Button
+            color={showInactive ? 'primary' : 'secondary'}
+            size="md"
+            iconLeading={FilterLines}
             onClick={() => setShowInactive(!showInactive)}
-            className={`flex items-center gap-2 px-4 py-3 rounded-md transition-colors ${showInactive
-              ? 'bg-accent text-foreground'
-              : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
-              }`}
           >
-            <Filter className="w-5 h-5" />
-            <span>{showInactive ? 'Ver Ativos' : 'Ver Inativos'}</span>
-          </button>
+            {showInactive ? 'Ver Ativos' : 'Ver Inativos'}
+          </Button>
 
-          <button
+          <Button
+            color="primary"
+            size="md"
+            iconLeading={Plus}
             onClick={() => router.push('/hubpixel/create')}
-            className="flex items-center gap-2 px-4 py-3 bg-foreground text-background hover:bg-foreground/90 rounded-md transition-colors"
           >
-            <Plus className="w-5 h-5" />
-            <span>Criar novo pixel</span>
-          </button>
+            Criar novo pixel
+          </Button>
         </div>
       </div>
 
@@ -273,7 +300,7 @@ export default function PixelTracker() {
           {filteredPixels.map((pixel) => (
             <div
               key={pixel.id}
-              className="bg-card border border-border rounded-md p-6 hover:shadow-md transition-shadow"
+              className="bg-card border border-border rounded-md px-6 pt-6 pb-4  hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -363,26 +390,16 @@ export default function PixelTracker() {
 
                         {/* Dropdown menu */}
                         {openDropdownId === pixel.id && (
-                          <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-md shadow-lg z-10">
-                            <button
+                          <div className="absolute right-0 mt-2 bg-card border border-border rounded-md shadow-lg z-10 p-2">
+                            <Button
+                              color={pixel.status === 'active' ? 'tertiary-destructive' : 'tertiary'}
+                              size="sm"
+                              iconLeading={pixel.status === 'active' ? EyeOff : Eye}
                               onClick={() => handleTogglePixelStatus(pixel)}
-                              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${pixel.status === 'active'
-                                ? 'text-destructive hover:bg-destructive/10'
-                                : 'text-success hover:bg-success/10'
-                                }`}
+                              className="w-full justify-start"
                             >
-                              {pixel.status === 'active' ? (
-                                <>
-                                  <EyeOff className="w-4 h-4" />
-                                  <span className="text-body">Desativar pixel</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Eye className="w-4 h-4" />
-                                  <span className="text-body">Ativar pixel</span>
-                                </>
-                              )}
-                            </button>
+                              {pixel.status === 'active' ? 'Desativar pixel' : 'Ativar pixel'}
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -391,42 +408,49 @@ export default function PixelTracker() {
 
 
                   {/* Ações adicionais */}
-                  <div className="flex flex-row justify-between mt-4 pt-4 border-t border-border">
-                    <button
+                  <div className="flex flex-row items-center mt-4 pt-4 border-t border-border text-sm">
+                    <Button
+                    className='p-2'
+                      color="secondary"
+                      size="sm"
+                      iconLeading={Copy}
                       onClick={() => handleCopyPixelCode(pixel.pixelId)}
-                      className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm"
                     >
-                      <Copy className="w-4 h-4" />
-                      <span>Copiar código</span>
-                    </button>
+                      Copiar código
+                    </Button>
 
-                    <div className="flex gap-4">
-                      <button
+                    <div className="flex-1" />
+
+                    <div className="flex gap-3 text-sm">
+                      <Button
+                      className='p-2'
+                        color="secondary"
+                        size="sm"
+                        iconLeading={FlaskConical}
                         onClick={() => console.log('Testar instalação', pixel.pixelId)}
-                        className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm"
-                        title="Testar instalação"
                       >
-                        <FlaskConical className="w-4 h-4" />
-                        <span>Testar instalação</span>
-                      </button>
+                        Testar instalação
+                      </Button>
 
-                      <button
+                      <Button
+                      className='p-2'
+                        color="secondary"
+                        size="sm"
+                        iconLeading={Shield}
                         onClick={() => console.log('Bloqueador de IPs', pixel.pixelId)}
-                        className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm"
-                        title="Bloqueador de IPs"
                       >
-                        <Shield className="w-4 h-4" />
-                        <span>Bloqueador de IPs</span>
-                      </button>
+                        Bloqueador de IPs
+                      </Button>
 
-                      <button
+                      <Button
+                      className='p-2'
+                        color="secondary"
+                        size="sm"
+                        iconLeading={ShoppingCart}
                         onClick={() => console.log('Configurar checkout', pixel.pixelId)}
-                        className="flex items-center gap-2 px-3 py-2 bg-card border border-border hover:bg-accent text-foreground rounded-md transition-colors text-sm"
-                        title="Configurar checkout"
                       >
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>Configurar checkout</span>
-                      </button>
+                        Configurar checkout
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -436,16 +460,19 @@ export default function PixelTracker() {
         </div>
       ) : (
         <div className="bg-card border border-border rounded-md p-12 text-center">
-          <p className="text-body text-muted-foreground mb-4">
-            Nenhum pixel encontrado
+          <p className={`text-body text-muted-foreground ${!showInactive ? 'mb-4' : ''}`}>
+            {showInactive ? 'Nenhum pixel inativo encontrado' : 'Nenhum pixel encontrado'}
           </p>
-          <button
-            onClick={() => router.push('/hubpixel/create')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-black hover:bg-accent/80 rounded-md transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Criar primeiro pixel</span>
-          </button>
+          {!showInactive && (
+            <Button
+              color="primary"
+              size="md"
+              iconLeading={Plus}
+              onClick={() => router.push('/hubpixel/create')}
+            >
+              Criar primeiro pixel
+            </Button>
+          )}
         </div>
       )}
 
@@ -461,6 +488,55 @@ export default function PixelTracker() {
         type={confirmationModal.type}
         isLoading={confirmationModal.isLoading}
       />
+
+      {/* Modal de sucesso ao criar pixel */}
+      {successModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setSuccessModal(prev => ({ ...prev, isOpen: false }))}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-card border border-border rounded-lg w-full max-w-md">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-headline">Pixel Criado com Sucesso!</h2>
+              <button
+                onClick={() => setSuccessModal(prev => ({ ...prev, isOpen: false }))}
+                className="p-2 hover:bg-accent rounded-md transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Conteudo */}
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-accent border border-border rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-foreground" />
+                </div>
+                <h3 className="text-title mb-4">Pixel criado com sucesso!</h3>
+                <p className="text-body text-muted-foreground">
+                  Seu pixel "{successModal.pixelName}" foi criado.
+                </p>
+              </div>
+
+              {/* Botao de acao */}
+              <div className="flex justify-center">
+                <Button
+                  color="primary"
+                  size="md"
+                  onClick={() => setSuccessModal(prev => ({ ...prev, isOpen: false }))}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* Toast */}

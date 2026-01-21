@@ -17,14 +17,29 @@ model User {
   name      String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  
+
   // Relacionamentos
   presells          Presell[]
   pixels            Pixel[]
   googleAccounts    GoogleAccount[]
   googleAdsAccounts GoogleAdsAccount[]
+  passwordResetCodes PasswordResetCode[]
 
   @@map("users")
+}
+
+model PasswordResetCode {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  code      String   // Código de 6 dígitos
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relacionamentos
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("password_reset_codes")
 }
 
 model Domain {

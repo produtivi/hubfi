@@ -36,7 +36,10 @@ export function TooltipHelp({ text, imageSrc, imageAlt = 'Exemplo' }: TooltipHel
     <div className="relative inline-flex items-center" ref={containerRef}>
       <button
         type="button"
-        onClick={() => setIsVisible(!isVisible)}
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsVisible(!isVisible)
+        }}
         className="text-muted-foreground hover:text-foreground transition-colors"
         aria-label="Ajuda"
       >

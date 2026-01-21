@@ -17,18 +17,20 @@ interface LabelProps extends AriaLabelProps {
 
 export const Label = ({ isRequired, tooltip, tooltipDescription, className, ...props }: LabelProps) => {
     return (
-        <AriaLabel
-            // Used for conditionally hiding/showing the label element via CSS:
-            // <Input label="Visible only on mobile" className="lg:**:data-label:hidden" />
-            // or
-            // <Input label="Visible only on mobile" className="lg:label:hidden" />
-            data-label="true"
-            {...props}
-            className={cx("flex cursor-default items-center gap-0.5 text-sm font-medium text-foreground", className)}
-        >
-            {props.children}
+        <div className="flex items-center gap-1">
+            <AriaLabel
+                // Used for conditionally hiding/showing the label element via CSS:
+                // <Input label="Visible only on mobile" className="lg:**:data-label:hidden" />
+                // or
+                // <Input label="Visible only on mobile" className="lg:label:hidden" />
+                data-label="true"
+                {...props}
+                className={cx("flex cursor-default items-center gap-0.5 text-sm font-medium text-foreground", className)}
+            >
+                {props.children}
 
-            <span className={cx("hidden text-destructive", isRequired && "block", typeof isRequired === "undefined" && "group-required:block")}>*</span>
+                <span className={cx("hidden text-destructive", isRequired && "block", typeof isRequired === "undefined" && "group-required:block")}>*</span>
+            </AriaLabel>
 
             {tooltip && (
                 <Tooltip title={tooltip} description={tooltipDescription} placement="top">
@@ -43,7 +45,7 @@ export const Label = ({ isRequired, tooltip, tooltipDescription, className, ...p
                     </TooltipTrigger>
                 </Tooltip>
             )}
-        </AriaLabel>
+        </div>
     );
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, RefreshCw05, Settings01 } from '@untitledui/icons';
+import { Plus, RefreshCw05, Settings01, SearchLg, FilterLines } from '@untitledui/icons';
 import { useRouter } from 'next/navigation';
 import { CreatePageModal } from '../components/page-builder/create-page-modal';
 import { DeleteConfirmationModal } from '../components/page-builder/delete-confirmation-modal';
@@ -11,6 +11,7 @@ import { Toast } from '../components/ui/toast';
 import { useToast } from '../hooks/useToast';
 import { Button } from '@/components/base/buttons/button';
 import { Select } from '@/components/base/select/select';
+import { Input } from '@/components/base/input/input';
 import type { Key } from 'react-aria-components';
 
 interface Presell {
@@ -34,6 +35,8 @@ export default function PageBuilder() {
   const router = useRouter();
   const { toast, showSuccess, showError, hideToast } = useToast();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [filterType, setFilterType] = useState<PageType | 'all'>('all');
   const [filterDomain, setFilterDomain] = useState<string | 'all'>('all');
   const [showArchived, setShowArchived] = useState(false);
@@ -108,11 +111,14 @@ export default function PageBuilder() {
   // Filtrar páginas
   const filteredPages = useMemo(() => {
     return pages.filter(page => {
+      const searchMatch = searchQuery === '' ||
+        page.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        page.domain.toLowerCase().includes(searchQuery.toLowerCase());
       const typeMatch = filterType === 'all' || page.type === filterType;
       const domainMatch = filterDomain === 'all' || page.domain === filterDomain;
-      return typeMatch && domainMatch;
+      return searchMatch && typeMatch && domainMatch;
     });
-  }, [pages, filterType, filterDomain]);
+  }, [pages, searchQuery, filterType, filterDomain]);
 
   const handleCreatePage = (type: PageType) => {
     if (type === 'presell') {
@@ -221,62 +227,85 @@ export default function PageBuilder() {
           </div>
         </div>
 
-        {/* Create Button */}
-        <Button
-          color="primary"
-          size="md"
-          iconLeading={Plus}
-          onClick={() => setIsCreateModalOpen(true)}
-        >
-          Criar Página
-        </Button>
+        {/* Search + Filters + Create Button */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <Input
+              placeholder="Buscar páginas por nome ou domínio..."
+              value={searchQuery}
+              onChange={(value: string) => setSearchQuery(value)}
+              icon={SearchLg}
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button
+              color={showFilters ? 'primary' : 'secondary'}
+              size="md"
+              iconLeading={FilterLines}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              Filtros
+            </Button>
+            <Button
+              color="primary"
+              size="md"
+              iconLeading={Plus}
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Criar Página
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-card border border-border rounded-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="block text-label">Tipo de página</label>
-            <Select
-              placeholder="Todos os tipos"
-              selectedKey={filterType}
-              onSelectionChange={(key: Key | null) => setFilterType((key as PageType | 'all') || 'all')}
-              items={[
-                { id: 'all', label: 'Todos os tipos' },
-                ...Object.entries(PAGE_TYPES).map(([key, value]) => ({ id: key, label: value.label }))
-              ]}
-            >
-              {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
-            </Select>
+      {showFilters && (
+        <div className="bg-card border border-border rounded-md p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="block text-label">Tipo de página</label>
+              <Select
+                placeholder="Todos os tipos"
+                selectedKey={filterType}
+                onSelectionChange={(key: Key | null) => setFilterType((key as PageType | 'all') || 'all')}
+                items={[
+                  { id: 'all', label: 'Todos os tipos' },
+                  ...Object.entries(PAGE_TYPES).map(([key, value]) => ({ id: key, label: value.label }))
+                ]}
+              >
+                {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-label">Domínio</label>
+              <Select
+                placeholder="Todos os domínios"
+                selectedKey={filterDomain}
+                onSelectionChange={(key: Key | null) => setFilterDomain((key as string) || 'all')}
+                items={[
+                  { id: 'all', label: 'Todos os domínios' },
+                  ...uniqueDomains.map((domain) => ({ id: domain, label: domain }))
+                ]}
+              >
+                {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+              </Select>
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="block text-label">Domínio</label>
-            <Select
-              placeholder="Todos os domínios"
-              selectedKey={filterDomain}
-              onSelectionChange={(key: Key | null) => setFilterDomain((key as string) || 'all')}
-              items={[
-                { id: 'all', label: 'Todos os domínios' },
-                ...uniqueDomains.map((domain) => ({ id: domain, label: domain }))
-              ]}
-            >
-              {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
-            </Select>
-          </div>
-        </div>
 
-        <Button
-          color="link-gray"
-          size="sm"
-          className="mt-4"
-          onClick={() => {
-            setFilterType('all');
-            setFilterDomain('all');
-          }}
-        >
-          Limpar Filtros
-        </Button>
-      </div>
+          <Button
+            color="link-gray"
+            size="sm"
+            className="mt-4"
+            onClick={() => {
+              setSearchQuery('');
+              setFilterType('all');
+              setFilterDomain('all');
+            }}
+          >
+            Limpar Filtros
+          </Button>
+        </div>
+      )}
 
       {/* Results Count */}
       <div className="mb-4">
