@@ -141,7 +141,7 @@ export default function NovoHubTitle() {
                   }}
                   items={PRODUCT_CATEGORIES.map(cat => ({ id: cat, label: cat }))}
                 >
-                  {(item) => <Select.Item>{item.label}</Select.Item>}
+                  {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                 </Select>
               </div>
 
