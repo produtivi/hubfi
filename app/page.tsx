@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { BarChart03 as BarChart3, TrendUp02 as TrendingUp, CurrencyDollarCircle as DollarSign, CursorClick02 as MousePointerClick, PlayCircle as Play, Lightbulb02 as Lightbulb, TrendDown02 as TrendingDown } from '@untitledui/icons';
+import { Select } from '@/components/base/select/select';
+import type { Key } from 'react-aria-components';
 
 export default function Home() {
   const [dateFilter, setDateFilter] = useState('7days');
@@ -97,20 +99,23 @@ export default function Home() {
             </p>
           </div>
 
-          <div>
-            <label className="block text-label mb-2">Período</label>
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="px-4 py-2 bg-card border border-border rounded-md text-label focus:outline-none focus:ring-2 focus:ring-primary"
+          <div className="w-48">
+            <span className="block text-label mb-1">Período</span>
+            <Select
+              placeholder="Selecione o período"
+              selectedKey={dateFilter}
+              onSelectionChange={(key: Key | null) => setDateFilter(key as string || '7days')}
+              items={[
+                { id: 'today', label: 'Hoje' },
+                { id: '7days', label: 'Últimos 7 dias' },
+                { id: '30days', label: 'Últimos 30 dias' },
+                { id: '90days', label: 'Últimos 3 meses' },
+                { id: '12months', label: 'Últimos 12 meses' },
+                { id: 'all', label: 'Desde o início' }
+              ]}
             >
-              <option value="today">Hoje</option>
-              <option value="7days">Últimos 7 dias</option>
-              <option value="30days">Últimos 30 dias</option>
-              <option value="90days">Últimos 3 meses</option>
-              <option value="12months">Últimos 12 meses</option>
-              <option value="all">Desde o início</option>
-            </select>
+              {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+            </Select>
           </div>
         </div>
       </div>

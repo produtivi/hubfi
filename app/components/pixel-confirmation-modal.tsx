@@ -24,9 +24,10 @@ interface PixelConfirmationModalProps {
   onClose: () => void
   onSuccess: () => void
   onError: (message: string) => void
+  onPixelCreated?: (pixel: any) => void
 }
 
-export function PixelConfirmationModal({ pixelData, onClose, onSuccess, onError }: PixelConfirmationModalProps) {
+export function PixelConfirmationModal({ pixelData, onClose, onSuccess, onError, onPixelCreated }: PixelConfirmationModalProps) {
   const [currentStep, setCurrentStep] = useState(1) // 1: Resumo, 2: Criado, 3: Código
   const [isLoading, setIsLoading] = useState(false)
   const [createdPixel, setCreatedPixel] = useState<any>(null)
@@ -54,7 +55,13 @@ export function PixelConfirmationModal({ pixelData, onClose, onSuccess, onError 
 
       if (result.success) {
         setCreatedPixel(result.data)
-        setCurrentStep(2)
+        // Salvar no sessionStorage para mostrar modal na página de lista
+        sessionStorage.setItem('pixelCreated', JSON.stringify(result.data))
+        if (onPixelCreated) {
+          onPixelCreated(result.data)
+        } else {
+          setCurrentStep(2)
+        }
       } else {
         onError('Erro ao criar pixel: ' + result.error)
       }

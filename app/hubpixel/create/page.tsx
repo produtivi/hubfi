@@ -1,11 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Toast } from '../../components/ui/toast';
 import { useToast } from '../../hooks/useToast';
 import { PixelConfirmationModal } from '../../components/pixel-confirmation-modal';
+import { TooltipHelp } from '../../components/ui/tooltip-help';
+import { Input } from '@/components/base/input/input';
+import { Select } from '@/components/base/select/select';
+import { Button } from '@/components/base/buttons/button';
+import type { Key } from 'react-aria-components';
 
 interface Presell {
   id: string;
@@ -333,30 +338,24 @@ export default function CreatePixel() {
               </span>
             </div>
 
-            {/* Campos principais */}
-            <div className="space-y-6">
+            {/* Grid de campos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Suas contas do Gmail */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
-                  Suas contas do Gmail <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.selectedGmail}
-                    onChange={(e) => handleGmailSelect(e.target.value)}
-                    className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                    required
-                    disabled={isLoadingGmails}
-                  >
-                    <option value="">
-                      {isLoadingGmails ? 'Carregando...' : 'Escolha o email da conta'}
-                    </option>
-                    {gmailAccounts.map((account) => (
-                      <option key={account.id} value={account.id}>{account.email}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                </div>
+              <div className="space-y-1">
+                <span className="text-body font-medium flex items-center gap-2">
+                  Conta Google <span className="text-destructive">*</span>
+                  <TooltipHelp text="Selecione a conta Google conectada que possui acesso ao Google Ads." />
+                </span>
+                <Select
+                  placeholder={isLoadingGmails ? 'Carregando...' : 'Escolha o email da conta'}
+                  selectedKey={formData.selectedGmail || null}
+                  onSelectionChange={(key: Key | null) => handleGmailSelect(key as string || '')}
+                  items={gmailAccounts.map((account) => ({ id: account.id.toString(), label: account.email }))}
+                  isRequired
+                  isDisabled={isLoadingGmails}
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
                 {gmailAccounts.length === 0 && !isLoadingGmails && (
                   <p className="text-label text-muted-foreground">
                     Nenhuma conta Google conectada.{' '}
@@ -368,41 +367,28 @@ export default function CreatePixel() {
               </div>
 
               {/* Suas contas do Google ADS */}
-              <div className="space-y-3">
-                <label className={`text-body font-medium ${!formData.selectedGmail ? 'text-muted-foreground' : ''}`}>
-                  {formData.useFiltermagic ? 'Suas MCCs' : 'Suas contas do Google ADS'} <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.selectedGoogleAds}
-                    onChange={(e) => handleGoogleAdsSelect(e.target.value)}
-                    className={`w-full px-4 py-3 pr-10 border rounded-md text-body appearance-none outline-none transition-all ${!formData.selectedGmail || isLoadingAdsAccounts
-                        ? 'bg-accent/50 border-border text-muted-foreground cursor-not-allowed opacity-60'
-                        : 'bg-background border-border focus:ring-2 focus:ring-primary focus:border-transparent'
-                      }`}
-                    required
-                    disabled={!formData.selectedGmail || isLoadingAdsAccounts}
-                  >
-                    <option value="">
-                      {isLoadingAdsAccounts
-                        ? 'Carregando contas...'
-                        : formData.useFiltermagic
-                          ? 'Selecione uma MCC'
-                          : 'Selecione uma conta Google Ads'}
-                    </option>
-                    {googleAdsAccounts
-                      .filter(acc => !acc.isTestAccount && (formData.useFiltermagic ? acc.isManager : !acc.isManager))
-                      .map((account) => (
-                        <option key={account.customerId} value={account.customerId}>
-                          {account.accountName.includes(account.customerId)
-                            ? account.accountName
-                            : `${account.accountName} - ${account.customerId}`}
-                        </option>
-                      ))}
-                  </select>
-                  <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${!formData.selectedGmail ? 'text-muted-foreground/50' : 'text-muted-foreground'
-                    }`} />
-                </div>
+              <div className="space-y-1">
+                <span className={`text-body font-medium flex items-center gap-2 ${!formData.selectedGmail ? 'text-muted-foreground' : ''}`}>
+                  {formData.useFiltermagic ? 'MCC' : 'Conta Google Ads'} <span className="text-destructive">*</span>
+                  <TooltipHelp text={formData.useFiltermagic ? 'Selecione a MCC onde sua ação de conversão foi criada.' : 'Selecione a conta Google Ads onde sua ação de conversão foi criada.'} />
+                </span>
+                <Select
+                  placeholder={isLoadingAdsAccounts ? 'Carregando contas...' : formData.useFiltermagic ? 'Selecione uma MCC' : 'Selecione uma conta Google Ads'}
+                  selectedKey={formData.selectedGoogleAds || null}
+                  onSelectionChange={(key: Key | null) => handleGoogleAdsSelect(key as string || '')}
+                  items={googleAdsAccounts
+                    .filter(acc => !acc.isTestAccount && (formData.useFiltermagic ? acc.isManager : !acc.isManager))
+                    .map((account) => ({
+                      id: account.customerId,
+                      label: account.accountName.includes(account.customerId)
+                        ? account.accountName
+                        : `${account.accountName} - ${account.customerId}`
+                    }))}
+                  isRequired
+                  isDisabled={!formData.selectedGmail || isLoadingAdsAccounts}
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
                 {formData.selectedGmail && !isLoadingAdsAccounts &&
                   googleAdsAccounts.filter(acc => !acc.isTestAccount && (formData.useFiltermagic ? acc.isManager : !acc.isManager)).length === 0 && (
                     <p className="text-label text-muted-foreground">
@@ -414,33 +400,21 @@ export default function CreatePixel() {
               </div>
 
               {/* Suas ações de conversão do Google ADS */}
-              <div className="space-y-3">
-                <label className={`text-body font-medium ${!formData.selectedGoogleAds ? 'text-muted-foreground' : ''}`}>
-                  Suas ações de conversão do Google ADS <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.selectedConversionAction}
-                    onChange={(e) => handleInputChange('selectedConversionAction', e.target.value)}
-                    className={`w-full px-4 py-3 pr-10 border rounded-md text-body appearance-none outline-none transition-all ${!formData.selectedGoogleAds || isLoadingConversions
-                        ? 'bg-accent/50 border-border text-muted-foreground cursor-not-allowed opacity-60'
-                        : 'bg-background border-border focus:ring-2 focus:ring-primary focus:border-transparent'
-                      }`}
-                    required
-                    disabled={!formData.selectedGoogleAds || isLoadingConversions}
-                  >
-                    <option value="">
-                      {isLoadingConversions ? 'Carregando ações...' : 'Selecione uma ação de conversão'}
-                    </option>
-                    {conversionActions.map((action) => (
-                      <option key={action.id} value={action.id}>
-                        {action.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${!formData.selectedGoogleAds ? 'text-muted-foreground/50' : 'text-muted-foreground'
-                    }`} />
-                </div>
+              <div className="space-y-1">
+                <span className={`text-body font-medium flex items-center gap-2 ${!formData.selectedGoogleAds ? 'text-muted-foreground' : ''}`}>
+                  Ação de Conversão <span className="text-destructive">*</span>
+                  <TooltipHelp text="Selecione a ação de conversão que será disparada quando houver uma venda." />
+                </span>
+                <Select
+                  placeholder={isLoadingConversions ? 'Carregando ações...' : 'Selecione uma ação de conversão'}
+                  selectedKey={formData.selectedConversionAction || null}
+                  onSelectionChange={(key: Key | null) => handleInputChange('selectedConversionAction', key as string || '')}
+                  items={conversionActions.map((action) => ({ id: action.id, label: action.name }))}
+                  isRequired
+                  isDisabled={!formData.selectedGoogleAds || isLoadingConversions}
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
                 {formData.selectedGoogleAds && !isLoadingConversions && conversionActions.length === 0 && (
                   <p className="text-label text-muted-foreground">
                     Nenhuma ação de conversão encontrada.{' '}
@@ -451,14 +425,32 @@ export default function CreatePixel() {
                 )}
               </div>
 
+              {/* Plataforma */}
+              <div className="space-y-1">
+                <span className="text-body font-medium flex items-center gap-2">
+                  Plataforma <span className="text-destructive">*</span>
+                  <TooltipHelp text="Plataforma onde o produto está hospedado (Hotmart, Kiwify, etc)." />
+                </span>
+                <Select
+                  placeholder="Selecione a plataforma"
+                  selectedKey={formData.selectedPlatform || null}
+                  onSelectionChange={(key: Key | null) => handleInputChange('selectedPlatform', key as string || '')}
+                  items={platforms.map((platform) => ({ id: platform, label: platform }))}
+                  isRequired
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
+              </div>
+
               {/* Nome do Pixel */}
-              <div className="space-y-3">
-                <label className={`text-body font-medium ${!formData.selectedConversionAction ? 'text-muted-foreground' : ''}`}>
+              <div className="space-y-1">
+                <span className={`text-body font-medium flex items-center gap-2 ${!formData.selectedConversionAction ? 'text-muted-foreground' : ''}`}>
                   Nome do Pixel <span className="text-destructive">*</span>
-                </label>
+                  <TooltipHelp text="Nome para identificar o pixel. Pode usar o nome da ação de conversão ou definir um personalizado." />
+                </span>
 
                 {/* Switch para escolher entre nome da conversão ou customizado */}
-                <div className={`flex items-center gap-2 ${!formData.selectedConversionAction ? 'opacity-60' : ''}`}>
+                <div className={`flex items-center gap-2 mb-2 ${!formData.selectedConversionAction ? 'opacity-60' : ''}`}>
                   <div className="relative">
                     <input
                       id="useConversionName"
@@ -479,63 +471,33 @@ export default function CreatePixel() {
                       />
                     </label>
                   </div>
-                  <span className={`text-label ${!formData.selectedConversionAction ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                  <span className="text-label text-muted-foreground">
                     Usar nome da ação de conversão
                   </span>
                 </div>
 
-                {/* Input de nome - mostra nome da conversão ou input customizado */}
-                {formData.useConversionName ? (
-                  <input
-                    type="text"
-                    value={conversionActions.find(a => a.id === formData.selectedConversionAction)?.name || ''}
-                    readOnly
-                    placeholder="Nome da ação de conversão"
-                    className="w-full px-4 py-3 bg-accent/50 border border-border rounded-md text-body text-muted-foreground cursor-not-allowed"
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Digite o nome do pixel"
-                    className={`w-full px-4 py-3 border rounded-md text-body outline-none transition-all ${!formData.selectedConversionAction
-                        ? 'bg-accent/50 border-border text-muted-foreground cursor-not-allowed opacity-60'
-                        : 'bg-background border-border focus:ring-2 focus:ring-primary focus:border-transparent'
-                      }`}
-                    disabled={!formData.selectedConversionAction}
-                    required={!formData.useConversionName}
-                  />
-                )}
+                <Input
+                  value={formData.useConversionName
+                    ? conversionActions.find(a => a.id === formData.selectedConversionAction)?.name || ''
+                    : formData.name}
+                  onChange={(value) => handleInputChange('name', value)}
+                  placeholder={formData.useConversionName ? 'Nome da ação de conversão' : 'Digite o nome do pixel'}
+                  isDisabled={!formData.selectedConversionAction || formData.useConversionName}
+                  isRequired={!formData.useConversionName}
+                />
               </div>
+            </div>
 
-              {/* Plataforma */}
-              <div className="space-y-3">
-                <label className="text-body font-medium">
-                  Plataforma <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.selectedPlatform}
-                    onChange={(e) => handleInputChange('selectedPlatform', e.target.value)}
-                    className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                    required
-                  >
-                    <option value="">Selecione a plataforma</option>
-                    {platforms.map((platform) => (
-                      <option key={platform} value={platform}>{platform}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
+            {/* Configuração da página */}
+            <div className="space-y-1 max-w-md">
+              <span className="text-body font-medium flex items-center gap-2">
+                Configuração da página
+                <TooltipHelp text="Escolha se deseja usar a estrutura do produto ou uma página do HubPage." />
+              </span>
 
-              {/* Checkboxes mutuamente exclusivos */}
-              <div className="space-y-4">
-                <label className="text-body font-medium">Configuração da página</label>
-
+              <div className="space-y-3 mt-2">
                 {/* Utilizar estrutura do produto */}
-                <div className="flex items-start gap-3 mt-2">
+                <div className="flex items-center gap-3">
                   <div className="relative flex items-center">
                     <input
                       id="useProductStructure"
@@ -572,7 +534,7 @@ export default function CreatePixel() {
                 </div>
 
                 {/* Utilizar página do HubPage */}
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                   <div className="relative flex items-center">
                     <input
                       id="useHubPage"
@@ -608,56 +570,51 @@ export default function CreatePixel() {
                     Utilizar página do HubPage
                   </label>
                 </div>
-
-                {/* Select de presells - aparece apenas quando HubPage está selecionado */}
-                {formData.useHubPage && (
-                  <div className="space-y-3 mt-4">
-                    <label className="text-body font-medium">
-                      Selecione a presell <span className="text-destructive">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={formData.selectedPresell}
-                        onChange={(e) => handleInputChange('selectedPresell', e.target.value)}
-                        className="w-full px-4 py-3 pr-10 bg-background border border-border rounded-md text-body appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                        required
-                      >
-                        <option value="">
-                          {isLoadingPresells ? 'Carregando páginas...' : 'Escolha uma presell'}
-                        </option>
-                        {presellPages.map((presell) => (
-                          <option key={presell.id} value={presell.id}>
-                            {presell.name} {presell.domain ? `(${presell.domain})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
+            {/* Select de presells - aparece apenas quando HubPage está selecionado */}
+            {formData.useHubPage && (
+              <div className="space-y-1 max-w-md">
+                <span className="text-body font-medium flex items-center gap-2">
+                  Selecione a Presell <span className="text-destructive">*</span>
+                  <TooltipHelp text="Escolha uma página criada no HubPage para vincular ao pixel." />
+                </span>
+                <Select
+                  placeholder={isLoadingPresells ? 'Carregando páginas...' : 'Escolha uma presell'}
+                  selectedKey={formData.selectedPresell || null}
+                  onSelectionChange={(key: Key | null) => handleInputChange('selectedPresell', key as string || '')}
+                  items={presellPages.map((presell) => ({
+                    id: presell.id,
+                    label: presell.name + (presell.domain ? ` (${presell.domain})` : '')
+                  }))}
+                  isRequired
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
+              </div>
+            )}
+
             {/* Botões de ação */}
             <div className="flex justify-between items-center pt-8 border-t border-border">
-              <button
+              <Button
                 type="button"
+                color="secondary"
+                size="lg"
                 onClick={() => router.back()}
-                className="px-6 py-3 border border-border bg-background hover:bg-accent text-foreground rounded-md transition-colors"
               >
                 Cancelar
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="submit"
-                disabled={isLoading || (!formData.useProductStructure && !formData.useHubPage) || (formData.useHubPage && !formData.selectedPresell)}
-                className="flex items-center gap-2 px-8 py-3 rounded-md transition-colors font-medium bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                color="primary"
+                size="lg"
+                isDisabled={isLoading || (!formData.useProductStructure && !formData.useHubPage) || (formData.useHubPage && !formData.selectedPresell)}
+                isLoading={isLoading}
               >
-                {isLoading && (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                )}
-                <span>{isLoading ? 'Avançando...' : 'Avançar'}</span>
-              </button>
+                {isLoading ? 'Avançando...' : 'Avançar'}
+              </Button>
             </div>
           </form>
         </div>
@@ -670,11 +627,16 @@ export default function CreatePixel() {
           onClose={() => setShowConfirmationModal(false)}
           onSuccess={() => {
             setShowConfirmationModal(false);
-            showSuccess('Pixel criado com sucesso!');
             router.push('/hubpixel');
           }}
           onError={(message) => {
             showError(message);
+          }}
+          onPixelCreated={(pixel) => {
+            // Salvar pixel no sessionStorage e navegar para lista
+            sessionStorage.setItem('pixelCreated', JSON.stringify(pixel));
+            setShowConfirmationModal(false);
+            router.push('/hubpixel');
           }}
         />
       )}

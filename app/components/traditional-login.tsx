@@ -59,6 +59,12 @@ export function TraditionalLogin({ onSubmit }: TraditionalLoginProps) {
           placeholder="••••••••"
           disabled={isLoading}
         />
+        <a
+          href="/forgot-password"
+          className="text-label text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Esqueceu a senha?
+        </a>
       </div>
 
       {error && (

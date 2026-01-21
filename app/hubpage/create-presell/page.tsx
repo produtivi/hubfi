@@ -203,10 +203,10 @@ export default function CreatePresell() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Domínio */}
               <div className="space-y-1">
-                <label className="text-body font-medium flex items-center gap-2">
+                <span className="text-body font-medium flex items-center gap-2">
                   Domínio <span className="text-destructive">*</span>
                   <TooltipHelp text="Selecione o domínio onde sua presell será publicada." />
-                </label>
+                </span>
                 <Select
                   placeholder="Escolha o domínio"
                   selectedKey={formData.domain || null}
@@ -220,14 +220,14 @@ export default function CreatePresell() {
 
               {/* Nome da página */}
               <div className="space-y-1">
-                <label className="text-body font-medium flex items-center gap-2">
+                <span className="text-body font-medium flex items-center gap-2">
                   Nome da página <span className="text-destructive">*</span>
                   <TooltipHelp
                     text="Este nome aparece na aba do navegador quando o visitante abre sua presell."
                     imageSrc="/Captura de tela de 2026-01-20 14-33-05.png"
                     imageAlt="Exemplo de nome da página na aba do navegador"
                   />
-                </label>
+                </span>
                 <Input
                   value={formData.pageName}
                   onChange={(value) => setFormData({ ...formData, pageName: value })}
@@ -238,10 +238,10 @@ export default function CreatePresell() {
 
               {/* Link de Afiliado */}
               <div className="space-y-1">
-                <label className="text-body font-medium flex items-center gap-2">
+                <span className="text-body font-medium flex items-center gap-2">
                   Link de Afiliado <span className="text-destructive">*</span>
                   <TooltipHelp text="Link para onde o visitante será redirecionado ao clicar no botão de compra." />
-                </label>
+                </span>
                 <Input
                   type="url"
                   value={formData.affiliateLink}
@@ -253,10 +253,10 @@ export default function CreatePresell() {
 
               {/* Página de vendas do produtor */}
               <div className="space-y-1">
-                <label className="text-body font-medium flex items-center gap-2">
+                <span className="text-body font-medium flex items-center gap-2">
                   Página de vendas do produtor <span className="text-destructive">*</span>
                   <TooltipHelp text="URL da página de vendas original. Usada para capturar screenshots e elementos visuais." />
-                </label>
+                </span>
                 <Input
                   type="url"
                   value={formData.producerSalesPage}
@@ -268,10 +268,10 @@ export default function CreatePresell() {
 
               {/* Tipo de Presell */}
               <div className="space-y-1">
-                <label className="text-body font-medium flex items-center gap-2">
+                <span className="text-body font-medium flex items-center gap-2">
                   Tipo de Presell <span className="text-destructive">*</span>
                   <TooltipHelp text="Escolha o formato da sua presell: quiz, artigo, VSL, entre outros." />
-                </label>
+                </span>
                 <Select
                   placeholder="Selecione o tipo"
                   selectedKey={formData.presellType || null}
@@ -285,10 +285,10 @@ export default function CreatePresell() {
 
               {/* Idioma da Presell */}
               <div className="space-y-1">
-                <label className="text-body font-medium flex items-center gap-2">
+                <span className="text-body font-medium flex items-center gap-2">
                   Idioma <span className="text-destructive">*</span>
                   <TooltipHelp text="Define o idioma dos textos e botões da sua presell." />
-                </label>
+                </span>
                 <Select
                   placeholder="Selecione o idioma"
                   selectedKey={formData.presellLanguage || null}

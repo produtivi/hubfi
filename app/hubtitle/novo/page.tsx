@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft } from '@untitledui/icons'
+import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/base/input/input'
 import { Button } from '@/components/base/buttons/button'
 import { Select } from '@/components/base/select/select'
-import { Label } from '@/components/base/input/label'
+import { TooltipHelp } from '@/components/ui/tooltip-help'
+import type { Key } from 'react-aria-components'
 
 const PRODUCT_CATEGORIES = [
   'Saúde e Bem-estar',
@@ -89,12 +90,12 @@ export default function NovoHubTitle() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <Button
-            size="md"
-            color="tertiary"
-            iconLeading={ArrowLeft}
+          <button
             onClick={handleCancel}
-          />
+            className="p-2 hover:bg-accent rounded-md transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <div>
             <h1 className="text-headline">Criar Novo Produto</h1>
             <p className="text-label text-muted-foreground">
@@ -111,10 +112,13 @@ export default function NovoHubTitle() {
             {/* Grid de campos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Nome do Produto */}
-              <div>
+              <div className="space-y-1">
+                <span className="text-body font-medium flex items-center gap-2">
+                  Nome do Produto <span className="text-destructive">*</span>
+                  <TooltipHelp text="Nome do produto que será usado para gerar títulos e descrições." />
+                </span>
                 <Input
                   size="md"
-                  label="Nome do Produto"
                   placeholder="Ex: Curso de Marketing Digital"
                   value={formData.name}
                   onChange={(value) => setFormData({ ...formData, name: value })}
@@ -123,13 +127,16 @@ export default function NovoHubTitle() {
               </div>
 
               {/* Categoria */}
-              <div>
+              <div className="space-y-1">
+                <span className="text-body font-medium flex items-center gap-2">
+                  Categoria
+                  <TooltipHelp text="Categoria do produto para gerar conteúdo mais relevante." />
+                </span>
                 <Select
                   size="md"
-                  label="Categoria"
                   placeholder="Selecione uma categoria"
-                  selectedKey={showCustomCategory ? 'Outra' : formData.category || ''}
-                  onSelectionChange={(key) => {
+                  selectedKey={showCustomCategory ? 'Outra' : formData.category || null}
+                  onSelectionChange={(key: Key | null) => {
                     const value = key?.toString() || ''
                     if (value === 'Outra') {
                       setShowCustomCategory(true)
@@ -146,22 +153,28 @@ export default function NovoHubTitle() {
               </div>
 
               {/* Descrição do Produto - Span 2 colunas */}
-              <div className="md:col-span-2">
-                <Label isRequired>Descrição do Produto</Label>
+              <div className="md:col-span-2 space-y-1">
+                <span className="text-body font-medium flex items-center gap-2">
+                  Descrição do Produto <span className="text-destructive">*</span>
+                  <TooltipHelp text="Descreva seu produto em detalhes para gerar títulos e descrições mais precisos." />
+                </span>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descreva seu produto em detalhes para gerar títulos e descrições mais precisos..."
-                  className="mt-1.5 w-full px-3.5 py-2.5 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all min-h-[120px] resize-none shadow-xs"
+                  className="w-full px-3.5 py-2.5 bg-background border border-border rounded-md text-body focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all min-h-[120px] resize-none shadow-xs"
                   required
                 />
               </div>
 
               {/* Links */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 space-y-1">
+                <span className="text-body font-medium flex items-center gap-2">
+                  Links do Produto
+                  <TooltipHelp text="Link da página de vendas ou checkout do produto (opcional)." />
+                </span>
                 <Input
                   size="md"
-                  label="Links do Produto"
                   type="url"
                   placeholder="https://..."
                   value={formData.links}
@@ -171,10 +184,13 @@ export default function NovoHubTitle() {
 
               {/* Categoria customizada - condicional */}
               {showCustomCategory && (
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 space-y-1">
+                  <span className="text-body font-medium flex items-center gap-2">
+                    Especifique a categoria
+                    <TooltipHelp text="Digite uma categoria personalizada para o produto." />
+                  </span>
                   <Input
                     size="md"
-                    label="Especifique a categoria"
                     placeholder="Digite a categoria..."
                     value={customCategory}
                     onChange={(value) => setCustomCategory(value)}

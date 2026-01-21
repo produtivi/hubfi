@@ -1,6 +1,7 @@
 'use client'
 
 import { X, AlertTriangle, Eye, EyeOff } from 'lucide-react'
+import { Button } from '@/components/base/buttons/button'
 
 interface ConfirmationModalProps {
   isOpen: boolean
@@ -31,14 +32,6 @@ export function ConfirmationModal({
     if (e.target === e.currentTarget && !isLoading) {
       onClose()
     }
-  }
-
-  const getIcon = () => {
-    return type === 'activate' ? (
-      <Eye className="w-5 h-5 text-white" />
-    ) : (
-      <EyeOff className="w-5 h-5 text-white" />
-    )
   }
 
   return (
@@ -76,30 +69,24 @@ export function ConfirmationModal({
         </div>
 
         <div className="flex gap-3 justify-end">
-          <button
+          <Button
+            color="secondary"
+            size="md"
             onClick={onClose}
-            disabled={isLoading}
-            className="px-4 py-2 text-body border border-border rounded-md hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            isDisabled={isLoading}
           >
             {cancelText}
-          </button>
-          <button
+          </Button>
+          <Button
+            color="primary-destructive"
+            size="md"
+            iconLeading={type === 'activate' ? Eye : EyeOff}
             onClick={onConfirm}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-destructive text-white rounded-md hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            isDisabled={isLoading}
+            isLoading={isLoading}
           >
-            {isLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Processando...
-              </>
-            ) : (
-              <>
-                {getIcon()}
-                {confirmText}
-              </>
-            )}
-          </button>
+            {isLoading ? 'Processando...' : confirmText}
+          </Button>
         </div>
       </div>
     </div>

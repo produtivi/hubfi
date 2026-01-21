@@ -9,11 +9,10 @@ import { AuthProvider } from "./auth-provider";
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLoginPage = pathname === '/login';
-  const isRegisterPage = pathname === '/register';
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/reset-password';
   const isPreviewPage = pathname.startsWith('/preview');
 
-  if (isLoginPage || isRegisterPage || isPreviewPage) {
+  if (isAuthPage || isPreviewPage) {
     return <>{children}</>;
   }
 
