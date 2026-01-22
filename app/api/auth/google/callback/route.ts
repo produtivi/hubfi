@@ -11,11 +11,11 @@ export async function GET(request: NextRequest) {
 
     // Se houve erro (usuário cancelou)
     if (error) {
-      return NextResponse.redirect(new URL('/settings?error=cancelled', request.url));
+      return NextResponse.redirect(new URL('/settings/accounts?error=cancelled', request.url));
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(new URL('/settings?error=missing_params', request.url));
+      return NextResponse.redirect(new URL('/settings/accounts?error=missing_params', request.url));
     }
 
     // Decodificar o state para pegar o userId
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       const stateData = JSON.parse(state);
       userId = stateData.userId;
     } catch (e) {
-      return NextResponse.redirect(new URL('/settings?error=invalid_state', request.url));
+      return NextResponse.redirect(new URL('/settings/accounts?error=invalid_state', request.url));
     }
 
     // Trocar código por tokens
@@ -49,10 +49,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Redirecionar de volta para settings com sucesso
-    return NextResponse.redirect(new URL('/settings?success=account_connected', request.url));
+    return NextResponse.redirect(new URL('/settings/accounts?success=account_connected', request.url));
 
   } catch (error) {
     console.error('Erro no callback OAuth:', error);
-    return NextResponse.redirect(new URL('/settings?error=oauth_failed', request.url));
+    return NextResponse.redirect(new URL('/settings/accounts?error=oauth_failed', request.url));
   }
 }
