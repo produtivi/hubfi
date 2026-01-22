@@ -81,12 +81,26 @@ export default function CreatePixel() {
   const [presellPages, setPresellPages] = useState<Presell[]>([]);
   const [isLoadingPresells, setIsLoadingPresells] = useState(false);
 
-  // Buscar presells quando o componente montar
+  // Buscar presells do usuário quando o componente montar
   useEffect(() => {
     const fetchPresells = async () => {
       setIsLoadingPresells(true);
       try {
-        const response = await fetch('/api/presells');
+        // Primeiro buscar o userId do usuário logado
+        let userId;
+        try {
+          const userResponse = await fetch('/api/auth/me');
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            userId = userData.user.id;
+          }
+        } catch {
+          console.error('Erro ao buscar usuário');
+        }
+
+        // Buscar presells do usuário
+        const url = userId ? `/api/presells?userId=${userId}` : '/api/presells';
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch presells');
         const data = await response.json();
 
@@ -486,102 +500,15 @@ export default function CreatePixel() {
                   isRequired={!formData.useConversionName}
                 />
               </div>
-            </div>
 
-            {/* Configuração da página */}
-            <div className="space-y-1 max-w-md">
-              <span className="text-body font-medium flex items-center gap-2">
-                Configuração da página
-                <TooltipHelp text="Escolha se deseja usar a estrutura do produto ou uma página do HubPage." />
-              </span>
-
-              <div className="space-y-3 mt-2">
-                {/* Utilizar estrutura do produto */}
-                <div className="flex items-center gap-3">
-                  <div className="relative flex items-center">
-                    <input
-                      id="useProductStructure"
-                      type="checkbox"
-                      checked={formData.useProductStructure}
-                      onChange={(e) => {
-                        if (!formData.selectedPlatform) return;
-                        const checked = e.target.checked;
-                        handleInputChange('useProductStructure', checked);
-                        if (checked) {
-                          handleInputChange('useHubPage', false);
-                          handleInputChange('selectedPresell', '');
-                        }
-                      }}
-                      className={`w-5 h-5 border-2 rounded transition-colors ${!formData.selectedPlatform
-                        ? 'border-border bg-accent/50 cursor-not-allowed opacity-60'
-                        : formData.useHubPage
-                          ? 'border-border bg-accent/50 opacity-60 cursor-pointer'
-                          : 'border-border bg-background focus:ring-2 focus:ring-primary checked:bg-primary checked:border-primary cursor-pointer'
-                        }`}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      {formData.useProductStructure && (
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                  <label htmlFor="useProductStructure" className={`cursor-pointer ${!formData.selectedPlatform ? 'text-muted-foreground' : formData.useHubPage ? 'text-muted-foreground' : 'text-body'
-                    }`}>
-                    Utilizar a estrutura do produto
-                  </label>
-                </div>
-
-                {/* Utilizar página do HubPage */}
-                <div className="flex items-center gap-3">
-                  <div className="relative flex items-center">
-                    <input
-                      id="useHubPage"
-                      type="checkbox"
-                      checked={formData.useHubPage}
-                      onChange={(e) => {
-                        if (!formData.selectedPlatform) return;
-                        const checked = e.target.checked;
-                        handleInputChange('useHubPage', checked);
-                        if (checked) {
-                          handleInputChange('useProductStructure', false);
-                        } else {
-                          handleInputChange('selectedPresell', '');
-                        }
-                      }}
-                      className={`w-5 h-5 border-2 rounded transition-colors ${!formData.selectedPlatform
-                        ? 'border-border bg-accent/50 cursor-not-allowed opacity-60'
-                        : formData.useProductStructure
-                          ? 'border-border bg-accent/50 opacity-60 cursor-pointer'
-                          : 'border-border bg-background focus:ring-2 focus:ring-primary checked:bg-primary checked:border-primary cursor-pointer'
-                        }`}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      {formData.useHubPage && (
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                  <label htmlFor="useHubPage" className={`cursor-pointer ${!formData.selectedPlatform ? 'text-muted-foreground' : formData.useProductStructure ? 'text-muted-foreground' : 'text-body'
-                    }`}>
-                    Utilizar página do HubPage
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Select de presells - aparece apenas quando HubPage está selecionado */}
-            {formData.useHubPage && (
-              <div className="space-y-1 max-w-md">
-                <span className="text-body font-medium flex items-center gap-2">
-                  Selecione a Presell <span className="text-destructive">*</span>
-                  <TooltipHelp text="Escolha uma página criada no HubPage para vincular ao pixel." />
+              {/* Página do HubPage */}
+              <div className="space-y-1">
+                <span className={`text-body font-medium flex items-center gap-2 ${!formData.selectedPlatform ? 'text-muted-foreground' : ''}`}>
+                  Página do HubPage <span className="text-destructive">*</span>
+                  <TooltipHelp text="Selecione uma página criada no HubPage para vincular ao pixel." />
                 </span>
                 <Select
-                  placeholder={isLoadingPresells ? 'Carregando páginas...' : 'Escolha uma presell'}
+                  placeholder={isLoadingPresells ? 'Carregando páginas...' : 'Selecione sua página'}
                   selectedKey={formData.selectedPresell || null}
                   onSelectionChange={(key: Key | null) => handleInputChange('selectedPresell', key as string || '')}
                   items={presellPages.map((presell) => ({
@@ -589,11 +516,20 @@ export default function CreatePixel() {
                     label: presell.name + (presell.domain ? ` (${presell.domain})` : '')
                   }))}
                   isRequired
+                  isDisabled={!formData.selectedPlatform || isLoadingPresells}
                 >
                   {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
                 </Select>
+                {formData.selectedPlatform && presellPages.length === 0 && !isLoadingPresells && (
+                  <p className="text-label text-muted-foreground">
+                    Nenhuma página encontrada.{' '}
+                    <a href="/hubpage/create-presell" className="text-primary hover:underline">
+                      Criar uma página
+                    </a>
+                  </p>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Botões de ação */}
             <div className="flex justify-between items-center pt-8 border-t border-border">
@@ -610,7 +546,7 @@ export default function CreatePixel() {
                 type="submit"
                 color="primary"
                 size="lg"
-                isDisabled={isLoading || (!formData.useProductStructure && !formData.useHubPage) || (formData.useHubPage && !formData.selectedPresell)}
+                isDisabled={isLoading || !formData.selectedPresell}
                 isLoading={isLoading}
               >
                 {isLoading ? 'Avançando...' : 'Avançar'}

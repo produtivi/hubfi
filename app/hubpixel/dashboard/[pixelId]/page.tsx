@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Filter, TrendingUp, Eye, MousePointer, ShoppingBag, Target, Users, Activity, Zap, Shield } from 'lucide-react';
+import { ArrowLeft, Calendar, Filter, TrendingUp, Eye, MousePointer, ShoppingBag, Target, Users, Activity, Zap, Shield, CheckCircle } from 'lucide-react';
+import { Cursor02, CursorBox } from '@untitledui/icons';
 
 interface PixelInfo {
   id: string;
@@ -117,53 +118,53 @@ export default function PixelDashboard({ params }: DashboardParams) {
   // Dados reais do pixel (métricas ainda não funcionam, então valores serão 0 ou vazios)
   const metricsData = pixelInfo ? [
     {
-      title: 'Visitas Totais',
+      title: 'Cliques no Google',
       value: pixelInfo.visits?.toString() || '0',
       change: '--',
       trend: 'neutral',
-      icon: Eye,
+      icon: Cursor02,
       color: 'text-foreground'
     },
+    // {
+    //   title: 'Visitas Únicas',
+    //   value: pixelInfo.uniqueVisits?.toString() || '0',
+    //   change: '--',
+    //   trend: 'neutral',
+    //   icon: Users,
+    //   color: 'text-foreground'
+    // },
     {
-      title: 'Visitas Únicas',
-      value: pixelInfo.uniqueVisits?.toString() || '0',
-      change: '--',
-      trend: 'neutral',
-      icon: Users,
-      color: 'text-foreground'
-    },
-    {
-      title: 'Cliques',
+      title: 'Cliques na página do HubPage',
       value: pixelInfo.clicks?.toString() || '0',
       change: '--',
       trend: 'neutral',
-      icon: MousePointer,
+      icon: CursorBox,
       color: 'text-foreground'
     },
+    // {
+    //   title: 'Checkouts',
+    //   value: pixelInfo.checkouts?.toString() || '0',
+    //   change: '--',
+    //   trend: 'neutral',
+    //   icon: ShoppingBag,
+    //   color: 'text-foreground'
+    // },
     {
-      title: 'Checkouts',
-      value: pixelInfo.checkouts?.toString() || '0',
-      change: '--',
-      trend: 'neutral',
-      icon: ShoppingBag,
-      color: 'text-foreground'
-    },
-    {
-      title: 'Vendas',
+      title: 'Conversão',
       value: pixelInfo.sales?.toString() || '0',
       change: '--',
       trend: 'neutral',
-      icon: Target,
+      icon: CheckCircle,
       color: 'text-foreground'
     },
-    {
-      title: 'Taxa de Conversão',
-      value: calculateConversionRate() + '%',
-      change: '--',
-      trend: 'neutral',
-      icon: TrendingUp,
-      color: 'text-foreground'
-    },
+    // {
+    //   title: 'Taxa de Conversão',
+    //   value: calculateConversionRate() + '%',
+    //   change: '--',
+    //   trend: 'neutral',
+    //   icon: TrendingUp,
+    //   color: 'text-foreground'
+    // },
     {
       title: 'Taxa de Fuga',
       value: pixelInfo.bounceRate?.toFixed(1) + '%' || '0.0%',
@@ -172,14 +173,14 @@ export default function PixelDashboard({ params }: DashboardParams) {
       icon: Activity,
       color: 'text-foreground'
     },
-    {
-      title: 'IPs Bloqueados',
-      value: pixelInfo.blockedIps?.toString() || '0',
-      change: '--',
-      trend: 'neutral',
-      icon: Shield,
-      color: 'text-foreground'
-    }
+    // {
+    //   title: 'IPs Bloqueados',
+    //   value: pixelInfo.blockedIps?.toString() || '0',
+    //   change: '--',
+    //   trend: 'neutral',
+    //   icon: Shield,
+    //   color: 'text-foreground'
+    // }
   ] : [];
 
   if (isLoading) {

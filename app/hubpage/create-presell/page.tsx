@@ -77,16 +77,14 @@ export default function CreatePresell() {
           if (result.success && !result.data.isProcessing) {
             resolve();
           } else {
-            setTimeout(checkStatus, 3000); // Verificar a cada 3 segundos
+            setTimeout(checkStatus, 3000);
           }
         } catch (error) {
           console.error('Erro ao verificar status do screenshot:', error);
-          // Continuar mesmo com erro após 30 segundos
           setTimeout(() => resolve(), 30000);
         }
       };
 
-      // Começar a verificar após 2 segundos (dar tempo do processo começar)
       setTimeout(checkStatus, 2000);
     });
   };
@@ -105,11 +103,10 @@ export default function CreatePresell() {
           const userData = await userResponse.json();
           userId = userData.user.id;
         } else {
-          // Temporário: usar primeiro usuário se não estiver logado
-          userId = 2; // ID do jpteste@gmail.com
+          userId = 2;
         }
       } catch {
-        userId = 2; // Fallback
+        userId = 2;
       }
 
       const response = await fetch('/api/presells', {
@@ -309,6 +306,7 @@ export default function CreatePresell() {
                 color="secondary"
                 size="lg"
                 onClick={() => router.back()}
+                isDisabled={isLoading}
               >
                 Cancelar
               </Button>
@@ -319,8 +317,9 @@ export default function CreatePresell() {
                 size="lg"
                 isDisabled={isLoading}
                 isLoading={isLoading}
+                showTextWhileLoading
               >
-                {isLoading ? 'Criando...' : 'Criar Presell'}
+                {isLoading ? 'Criando Presell...' : 'Criar Presell'}
               </Button>
             </div>
           </form>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
+import { sendPasswordResetEmail } from '../../../lib/email';
 
 export async function POST(request: Request) {
   console.log('[forgot-password] Iniciando requisição');
@@ -61,9 +62,15 @@ export async function POST(request: Request) {
     });
     console.log('[forgot-password] Código salvo com sucesso');
 
-    // TODO: Enviar email com o código
-    // Por enquanto, logando o código para testes
-    console.log(`[forgot-password] Código para ${email}: ${code}`);
+    // Enviar email com o código
+    console.log(`[forgot-password] Enviando email para ${email}...`);
+    const emailResult = await sendPasswordResetEmail(email, code);
+
+    if (emailResult.success) {
+      console.log(`[forgot-password] Email enviado com sucesso para ${email}`);
+    } else {
+      console.log(`[forgot-password] Credenciais de email não configuradas. Código: ${code}`);
+    }
 
     return NextResponse.json({
       success: true,

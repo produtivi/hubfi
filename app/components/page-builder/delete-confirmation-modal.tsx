@@ -1,6 +1,7 @@
 'use client';
 
 import { X, Trash2, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/base/buttons/button';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -55,30 +56,24 @@ export function DeleteConfirmationModal({
         </div>
 
         <div className="flex gap-3 justify-end">
-          <button
+          <Button
+            color="secondary"
+            size="md"
             onClick={onClose}
-            disabled={isDeleting}
-            className="px-4 py-2 text-body border border-border rounded-md hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            isDisabled={isDeleting}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
+            color="primary-destructive"
+            size="md"
+            iconLeading={Trash2}
             onClick={onConfirm}
-            disabled={isDeleting}
-            className="flex items-center gap-2 px-4 py-2 bg-destructive text-white rounded-md hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            isDisabled={isDeleting}
+            isLoading={isDeleting}
           >
-            {isDeleting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Excluindo...
-              </>
-            ) : (
-              <>
-                <Trash2 className="w-4 h-4" />
-                Excluir página
-              </>
-            )}
-          </button>
+            {isDeleting ? 'Excluindo...' : 'Excluir página'}
+          </Button>
         </div>
       </div>
     </div>
