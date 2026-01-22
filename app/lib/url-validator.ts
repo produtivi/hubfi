@@ -130,18 +130,6 @@ export function validateURL(urlString: string): URLValidationResult {
       }
     }
 
-    // Verificar se o domínio está na whitelist
-    const isDomainAllowed = ALLOWED_DOMAINS_PATTERNS.some(pattern =>
-      pattern.test(hostname)
-    )
-
-    if (!isDomainAllowed) {
-      return {
-        isValid: false,
-        error: `Domínio não autorizado: ${hostname}. Apenas domínios de plataformas conhecidas são permitidos.`
-      }
-    }
-
     // URL válida e segura
     return {
       isValid: true,
