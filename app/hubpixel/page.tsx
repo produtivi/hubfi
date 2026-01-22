@@ -369,16 +369,6 @@ export default function PixelTracker() {
                         )}
                       </span>
 
-                      {/* Botão Dashboard */}
-                      <button
-                        onClick={() => router.push(`/hubpixel/dashboard/${pixel.pixelId}`)}
-                        className="flex items-center gap-1 px-2 py-1 hover:bg-accent rounded-md transition-colors"
-                        title="Dashboard"
-                      >
-                        <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-label text-muted-foreground">Dashboard</span>
-                      </button>
-
                       {/* Menu de ações */}
                       <div className="relative dropdown-container">
                         <button
@@ -409,19 +399,31 @@ export default function PixelTracker() {
 
                   {/* Ações adicionais */}
                   <div className="flex flex-row items-center mt-4 pt-4 border-t border-border text-sm">
+                    {/* Botão Dashboard */}
                     <Button
-                    className='p-2'
+                      className='p-2 bg-black/90 text-white border-0 hover:bg-black/70'
+                      color="secondary"
+                      size="sm"
+                      iconLeading={LayoutDashboard}
+                      onClick={() => router.push(`/hubpixel/dashboard/${pixel.pixelId}`)}
+                    >
+                      Dashboard
+                    </Button>
+
+                    {/* Botão Copiar código - comentado */}
+                    {/* <Button
+                      className='p-2'
                       color="secondary"
                       size="sm"
                       iconLeading={Copy}
                       onClick={() => handleCopyPixelCode(pixel.pixelId)}
                     >
                       Copiar código
-                    </Button>
+                    </Button> */}
 
                     <div className="flex-1" />
 
-                    <div className="flex gap-3 text-sm">
+                    <div className="flex gap-4 text-sm">
                       <Button
                       className='p-2'
                         color="secondary"
