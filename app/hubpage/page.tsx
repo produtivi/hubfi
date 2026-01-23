@@ -7,8 +7,7 @@ import { CreatePageModal } from '../components/page-builder/create-page-modal';
 import { DeleteConfirmationModal } from '../components/page-builder/delete-confirmation-modal';
 import { PagesList } from '../components/page-builder/pages-table';
 import { Page, PageType, PAGE_TYPES } from '../types/page-builder';
-import { Toast } from '../components/ui/toast';
-import { useToast } from '../hooks/useToast';
+import { useHubPageToast } from './toast-context';
 import { Button } from '@/components/base/buttons/button';
 import { Select } from '@/components/base/select/select';
 import { Input } from '@/components/base/input/input';
@@ -25,6 +24,7 @@ interface Presell {
   affiliateLink: string;
   screenshotDesktop?: string;
   screenshotMobile?: string;
+  htmlUrl?: string;
   domain: {
     domainName: string;
   };
@@ -33,7 +33,7 @@ interface Presell {
 
 export default function PageBuilder() {
   const router = useRouter();
-  const { toast, showSuccess, showError, hideToast } = useToast();
+  const { showSuccess, showError } = useHubPageToast();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -99,7 +99,9 @@ export default function PageBuilder() {
       status: presell.status as 'draft' | 'published' | 'archived',
       createdAt: new Date(presell.createdAt),
       updatedAt: new Date(presell.updatedAt),
-      url: presell.fullUrl
+      url: presell.fullUrl,
+      screenshotDesktop: presell.screenshotDesktop,
+      screenshotMobile: presell.screenshotMobile
     }));
   }, [presells]);
 
@@ -136,8 +138,16 @@ export default function PageBuilder() {
   };
 
   const handleView = (id: string) => {
-    // Abrir preview em nova guia
-    window.open(`/preview/${id}`, '_blank');
+    // Buscar o htmlUrl da presell
+    const presell = presells.find(p => p.id.toString() === id);
+
+    if (presell?.htmlUrl) {
+      // Se já tem HTML gerado, abrir direto
+      window.open(presell.htmlUrl, '_blank');
+    } else {
+      // Fallback para o preview Next.js enquanto HTML não está pronto
+      window.open(`/preview/${id}`, '_blank');
+    }
   };
 
   const handleCopy = async (id: string) => {
@@ -174,6 +184,7 @@ export default function PageBuilder() {
       const result = await response.json();
 
       if (result.success) {
+        showSuccess(`Página "${deleteModal.pageName}" excluída com sucesso!`);
         // Recarregar a lista de presells após exclusão
         await loadPresells();
         setDeleteModal({
@@ -183,12 +194,12 @@ export default function PageBuilder() {
           isDeleting: false
         });
       } else {
-        alert('Erro ao excluir página: ' + result.error);
+        showError(`Erro ao excluir página: ${result.error}`);
         setDeleteModal(prev => ({ ...prev, isDeleting: false }));
       }
     } catch (error) {
       console.error('Erro ao excluir página:', error);
-      alert('Erro ao excluir página');
+      showError('Erro ao excluir página');
       setDeleteModal(prev => ({ ...prev, isDeleting: false }));
     }
   };
@@ -329,6 +340,7 @@ export default function PageBuilder() {
           onView={handleView}
           onCopy={handleCopy}
           onDelete={handleDelete}
+          onScreenshotComplete={loadPresells}
         />
       )}
 
@@ -346,14 +358,6 @@ export default function PageBuilder() {
         onConfirm={handleConfirmDelete}
         pageName={deleteModal.pageName}
         isDeleting={deleteModal.isDeleting}
-      />
-
-      {/* Toast */}
-      <Toast
-        type={toast.type}
-        message={toast.message}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
       />
     </div>
   );

@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Toast } from '../../components/ui/toast';
-import { useToast } from '../../hooks/useToast';
+import { useHubPageToast } from '../toast-context';
 import { TooltipHelp } from '../../components/ui/tooltip-help';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
@@ -13,7 +12,7 @@ import type { Key } from 'react-aria-components';
 
 export default function CreatePresell() {
   const router = useRouter();
-  const { toast, showSuccess, showError, hideToast } = useToast();
+  const { showSuccess, showError } = useHubPageToast();
   const [formData, setFormData] = useState({
     domain: '',
     pageName: '',
@@ -67,28 +66,6 @@ export default function CreatePresell() {
     'Espanhol'
   ];
 
-  const waitForScreenshot = async (presellId: number): Promise<void> => {
-    return new Promise((resolve) => {
-      const checkStatus = async () => {
-        try {
-          const response = await fetch(`/api/presells/${presellId}/screenshot-status`);
-          const result = await response.json();
-
-          if (result.success && !result.data.isProcessing) {
-            resolve();
-          } else {
-            setTimeout(checkStatus, 3000);
-          }
-        } catch (error) {
-          console.error('Erro ao verificar status do screenshot:', error);
-          setTimeout(() => resolve(), 30000);
-        }
-      };
-
-      setTimeout(checkStatus, 2000);
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -131,18 +108,11 @@ export default function CreatePresell() {
         throw new Error(result.error || 'Erro ao criar presell');
       }
 
-      const presellId = result.data.id;
-
-      // Aguardar screenshot ficar pronto
-      await waitForScreenshot(presellId);
-
       // Mostrar toast de sucesso
-      showSuccess(`Página "${formData.pageName}" criada com sucesso!`);
+      showSuccess(`Página "${formData.pageName}" criada com sucesso! Screenshots serão gerados em segundo plano.`);
 
-      // Redirecionar
-      setTimeout(() => {
-        router.push('/hubpage');
-      }, 1000);
+      // Redirecionar imediatamente para a lista
+      router.push('/hubpage');
 
     } catch (error) {
       console.error('Erro:', error);
@@ -325,15 +295,6 @@ export default function CreatePresell() {
           </form>
         </div>
       </div>
-
-      {/* Toast */}
-      <Toast
-        type={toast.type}
-        message={toast.message}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
-      />
-
     </div>
   );
 }

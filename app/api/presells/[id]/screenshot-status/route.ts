@@ -25,15 +25,16 @@ export async function GET(
       );
     }
 
-    // Verificar se ainda está com screenshots temporários
-    const isProcessing = presell.screenshotDesktop?.includes('temp-') || 
-                        presell.screenshotMobile?.includes('temp-');
+    // Verificar se ainda está processando (screenshots são null quando sendo gerados)
+    const isProcessing = presell.screenshotDesktop === null || presell.screenshotMobile === null;
+    const hasScreenshots = presell.screenshotDesktop !== null && presell.screenshotMobile !== null;
 
     return NextResponse.json({
       success: true,
       data: {
         id: presell.id,
         isProcessing,
+        hasScreenshots,
         screenshotDesktop: presell.screenshotDesktop,
         screenshotMobile: presell.screenshotMobile
       }

@@ -72,6 +72,8 @@ model Presell {
   contentHtml        String?  @map("content_html")
   metaTitle          String?  @map("meta_title")
   metaDescription    String?  @map("meta_description")
+  faviconUrl         String?  @map("favicon_url")
+  htmlUrl            String?  @map("html_url")
   
   // Screenshots
   screenshotDesktop  String?  @map("screenshot_desktop")

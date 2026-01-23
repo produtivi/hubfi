@@ -18,6 +18,7 @@ interface Presell {
   affiliateLink: string;
   presellType: string;
   language?: string;
+  faviconUrl?: string;
 }
 
 export default function PreviewPage({ params }: PreviewPageProps) {
@@ -33,12 +34,26 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     getParams();
   }, []);
 
-  // Atualizar título da página quando presell carrega
+  // Atualizar título e favicon da página quando presell carrega
   useEffect(() => {
     if (presell?.pageName) {
       document.title = presell.pageName;
     }
-  }, [presell?.pageName]);
+
+    if (presell?.faviconUrl) {
+      // Remover favicon existente se houver
+      const existingFavicon = document.querySelector("link[rel*='icon']");
+      if (existingFavicon) {
+        existingFavicon.remove();
+      }
+
+      // Adicionar novo favicon
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = presell.faviconUrl;
+      document.head.appendChild(link);
+    }
+  }, [presell?.pageName, presell?.faviconUrl]);
 
   const loadPresell = async (id: string) => {
     try {

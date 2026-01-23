@@ -10,6 +10,9 @@ export interface Page {
   status: PageStatus;
   createdAt: Date;
   updatedAt: Date;
+  screenshotDesktop?: string | null;
+  screenshotMobile?: string | null;
+  faviconUrl?: string | null;
 }
 
 export interface Domain {

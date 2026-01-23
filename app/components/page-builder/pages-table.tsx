@@ -2,6 +2,8 @@
 
 import { Eye, Edit02, Copy01, Trash01, Check } from '@untitledui/icons';
 import { Page, PAGE_TYPES } from '@/types/page-builder';
+import { ScreenshotStatus } from './screenshot-status';
+import { useState } from 'react';
 
 interface PagesListProps {
   pages: Page[];
@@ -9,9 +11,12 @@ interface PagesListProps {
   onView: (id: string) => void;
   onCopy: (id: string) => void;
   onDelete: (id: string) => void;
+  onScreenshotComplete?: () => void;
 }
 
-export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesListProps) {
+export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onScreenshotComplete }: PagesListProps) {
+  const [completedScreenshots, setCompletedScreenshots] = useState<Set<string>>(new Set());
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
@@ -20,6 +25,15 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
+  };
+
+  const handleScreenshotComplete = (pageId: string) => {
+    setCompletedScreenshots(prev => new Set(prev).add(pageId));
+    onScreenshotComplete?.();
+  };
+
+  const needsScreenshot = (page: Page) => {
+    return !page.screenshotDesktop && !completedScreenshots.has(page.id);
   };
 
   if (pages.length === 0) {
@@ -100,6 +114,16 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
               <p className="text-body font-medium text-foreground">{formatDate(page.updatedAt)}</p>
             </div>
           </div>
+
+          {/* Status de screenshot se estiver processando */}
+          {needsScreenshot(page) && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <ScreenshotStatus
+                presellId={parseInt(page.id)}
+                onComplete={() => handleScreenshotComplete(page.id)}
+              />
+            </div>
+          )}
         </div>
       ))}
     </div>

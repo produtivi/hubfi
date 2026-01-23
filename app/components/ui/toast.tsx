@@ -38,17 +38,15 @@ export function Toast({ type, message, isVisible, onClose, duration = 4000 }: To
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
-      <div className="flex items-center gap-3 px-4 py-3 bg-card border border-border rounded-md shadow-lg min-w-[300px]">
-        {getIcon()}
-        <span className="text-body text-foreground flex-1">{message}</span>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-accent rounded-md transition-colors"
-        >
-          <X className="w-4 h-4 text-muted-foreground" />
-        </button>
-      </div>
+    <div className="flex items-center gap-3 px-4 py-3 bg-card border border-border rounded-md shadow-lg min-w-[300px]">
+      {getIcon()}
+      <span className="text-body text-foreground flex-1">{message}</span>
+      <button
+        onClick={onClose}
+        className="p-1 hover:bg-accent rounded-md transition-colors"
+      >
+        <X className="w-4 h-4 text-muted-foreground" />
+      </button>
     </div>
   );
 }
