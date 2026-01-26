@@ -340,7 +340,7 @@ export default function PageBuilder() {
           onView={handleView}
           onCopy={handleCopy}
           onDelete={handleDelete}
-          onScreenshotComplete={loadPresells}
+          onPreviewComplete={loadPresells}
         />
       )}
 

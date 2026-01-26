@@ -11,11 +11,11 @@ interface PagesListProps {
   onView: (id: string) => void;
   onCopy: (id: string) => void;
   onDelete: (id: string) => void;
-  onScreenshotComplete?: () => void;
+  onPreviewComplete?: () => void;
 }
 
-export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onScreenshotComplete }: PagesListProps) {
-  const [completedScreenshots, setCompletedScreenshots] = useState<Set<string>>(new Set());
+export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewComplete }: PagesListProps) {
+  const [completedPreviews, setCompletedPreviews] = useState<Set<string>>(new Set());
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
@@ -27,13 +27,13 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onScreensho
     }).format(date);
   };
 
-  const handleScreenshotComplete = (pageId: string) => {
-    setCompletedScreenshots(prev => new Set(prev).add(pageId));
-    onScreenshotComplete?.();
+  const handlePreviewComplete = (pageId: string) => {
+    setCompletedPreviews(prev => new Set(prev).add(pageId));
+    onPreviewComplete?.();
   };
 
-  const needsScreenshot = (page: Page) => {
-    return !page.screenshotDesktop && !completedScreenshots.has(page.id);
+  const needsPreview = (page: Page) => {
+    return !page.screenshotDesktop && !completedPreviews.has(page.id);
   };
 
   if (pages.length === 0) {
@@ -115,12 +115,12 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onScreensho
             </div>
           </div>
 
-          {/* Status de screenshot se estiver processando */}
-          {needsScreenshot(page) && (
+          {/* Status de prévia se estiver processando */}
+          {needsPreview(page) && (
             <div className="mt-4 pt-4 border-t border-border">
               <ScreenshotStatus
                 presellId={parseInt(page.id)}
-                onComplete={() => handleScreenshotComplete(page.id)}
+                onComplete={() => handlePreviewComplete(page.id)}
               />
             </div>
           )}

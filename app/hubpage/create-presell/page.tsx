@@ -109,7 +109,7 @@ export default function CreatePresell() {
       }
 
       // Mostrar toast de sucesso
-      showSuccess(`Página "${formData.pageName}" criada com sucesso! Screenshots serão gerados em segundo plano.`);
+      showSuccess(`Página "${formData.pageName}" criada com sucesso! Prévias serão geradas em segundo plano.`);
 
       // Redirecionar imediatamente para a lista
       router.push('/hubpage');
@@ -222,7 +222,7 @@ export default function CreatePresell() {
               <div className="space-y-1">
                 <span className="text-body font-medium flex items-center gap-2">
                   Página de vendas do produtor <span className="text-destructive">*</span>
-                  <TooltipHelp text="URL da página de vendas original. Usada para capturar screenshots e elementos visuais." />
+                  <TooltipHelp text="URL da página de vendas original. Usada para capturar elementos visuais e gerar prévias." />
                 </span>
                 <Input
                   type="url"

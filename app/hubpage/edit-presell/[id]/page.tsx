@@ -135,7 +135,7 @@ export default function EditPresell({ params }: EditPresellProps) {
         throw new Error(result.error || 'Erro ao atualizar presell');
       }
 
-      // Se mudou a URL da página do produtor, regenerar screenshot
+      // Se mudou a URL da página do produtor, regenerar prévias
       if (originalData.producerSalesPage !== formData.producerSalesPage) {
         try {
           await fetch(`/api/presells/${presellId}/regenerate-screenshot`, {
@@ -255,7 +255,7 @@ export default function EditPresell({ params }: EditPresellProps) {
               <div className="space-y-1">
                 <span className="text-body font-medium flex items-center gap-2">
                   Página de vendas do produtor <span className="text-destructive">*</span>
-                  <TooltipHelp text="URL da página de vendas original. Usada para capturar screenshots e elementos visuais." />
+                  <TooltipHelp text="URL da página de vendas original. Usada para capturar elementos visuais e gerar prévias." />
                 </span>
                 <Input
                   type="url"

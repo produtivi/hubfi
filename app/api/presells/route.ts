@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
     const producerSalesPageUrl = newPresell.producerSalesPage;
 
     console.log(`[Favicon] Iniciando download assíncrono para presell ${presellId}`);
-    console.log(`[Screenshot] Iniciando geração assíncrona para presell ${presellId}`);
+    console.log(`[Preview] Iniciando geração assíncrona para presell ${presellId}`);
     console.log(`[HTML] Iniciando geração assíncrona de HTML para presell ${presellId}`);
 
     // Baixar e salvar favicon em background
@@ -280,14 +280,14 @@ export async function POST(request: NextRequest) {
     // Executar em background sem await (fire-and-forget)
     (async () => {
       try {
-        console.log(`[Screenshot] Processando screenshots para presell ${presellId}, URL: ${producerSalesPageUrl}`);
+        console.log(`[Preview] Processando prévias para presell ${presellId}, URL: ${producerSalesPageUrl}`);
 
         // Validar URL
         const { validateURL } = await import('@/lib/url-validator');
         const urlValidation = validateURL(producerSalesPageUrl);
 
         if (!urlValidation.isValid) {
-          console.error(`[Screenshot] URL inválida para presell ${presellId}:`, urlValidation.error);
+          console.error(`[Preview] URL inválida para presell ${presellId}:`, urlValidation.error);
           // Atualizar com null para terminar polling
           await prisma.presell.update({
             where: { id: presellId },
@@ -296,19 +296,19 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        // Capturar screenshots com timeout
+        // Capturar screenshots com timeout aumentado
         const { takeScreenshot } = await import('@/lib/screenshot');
         const screenshotPromise = takeScreenshot(urlValidation.sanitized!, presellId);
         const timeoutPromise = new Promise<{ desktop: null, mobile: null }>((_, reject) => {
-          setTimeout(() => reject(new Error('Screenshot timeout - 30s')), 30000);
+          setTimeout(() => reject(new Error('Screenshot timeout - 60s')), 60000);
         });
 
         let screenshots: { desktop: string | null, mobile: string | null };
         try {
           screenshots = await Promise.race([screenshotPromise, timeoutPromise]);
-          console.log(`[Screenshot] Screenshots capturados para presell ${presellId}:`, screenshots);
+          console.log(`[Preview] Prévias capturadas para presell ${presellId}:`, screenshots);
         } catch (timeoutError) {
-          console.error(`[Screenshot] Timeout para presell ${presellId}:`, timeoutError);
+          console.error(`[Preview] Timeout para presell ${presellId}:`, timeoutError);
           screenshots = { desktop: null, mobile: null };
         }
 
@@ -321,9 +321,9 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        console.log(`[Screenshot] Presell ${presellId} atualizado no banco`);
+        console.log(`[Preview] Presell ${presellId} atualizado no banco`);
       } catch (error) {
-        console.error(`[Screenshot] Erro geral para presell ${presellId}:`, error);
+        console.error(`[Preview] Erro geral para presell ${presellId}:`, error);
         // Garantir que polling termine mesmo em erro
         try {
           await prisma.presell.update({
@@ -331,7 +331,7 @@ export async function POST(request: NextRequest) {
             data: { screenshotDesktop: null, screenshotMobile: null }
           });
         } catch (dbError) {
-          console.error(`[Screenshot] Erro ao atualizar banco para presell ${presellId}:`, dbError);
+          console.error(`[Preview] Erro ao atualizar banco para presell ${presellId}:`, dbError);
         }
       }
     })();

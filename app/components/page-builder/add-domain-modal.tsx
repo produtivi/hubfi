@@ -9,26 +9,21 @@ interface AddDomainModalProps {
   onAddDomain: (domain: string, registrar: 'godaddy' | 'hostinger' | 'already-have') => void;
 }
 
-type Step = 'choose-registrar' | 'enter-domain' | 'configure-nameservers';
+type Step = 'enter-domain' | 'configure-dns';
 
 export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalProps) {
-  const [step, setStep] = useState<Step>('choose-registrar');
-  const [registrar, setRegistrar] = useState<'godaddy' | 'hostinger' | 'already-have' | null>(null);
+  const [step, setStep] = useState<Step>('enter-domain');
+  const [registrar, setRegistrar] = useState<'godaddy' | 'hostinger' | 'already-have'>('already-have');
   const [domain, setDomain] = useState('');
   const [domainError, setDomainError] = useState('');
-  const [isTransferringExisting, setIsTransferringExisting] = useState(false);
 
-  const nameservers = ['brodie.ns.cloudflare.com', 'carioca.ns.cloudflare.com'];
+  const cnameTarget = 'customers.eduardoborges.dev.br';
 
   if (!isOpen) return null;
 
-  const handleRegistrarChoice = (choice: 'godaddy' | 'hostinger' | 'already-have') => {
-    setRegistrar(choice);
-    setStep('enter-domain');
-  };
-
   const validateDomain = (value: string) => {
-    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+    // Aceita domínios e subdomínios: exemplo.com, app.exemplo.com, api.app.exemplo.com
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
     if (!value) {
       setDomainError('');
       return false;
@@ -43,20 +38,18 @@ export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalP
 
   const handleDomainSubmit = () => {
     if (validateDomain(domain)) {
-      setStep('configure-nameservers');
+      setStep('configure-dns');
     }
   };
 
-  const handleCopyNameserver = (ns: string) => {
-    navigator.clipboard.writeText(ns);
+  const handleCopyCNAME = () => {
+    navigator.clipboard.writeText(cnameTarget);
   };
 
   const resetModalState = () => {
-    setStep('choose-registrar');
-    setRegistrar(null);
+    setStep('enter-domain');
     setDomain('');
     setDomainError('');
-    setIsTransferringExisting(false);
   };
 
   const handleFinish = () => {
@@ -78,22 +71,14 @@ export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalP
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            {step === 'configure-nameservers' && (
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center">
-                    <Check className="w-4 h-4 text-success-foreground" />
-                  </div>
-                  <span className="text-label text-success font-medium">Passo 1</span>
-                </div>
-                <span className="text-muted-foreground">...2</span>
-              </div>
-            )}
             <h2 className="text-title">
-              {step === 'choose-registrar' && 'Adicionar domínio'}
-              {step === 'enter-domain' && 'Adicionar domínio'}
-              {step === 'configure-nameservers' && 'Informações sobre o domínio'}
+              {step === 'enter-domain' && 'Adicionar Domínio Customizado'}
+              {step === 'configure-dns' && 'Configurar DNS'}
             </h2>
+            <p className="text-label text-muted-foreground mt-1">
+              {step === 'enter-domain' && 'Digite o domínio ou subdomínio que deseja usar'}
+              {step === 'configure-dns' && 'Configure o CNAME no painel DNS do seu domínio'}
+            </p>
           </div>
           <button
             onClick={handleClose}
@@ -106,61 +91,12 @@ export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalP
 
         {/* Content */}
         <div className="p-6">
-          {/* Step 1: Choose Registrar */}
-          {step === 'choose-registrar' && (
-            <div className="space-y-4">
-              <p className="text-body mb-6">Você já possui domínio registrado?</p>
-
-              <button
-                onClick={() => handleRegistrarChoice('already-have')}
-                className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity text-label font-medium"
-              >
-                Sim, já possuo
-              </button>
-
-              <div className="space-y-3">
-                <p className="text-label text-foreground font-medium">
-                  Não, mas quero registrar na GoDaddy (recomendado)
-                </p>
-
-                <a
-                  href="https://godaddy.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full px-6 py-4 border border-border rounded-md hover:bg-accent transition-colors text-label text-primary"
-                >
-                  Não sabe registrar um domínio na GoDaddy? Clique aqui!
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-
-                <div className="flex gap-4">
-                  <button
-                    onClick={() => handleRegistrarChoice('godaddy')}
-                    className="flex-1 px-6 py-4 bg-foreground text-background rounded-md hover:opacity-90 transition-opacity"
-                  >
-                    <span className="font-bold text-lg">GoDaddy</span>
-                  </button>
-                  <button
-                    onClick={() => handleRegistrarChoice('hostinger')}
-                    className="flex-1 px-6 py-4 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-opacity"
-                  >
-                    <span className="font-bold text-lg">HOSTINGER</span>
-                  </button>
-                </div>
-              </div>
-
-              <p className="text-label text-foreground font-medium">
-                Não, mas quero registrar na Hostinger
-              </p>
-            </div>
-          )}
-
-          {/* Step 2: Enter Domain */}
+          {/* Step 1: Enter Domain */}
           {step === 'enter-domain' && (
             <div className="space-y-6">
               <div>
                 <label className="block text-label text-foreground mb-2">
-                  1. Insira a url do seu domínio *
+                  Digite seu domínio ou subdomínio
                 </label>
                 <input
                   type="text"
@@ -169,7 +105,7 @@ export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalP
                     setDomain(e.target.value);
                     validateDomain(e.target.value);
                   }}
-                  placeholder="Nome do seu domínio"
+                  placeholder="exemplo: minhaloja.com ou app.minhaloja.com"
                   className="w-full px-4 py-3 bg-card border border-border rounded-md text-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 {domainError && (
@@ -185,18 +121,13 @@ export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalP
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="transferring"
-                  checked={isTransferringExisting}
-                  onChange={(e) => setIsTransferringExisting(e.target.checked)}
-                  className="w-4 h-4 rounded border-border"
-                />
-                <label htmlFor="transferring" className="text-body text-foreground">
-                  Estou ciente que caso esteja transferindo um domínio existente,
-                  as minhas páginas atuais (na godaddy por exemplo) irão parar de funcionar.
-                </label>
+              <div className="p-4 bg-accent rounded-md">
+                <p className="text-label font-medium mb-2">Exemplos válidos:</p>
+                <ul className="text-label text-muted-foreground space-y-1">
+                  <li>• minhaloja.com (domínio raiz)</li>
+                  <li>• app.minhaempresa.com.br (subdomínio)</li>
+                  <li>• loja.exemplo.shop (subdomínio)</li>
+                </ul>
               </div>
 
               <button
@@ -209,68 +140,82 @@ export function AddDomainModal({ isOpen, onClose, onAddDomain }: AddDomainModalP
             </div>
           )}
 
-          {/* Step 3: Configure Nameservers */}
-          {step === 'configure-nameservers' && (
+          {/* Step 2: Configure DNS */}
+          {step === 'configure-dns' && (
             <div className="space-y-6">
-              <div>
-                <p className="text-label text-muted-foreground mb-2">1. Insira a url do seu domínio *</p>
+              <div className="p-4 bg-accent rounded-md">
+                <p className="text-label font-medium mb-1">Domínio:</p>
                 <p className="text-body text-foreground">{domain}</p>
               </div>
 
               <div>
-                <p className="text-body mb-4">
-                  2. Altere os nameservers (NS) do seu domínio no registrador (ex:godaddy) por esses abaixo
+                <p className="text-body font-medium mb-4">
+                  Configure um registro CNAME no painel DNS do seu domínio:
                 </p>
 
-                <div className="space-y-3">
-                  {nameservers.map((ns, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={ns}
-                        readOnly
-                        className="flex-1 px-4 py-3 bg-card border border-border rounded-md text-body text-foreground"
-                      />
+                <div className="space-y-3 p-4 bg-card border border-border rounded-md">
+                  <div>
+                    <p className="text-label text-muted-foreground">Type:</p>
+                    <p className="text-body font-medium">CNAME</p>
+                  </div>
+                  <div>
+                    <p className="text-label text-muted-foreground">Name / Host:</p>
+                    <p className="text-body font-medium">
+                      {domain.split('.')[0]} {domain.split('.').length > 2 && '(ou @ se for domínio raiz)'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-label text-muted-foreground">Target / Points to:</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="flex-1 px-3 py-2 bg-background border border-border rounded text-body">
+                        {cnameTarget}
+                      </code>
                       <button
-                        onClick={() => handleCopyNameserver(ns)}
-                        className="px-4 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
+                        onClick={handleCopyCNAME}
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity flex items-center gap-2"
                       >
+                        <Copy className="w-4 h-4" />
                         Copiar
                       </button>
                     </div>
-                  ))}
+                  </div>
+                  <div>
+                    <p className="text-label text-muted-foreground">TTL:</p>
+                    <p className="text-body font-medium">Auto ou 3600</p>
+                  </div>
                 </div>
+              </div>
 
-                <p className="text-label text-muted-foreground mt-4">
-                  Selecione o registrador abaixo para ver o passo-a-passo de
-                  como alterar os servidores de nome do seu domínio
+              <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-md">
+                <p className="text-label font-medium text-blue-600 dark:text-blue-400 mb-2">
+                  Onde configurar o DNS?
+                </p>
+                <p className="text-label text-muted-foreground">
+                  Acesse o painel do seu provedor de domínio (GoDaddy, Hostinger, Registro.br, DigitalOcean, etc.)
+                  e procure por "DNS", "DNS Management" ou "Gerenciar DNS".
                 </p>
               </div>
 
-              <div>
-                <p className="text-label text-foreground font-medium mb-3">Recomendado</p>
-                <div className="flex gap-4">
-                  <button className="flex-1 px-6 py-4 bg-foreground text-background rounded-md hover:opacity-90 transition-opacity">
-                    <span className="font-bold text-lg">GoDaddy</span>
-                  </button>
-                  <button className="flex-1 px-6 py-4 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-opacity">
-                    <span className="font-bold text-lg">HOSTINGER</span>
-                  </button>
-                </div>
+              <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
+                <p className="text-label font-medium text-yellow-600 dark:text-yellow-400 mb-2">
+                  Tempo de propagação
+                </p>
+                <p className="text-label text-muted-foreground">
+                  Após configurar o DNS, pode levar <strong className="text-foreground">de 5 minutos até 24 horas</strong> para
+                  o domínio começar a funcionar. A propagação DNS depende do seu provedor e pode variar.
+                </p>
               </div>
 
               <button
                 onClick={handleFinish}
                 className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity text-label font-medium"
               >
-                Pronto, já realizei a alteração dos namesservers
+                Adicionar Domínio
               </button>
 
-              <div className="p-4 bg-success/10 border border-success rounded-md">
-                <p className="text-label text-success">
-                  Domínio adicionada com sucesso.
-                </p>
-              </div>
+              <p className="text-label text-muted-foreground text-center">
+                Você poderá verificar o status do domínio na lista após adicioná-lo.
+              </p>
             </div>
           )}
         </div>

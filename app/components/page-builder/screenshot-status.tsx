@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw05, CheckCircle, XCircle } from '@untitledui/icons';
 
-interface ScreenshotStatusProps {
+interface PreviewStatusProps {
   presellId: number;
   onComplete?: () => void;
 }
 
-export function ScreenshotStatus({ presellId, onComplete }: ScreenshotStatusProps) {
+export function ScreenshotStatus({ presellId, onComplete }: PreviewStatusProps) {
   const [status, setStatus] = useState<'processing' | 'completed' | 'failed'>('processing');
   const [progress, setProgress] = useState(0);
 
@@ -37,11 +37,11 @@ export function ScreenshotStatus({ presellId, onComplete }: ScreenshotStatusProp
         if (data.success && !data.data.isProcessing) {
           setProgress(100);
 
-          // Verificar se os screenshots foram gerados com sucesso ou falharam
+          // Verificar se as prévias foram geradas com sucesso ou falharam
           if (data.data.screenshotDesktop && data.data.screenshotMobile) {
             setStatus('completed');
           } else {
-            // Screenshots são null = falha
+            // Prévias são null = falha
             setStatus('failed');
           }
 
@@ -84,7 +84,7 @@ export function ScreenshotStatus({ presellId, onComplete }: ScreenshotStatusProp
     return (
       <div className="flex items-center gap-2 text-success">
         <CheckCircle className="w-4 h-4" />
-        <span className="text-label">Screenshots prontos</span>
+        <span className="text-label">Prévias prontas</span>
       </div>
     );
   }
@@ -93,7 +93,7 @@ export function ScreenshotStatus({ presellId, onComplete }: ScreenshotStatusProp
     return (
       <div className="flex items-center gap-2 text-destructive">
         <XCircle className="w-4 h-4" />
-        <span className="text-label">Falha ao gerar screenshots</span>
+        <span className="text-label">Falha ao gerar prévias</span>
       </div>
     );
   }
@@ -102,7 +102,7 @@ export function ScreenshotStatus({ presellId, onComplete }: ScreenshotStatusProp
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2 text-muted-foreground">
         <RefreshCw05 className="w-4 h-4 animate-spin" />
-        <span className="text-label">Gerando screenshots...</span>
+        <span className="text-label">Gerando prévias...</span>
       </div>
 
       {/* Barra de progresso */}
