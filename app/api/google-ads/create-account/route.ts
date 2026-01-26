@@ -75,8 +75,10 @@ export async function POST(request: NextRequest) {
         descriptive_name: accountName,
         currency_code: currencyCode,
         time_zone: timeZone
-      }
-    });
+      },
+      access_role: 'ADMIN',
+      validate_only: false
+    } as any);
 
     // Extrair o ID da nova conta
     const newCustomerId = createResponse.resource_name?.split('/').pop();

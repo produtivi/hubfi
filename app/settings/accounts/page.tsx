@@ -192,9 +192,8 @@ export default function ContasPage() {
           Conecte sua conta Google para gerenciar Google Ads e MCCs
         </p>
         <Button
-          onPress={handleAddGoogleAccount}
-          isDisabled={isAddingGmail}
-          isLoading={isAddingGmail}
+          onClick={handleAddGoogleAccount}
+          disabled={isAddingGmail}
           color="primary"
           iconLeading={GoogleIcon}
         >
