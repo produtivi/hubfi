@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       developer_token: process.env.GOOGLE_ADS_DEVELOPER_TOKEN!
     });
 
-    // Listar todas as contas acessíveis (geralmente MCCs)
+    // Listar todas as contas acessíveis (MCCs e contas regulares)
     const resourceNames = await client.listAccessibleCustomers(googleAccount.refreshToken);
 
     const accounts: Array<{
@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
       try {
         const customer = client.Customer({
           customer_id: customerId,
+          login_customer_id: customerId, // Necessário para MCCs acessarem subcontas
           refresh_token: googleAccount.refreshToken
         });
 
@@ -95,18 +96,20 @@ export async function GET(request: NextRequest) {
           const isTestAccount = result.customer.test_account || false;
 
           // Adicionar a conta principal (MCC ou conta normal)
-          accounts.push({
+          const account = {
             customerId: String(result.customer.id),
             accountName: result.customer.descriptive_name || `Conta ${result.customer.id}`,
             currencyCode: result.customer.currency_code || 'BRL',
             timeZone: result.customer.time_zone || 'America/Sao_Paulo',
             isTestAccount,
             isManager
-          });
+          };
+          accounts.push(account);
 
           // Se for MCC, buscar as subcontas
           if (isManager && !isTestAccount) {
             try {
+              // Buscar todas as contas vinculadas (incluindo níveis mais profundos)
               const subAccountsQuery = `
                 SELECT
                   customer_client.id,
@@ -117,26 +120,56 @@ export async function GET(request: NextRequest) {
                   customer_client.manager,
                   customer_client.hidden,
                   customer_client.level,
-                  customer_client.status
+                  customer_client.status,
+                  customer_client.resource_name
                 FROM customer_client
-                WHERE customer_client.status = 'ENABLED'
+                WHERE customer_client.level > 0
               `;
 
               const subAccountsResults = await customer.query(subAccountsQuery);
+
+              // Se não encontrou com level > 0, tentar sem filtro
+              if (subAccountsResults.length === 0) {
+                const allClientsQuery = `
+                  SELECT
+                    customer_client.id,
+                    customer_client.descriptive_name,
+                    customer_client.currency_code,
+                    customer_client.time_zone,
+                    customer_client.test_account,
+                    customer_client.manager,
+                    customer_client.hidden,
+                    customer_client.level,
+                    customer_client.status,
+                    customer_client.resource_name
+                  FROM customer_client
+                `;
+                await customer.query(allClientsQuery);
+              }
 
               for (const subResult of subAccountsResults) {
                 if (subResult.customer_client) {
                   const subCustomerId = String(subResult.customer_client.id);
 
                   // Não adicionar a própria MCC novamente
-                  if (subCustomerId === customerId) continue;
+                  if (subCustomerId === customerId) {
+                    continue;
+                  }
 
                   // Não adicionar contas de teste
-                  if (subResult.customer_client.test_account) continue;
+                  if (subResult.customer_client.test_account) {
+                    continue;
+                  }
 
                   // Não adicionar contas ocultas
-                  if (subResult.customer_client.hidden) continue;
+                  if (subResult.customer_client.hidden) {
+                    continue;
+                  }
 
+                  // Verificar status (2 = ENABLED, 3 = CANCELLED, etc)
+                  if (subResult.customer_client.status !== 2) {
+                    continue;
+                  }
                   accounts.push({
                     customerId: subCustomerId,
                     accountName: subResult.customer_client.descriptive_name || `Conta ${subCustomerId}`,
@@ -148,17 +181,13 @@ export async function GET(request: NextRequest) {
                   });
                 }
               }
-            } catch (subErr) {
-              console.error(`Erro ao buscar subcontas da MCC ${customerId}:`, subErr);
+            } catch {
+              // Silently skip MCC subaccount fetch errors
             }
           }
         }
-      } catch (err: any) {
-        // Ignorar contas desativadas ou sem acesso (é esperado)
-        const errorMessage = err?.errors?.[0]?.message || '';
-        if (!errorMessage.includes('not yet enabled') && !errorMessage.includes('deactivated')) {
-          console.error(`Erro ao buscar detalhes da conta ${customerId}:`, err);
-        }
+      } catch {
+        // Silently skip accounts that can't be accessed
       }
     }
 

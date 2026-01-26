@@ -272,7 +272,12 @@ export default function CreatePixel() {
 
     // Encontrar a presell selecionada para pegar a URL
     const selectedPresell = presellPages.find(p => p.id === formData.selectedPresell);
-    const presellUrl = selectedPresell ? `${selectedPresell.domain || ''}/${selectedPresell.url}` : '';
+    // url já vem como fullUrl completa (https://domain/slug) ou apenas o slug
+    const presellUrl = selectedPresell?.url?.startsWith('http')
+      ? selectedPresell.url
+      : selectedPresell && selectedPresell.domain
+        ? `https://${selectedPresell.domain}/${selectedPresell.url}`
+        : '';
 
     // Preparar dados para o modal
     const pixelData = {
@@ -282,8 +287,8 @@ export default function CreatePixel() {
       googleAdsCustomerId: formData.selectedGoogleAds,
       conversionActionId: formData.selectedConversionAction,
       useMcc: formData.useFiltermagic,
-      presellId: formData.useHubPage ? formData.selectedPresell : undefined,
-      presellUrl: formData.useHubPage ? presellUrl : undefined,
+      presellId: formData.selectedPresell,
+      presellUrl: presellUrl,
       // Dados extras para exibição no modal
       gmailEmail: gmailAccounts.find(g => g.id.toString() === formData.selectedGmail)?.email,
       googleAdsAccountName: googleAdsAccounts.find(a => a.customerId === formData.selectedGoogleAds)?.accountName,
@@ -408,7 +413,7 @@ export default function CreatePixel() {
                     <p className="text-label text-muted-foreground">
                       {formData.useFiltermagic
                         ? 'Nenhuma MCC encontrada para este Gmail'
-                        : 'Nenhuma subconta encontrada para este Gmail'}
+                        : 'Nenhuma conta Google Ads encontrada para este Gmail'}
                     </p>
                   )}
               </div>
@@ -456,6 +461,35 @@ export default function CreatePixel() {
                 </Select>
               </div>
 
+              {/* Página do HubPage */}
+              <div className="space-y-1">
+                <span className={`text-body font-medium flex items-center gap-2 ${!formData.selectedPlatform ? 'text-muted-foreground' : ''}`}>
+                  Página do HubPage <span className="text-destructive">*</span>
+                  <TooltipHelp text="Selecione uma página criada no HubPage para vincular ao pixel." />
+                </span>
+                <Select
+                  placeholder={isLoadingPresells ? 'Carregando páginas...' : 'Selecione sua página'}
+                  selectedKey={formData.selectedPresell || null}
+                  onSelectionChange={(key: Key | null) => handleInputChange('selectedPresell', key as string || '')}
+                  items={presellPages.map((presell) => ({
+                    id: presell.id,
+                    label: presell.name + (presell.domain ? ` (${presell.domain})` : '')
+                  }))}
+                  isRequired
+                  isDisabled={!formData.selectedPlatform || isLoadingPresells}
+                >
+                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+                </Select>
+                {formData.selectedPlatform && presellPages.length === 0 && !isLoadingPresells && (
+                  <p className="text-label text-muted-foreground">
+                    Nenhuma página encontrada.{' '}
+                    <a href="/hubpage/create-presell" className="text-primary hover:underline">
+                      Criar uma página
+                    </a>
+                  </p>
+                )}
+              </div>
+
               {/* Nome do Pixel */}
               <div className="space-y-1">
                 <span className={`text-body font-medium flex items-center gap-2 ${!formData.selectedConversionAction ? 'text-muted-foreground' : ''}`}>
@@ -499,35 +533,6 @@ export default function CreatePixel() {
                   isDisabled={!formData.selectedConversionAction || formData.useConversionName}
                   isRequired={!formData.useConversionName}
                 />
-              </div>
-
-              {/* Página do HubPage */}
-              <div className="space-y-1">
-                <span className={`text-body font-medium flex items-center gap-2 ${!formData.selectedPlatform ? 'text-muted-foreground' : ''}`}>
-                  Página do HubPage <span className="text-destructive">*</span>
-                  <TooltipHelp text="Selecione uma página criada no HubPage para vincular ao pixel." />
-                </span>
-                <Select
-                  placeholder={isLoadingPresells ? 'Carregando páginas...' : 'Selecione sua página'}
-                  selectedKey={formData.selectedPresell || null}
-                  onSelectionChange={(key: Key | null) => handleInputChange('selectedPresell', key as string || '')}
-                  items={presellPages.map((presell) => ({
-                    id: presell.id,
-                    label: presell.name + (presell.domain ? ` (${presell.domain})` : '')
-                  }))}
-                  isRequired
-                  isDisabled={!formData.selectedPlatform || isLoadingPresells}
-                >
-                  {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
-                </Select>
-                {formData.selectedPlatform && presellPages.length === 0 && !isLoadingPresells && (
-                  <p className="text-label text-muted-foreground">
-                    Nenhuma página encontrada.{' '}
-                    <a href="/hubpage/create-presell" className="text-primary hover:underline">
-                      Criar uma página
-                    </a>
-                  </p>
-                )}
               </div>
             </div>
 

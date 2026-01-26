@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Activity, Eye, EyeOff, MoreVertical, Copy, Trash2, Edit2, X, ExternalLink, LayoutDashboard, FlaskConical, Shield, ShoppingCart, CheckCircle } from 'lucide-react'
+import { Activity, Eye, EyeOff, MoreVertical, Trash2, Edit2, X, ExternalLink, LayoutDashboard, FlaskConical, Shield, ShoppingCart, CheckCircle } from 'lucide-react'
 import { SearchLg, Plus, FilterLines } from '@untitledui/icons'
 import { useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { ConfirmationModal } from '../components/confirmation-modal'
 import { Toast } from '../components/ui/toast'
 import { Button } from '@/components/base/buttons/button'
@@ -32,6 +33,7 @@ interface Pixel {
 
 export default function PixelTracker() {
   const router = useRouter()
+  const { resolvedTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState('')
   const [showInactive, setShowInactive] = useState(false)
   const [toast, setToast] = useState<{
@@ -173,25 +175,6 @@ export default function PixelTracker() {
       setToast(prev => ({ ...prev, isVisible: false }))
     }, 3000)
   }
-
-  // Função para copiar código do pixel
-  const handleCopyPixelCode = async (pixelId: string) => {
-    try {
-      const response = await fetch(`/api/pixels/${pixelId}/code`)
-      const result = await response.json()
-
-      if (result.success) {
-        await navigator.clipboard.writeText(result.data.trackingCode)
-        showToast('Código copiado para a área de transferência!', 'success')
-      } else {
-        showToast('Erro ao obter código do pixel', 'error')
-      }
-    } catch (err) {
-      console.error('Erro ao copiar código:', err)
-      showToast('Erro ao copiar código', 'error')
-    }
-  }
-
 
   // Função para toggle do pixel
   const handleTogglePixelStatus = (pixel: Pixel) => {
@@ -350,6 +333,9 @@ export default function PixelTracker() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Botão Dashboard */}
+                      
+
                       <span
                         className={`flex items-center gap-1 px-2 py-1 rounded-full text-label ${pixel.status === 'active'
                           ? 'bg-success/10 text-success'
@@ -399,9 +385,8 @@ export default function PixelTracker() {
 
                   {/* Ações adicionais */}
                   <div className="flex flex-row items-center mt-4 pt-4 border-t border-border text-sm">
-                    {/* Botão Dashboard */}
                     <Button
-                      className='p-2 bg-black/90 text-white border-0 hover:bg-black/70'
+                      className={`p-2 border-0 ${resolvedTheme === 'dark' ? 'bg-white text-black hover:bg-white/80' : 'bg-black/90 text-white hover:bg-black/70'}`}
                       color="secondary"
                       size="sm"
                       iconLeading={LayoutDashboard}
@@ -409,17 +394,6 @@ export default function PixelTracker() {
                     >
                       Dashboard
                     </Button>
-
-                    {/* Botão Copiar código - comentado */}
-                    {/* <Button
-                      className='p-2'
-                      color="secondary"
-                      size="sm"
-                      iconLeading={Copy}
-                      onClick={() => handleCopyPixelCode(pixel.pixelId)}
-                    >
-                      Copiar código
-                    </Button> */}
 
                     <div className="flex-1" />
 

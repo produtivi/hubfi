@@ -96,6 +96,29 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const presellId = searchParams.get('presellId')
+
+    // Se está buscando por presellId (para injeção de script), não precisa de auth
+    if (presellId) {
+      const pixels = await prisma.pixel.findMany({
+        where: {
+          presellId: parseInt(presellId),
+          status: 'active'
+        },
+        select: {
+          pixelId: true,
+          status: true
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        data: pixels
+      })
+    }
+
+    // Para listagem completa, precisa de auth
     const user = await getAuthUser()
 
     if (!user) {
@@ -142,16 +165,9 @@ export async function GET(request: NextRequest) {
         conversionActionId: pixel.conversionActionId,
         useMcc: pixel.useMcc,
         status: pixel.status,
-        visits: pixel.visits,
-        uniqueVisits: pixel.uniqueVisits,
-        cleanVisits: pixel.cleanVisits,
-        paidTrafficVisits: pixel.paidTrafficVisits,
         clicks: pixel.clicks,
-        checkouts: pixel.checkouts,
         sales: pixel.sales,
-        conversions: pixel.conversions,
         bounceRate: pixel.bounceRate ? parseFloat(pixel.bounceRate.toString()) : 0,
-        blockedIps: pixel.blockedIps,
         totalEvents: pixel._count.events,
         createdAt: pixel.createdAt,
         updatedAt: pixel.updatedAt

@@ -139,18 +139,9 @@ model Pixel {
   useMcc               Boolean  @default(false) @map("use_mcc") // Se está usando MCC
 
   // Métricas básicas
-  visits              Int      @default(0)                    // Total de visitas
-  uniqueVisits        Int      @default(0) @map("unique_visits")        // Visitas únicas
-  cleanVisits         Int      @default(0) @map("clean_visits")         // Visitas limpas (sem bots)
-  paidTrafficVisits   Int      @default(0) @map("paid_traffic_visits")  // Visitas de tráfego pago
-  clicks              Int      @default(0)                    // Cliques na página
-  checkouts           Int      @default(0)                    // Checkouts
-  sales               Int      @default(0)                    // Vendas
+  clicks              Int      @default(0)                    // Cliques na página do HubPage
+  sales               Int      @default(0)                    // Conversões/Vendas
   bounceRate          Decimal  @default(0) @map("bounce_rate") @db.Decimal(5,2) // Taxa de fuga (0.00 - 100.00)
-  blockedIps          Int      @default(0) @map("blocked_ips")          // IPs bloqueados
-  
-  // Métricas antigas (manter compatibilidade)
-  conversions         Int      @default(0)                    // Deprecated - usar sales
   
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
