@@ -78,7 +78,7 @@ export function TooltipHelp({ text, imageSrc, imageAlt = 'Exemplo' }: TooltipHel
             )}
 
             {/* Texto explicativo */}
-            <p className="text-sm text-foreground leading-relaxed pr-5">
+            <p className="text-sm text-foreground leading-relaxed pr-5 whitespace-pre-line">
               {text}
             </p>
           </div>

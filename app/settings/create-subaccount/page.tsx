@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSettingsToast } from '../toast-context';
+import { AlertCircle } from 'lucide-react';
+import { Input } from '@/components/base/input/input';
+import { Select } from '@/components/base/select/select';
+import { Button } from '@/components/base/buttons/button';
+import type { Key } from 'react-aria-components';
 
 interface GoogleAccount {
   id: string;
@@ -103,6 +108,8 @@ export default function CriarSubcontaPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          googleAccountId: selectedGmail,
+          mccId: selectedMcc,
           accountName: subAccountName,
           currencyCode: 'BRL',
           timeZone: 'America/Sao_Paulo'
@@ -115,7 +122,7 @@ export default function CriarSubcontaPage() {
         throw new Error(result.error || 'Erro ao criar subconta');
       }
 
-      showSuccess(`Subconta "${subAccountName}" criada com sucesso!`);
+      showSuccess(`Subconta "${subAccountName}" criada! Finalize a configuração no Google Ads.`);
       setSubAccountName('');
     } catch (error) {
       console.error('Erro:', error);
@@ -131,92 +138,107 @@ export default function CriarSubcontaPage() {
       <div className="mb-6">
         <h2 className="text-title mb-2">Criar subconta para MCC</h2>
         <p className="text-body-muted">
-          Adicione uma nova conta dentro de uma MCC existente
+          Adicione uma nova conta Google Ads dentro de uma MCC existente
         </p>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); handleCreateSubAccount(); }} className="space-y-4 max-w-2xl">
+      {/* Aviso importante */}
+      <div className="mb-6 p-4 bg-accent/30 border border-border rounded-lg flex gap-3">
+        <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
         <div>
-          <label className="block text-label text-muted-foreground mb-2">
-            Selecione um Gmail
-          </label>
-          <select
-            value={selectedGmail}
-            onChange={(e) => handleGmailSelect(e.target.value)}
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-body focus:ring-1 focus:ring-ring outline-none"
-            required
-          >
-            <option value="">Selecione</option>
-            {googleAccounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.email}
-              </option>
-            ))}
-          </select>
-          {!googleAccounts.length && (
-            <button
-              type="button"
-              onClick={() => router.push('/settings/accounts')}
-              className="text-label text-primary hover:underline mt-1 inline-block"
+          <p className="text-body font-medium mb-1">
+            Importante
+          </p>
+          <p className="text-label text-muted-foreground">
+            Após criar a subconta, você precisará acessar o{' '}
+            <a
+              href="https://ads.google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
             >
-              + adicionar uma conta Google
-            </button>
-          )}
+              Google Ads
+            </a>
+            {' '}para finalizar a configuração (aceitar termos, adicionar forma de pagamento, etc).
+            Somente após a configuração completa a conta aparecerá disponível para uso.
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={(e) => { e.preventDefault(); handleCreateSubAccount(); }} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <span className="text-body font-medium">
+              Gmail <span className="text-destructive">*</span>
+            </span>
+            <Select
+              placeholder="Selecione um Gmail"
+              selectedKey={selectedGmail || null}
+              onSelectionChange={(key: Key | null) => handleGmailSelect(key as string || '')}
+              items={googleAccounts.map((account) => ({ id: account.id, label: account.email }))}
+              isRequired
+            >
+              {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+            </Select>
+            {!googleAccounts.length && (
+              <button
+                type="button"
+                onClick={() => router.push('/settings/accounts')}
+                className="text-label text-primary hover:underline mt-1 inline-block"
+              >
+                + adicionar uma conta Google
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-body font-medium">
+              MCC <span className="text-destructive">*</span>
+            </span>
+            <Select
+              placeholder={isLoadingAdsAccounts ? 'Carregando...' : 'Selecione uma MCC'}
+              selectedKey={selectedMcc || null}
+              onSelectionChange={(key: Key | null) => setSelectedMcc(key as string || '')}
+              items={googleAdsAccounts
+                .filter(acc => acc.isManager && !acc.isTestAccount)
+                .map((account) => ({ id: account.customerId, label: `${account.accountName} - ${account.customerId}` }))}
+              isRequired
+              isDisabled={!selectedGmail || isLoadingAdsAccounts}
+            >
+              {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
+            </Select>
+            {selectedGmail && !isLoadingAdsAccounts && googleAdsAccounts.filter(acc => acc.isManager && !acc.isTestAccount).length === 0 && (
+              <p className="text-label text-muted-foreground mt-1">
+                Nenhuma MCC encontrada nesta conta
+              </p>
+            )}
+          </div>
         </div>
 
-        <div>
-          <label className="block text-label text-muted-foreground mb-2">
-            Selecione uma MCC
-          </label>
-          <select
-            value={selectedMcc}
-            onChange={(e) => setSelectedMcc(e.target.value)}
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-body focus:ring-1 focus:ring-ring outline-none"
-            required
-            disabled={!selectedGmail || isLoadingAdsAccounts}
-          >
-            <option value="">
-              {isLoadingAdsAccounts ? 'Carregando...' : 'Selecione'}
-            </option>
-            {googleAdsAccounts
-              .filter(acc => acc.isManager && !acc.isTestAccount)
-              .map((account) => (
-                <option key={account.customerId} value={account.customerId}>
-                  {account.accountName} - {account.customerId}
-                </option>
-              ))}
-          </select>
-          {selectedGmail && !isLoadingAdsAccounts && googleAdsAccounts.filter(acc => acc.isManager && !acc.isTestAccount).length === 0 && (
-            <p className="text-label text-muted-foreground mt-1">
-              Nenhuma MCC encontrada nesta conta
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-label text-muted-foreground mb-2">
-            Nome da conta
-          </label>
-          <input
-            type="text"
+        <div className="space-y-1 md:w-[calc(50%-12px)]">
+          <span className="text-body font-medium">
+            Nome da conta <span className="text-destructive">*</span>
+          </span>
+          <Input
             value={subAccountName}
-            onChange={(e) => setSubAccountName(e.target.value)}
+            onChange={(value) => setSubAccountName(value)}
             placeholder="Ex.: subContaNova"
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-body placeholder:text-muted-foreground focus:ring-1 focus:ring-ring outline-none"
-            required
+            isRequired
           />
           <p className="text-label text-muted-foreground mt-2">
             O nome deve ter entre 4 e 128 caracteres, usando apenas letras, números, espaços, hífens e sublinhados, sem acentos, cedilha ou caracteres especiais (como & e !).
           </p>
         </div>
 
-        <button
+        <Button
           type="submit"
-          disabled={isLoading || !selectedGmail || !selectedMcc || !subAccountName}
-          className="w-full px-6 py-3 bg-foreground text-background rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          color="primary"
+          size="md"
+          isDisabled={isLoading || !selectedGmail || !selectedMcc || !subAccountName}
+          isLoading={isLoading}
         >
-          {isLoading ? 'Criando conta...' : 'Criar conta'}
-        </button>
+          {isLoading ? 'Criando...' : 'Criar conta'}
+        </Button>
       </form>
     </>
   );
