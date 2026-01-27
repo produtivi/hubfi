@@ -176,6 +176,39 @@ export default function PixelTracker() {
     }, 3000)
   }
 
+  // Função para salvar nome do pixel
+  const handleSavePixelName = async (pixelId: string, newName: string) => {
+    if (!newName.trim()) {
+      setEditingPixelId(null)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/pixels', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pixelId, name: newName.trim() })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Atualizar o nome localmente
+        setPixels(prev => prev.map(p =>
+          p.pixelId === pixelId ? { ...p, name: newName.trim() } : p
+        ))
+        showToast('Nome atualizado com sucesso')
+      } else {
+        showToast('Erro ao atualizar nome', 'error')
+      }
+    } catch (error) {
+      console.error('Erro ao salvar nome:', error)
+      showToast('Erro ao atualizar nome', 'error')
+    }
+
+    setEditingPixelId(null)
+  }
+
   // Função para toggle do pixel
   const handleTogglePixelStatus = (pixel: Pixel) => {
     const action = pixel.status === 'active' ? 'desativar' : 'ativar'
@@ -291,18 +324,39 @@ export default function PixelTracker() {
                     <div className="flex flex-col gap-2 flex-1">
                       <div className="flex items-center gap-2 group">
                         {editingPixelId === pixel.id ? (
-                          <input
-                            type="text"
-                            defaultValue={pixel.name}
-                            className="text-title bg-card border-b-2 border-primary outline-none px-1"
-                            autoFocus
-                            onBlur={() => setEditingPixelId(null)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Escape' || e.key === 'Enter') {
-                                setEditingPixelId(null)
-                              }
-                            }}
-                          />
+                          <div className="flex items-center gap-2">
+                            <input
+                              id={`pixel-name-input-${pixel.id}`}
+                              type="text"
+                              defaultValue={pixel.name}
+                              className="text-title bg-card border-b-2 border-primary outline-none px-1"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  setEditingPixelId(null)
+                                } else if (e.key === 'Enter') {
+                                  handleSavePixelName(pixel.pixelId, e.currentTarget.value)
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                const input = document.getElementById(`pixel-name-input-${pixel.id}`) as HTMLInputElement
+                                if (input) handleSavePixelName(pixel.pixelId, input.value)
+                              }}
+                              className="p-1 bg-primary text-primary-foreground rounded hover:opacity-80 transition-opacity"
+                              title="Salvar"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setEditingPixelId(null)}
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title="Cancelar"
+                            >
+                              <X className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </div>
                         ) : (
                           <>
                             <h3 className="text-title">{pixel.name}</h3>
