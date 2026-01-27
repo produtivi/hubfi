@@ -113,7 +113,7 @@ export function PixelConfirmationModal({ pixelData, onClose, onSuccess, onError,
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
-                <h2 className="text-headline">Resumo da criacao do Pixel</h2>
+                <h2 className="text-headline">Resumo da criação do Pixel</h2>
                 {pixelData.presellUrl && (
                   <p className="text-label text-muted-foreground mt-1">
                     {pixelData.presellUrl}

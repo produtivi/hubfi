@@ -100,7 +100,7 @@ export default function PixelDashboard({ params }: DashboardParams) {
       color: 'text-foreground'
     },
     {
-      title: 'Cliques na página',
+      title: 'Cliques na página do HubPage',
       value: pixelInfo.clicks?.toString() || '0',
       change: '--',
       trend: 'neutral',

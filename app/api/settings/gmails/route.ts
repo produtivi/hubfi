@@ -88,6 +88,21 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // Delete associated pixels first (and their events and blocked IPs)
+    const pixels = await prisma.pixel.findMany({
+      where: { googleAccountId: parseInt(id) },
+      select: { id: true }
+    })
+
+    for (const pixel of pixels) {
+      await prisma.blockedIp.deleteMany({ where: { pixelId: pixel.id } })
+      await prisma.pixelEvent.deleteMany({ where: { pixelId: pixel.id } })
+    }
+
+    await prisma.pixel.deleteMany({
+      where: { googleAccountId: parseInt(id) }
+    })
+
     // Delete the account
     await prisma.googleAccount.delete({
       where: {

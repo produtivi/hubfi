@@ -94,6 +94,66 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await getAuthUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Não autenticado' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const { pixelId, name } = body
+
+    if (!pixelId || !name) {
+      return NextResponse.json(
+        { success: false, error: 'pixelId e name são obrigatórios' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar se o pixel pertence ao usuário
+    const existingPixel = await prisma.pixel.findFirst({
+      where: {
+        pixelId,
+        userId: user.id
+      }
+    })
+
+    if (!existingPixel) {
+      return NextResponse.json(
+        { success: false, error: 'Pixel não encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Atualizar o nome do pixel
+    const updatedPixel = await prisma.pixel.update({
+      where: { id: existingPixel.id },
+      data: { name }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: updatedPixel.id,
+        pixelId: updatedPixel.pixelId,
+        name: updatedPixel.name
+      }
+    })
+
+  } catch (error) {
+    console.error('Erro ao atualizar pixel:', error)
+    return NextResponse.json(
+      { success: false, error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
