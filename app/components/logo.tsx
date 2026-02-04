@@ -4,7 +4,12 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-export function Logo() {
+interface LogoProps {
+  width?: number;
+  height?: number;
+}
+
+export function Logo({ width = 120, height = 32 }: LogoProps) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -12,27 +17,16 @@ export function Logo() {
     setMounted(true);
   }, []);
 
-  // Enquanto não montar, mostra logo preta por padrão
-  if (!mounted) {
-    return (
-      <Image
-        src="/logo/logo-preta.png"
-        alt="Hubfi"
-        width={120}
-        height={32}
-        priority
-        unoptimized
-      />
-    );
-  }
+  const src = mounted && resolvedTheme === "dark"
+    ? "/logo/logo-branca.png"
+    : "/logo/logo-preta.png";
 
-  // Depois de montar, mostra baseado no tema
   return (
     <Image
-      src={resolvedTheme === "dark" ? "/logo/logo-branca.png" : "/logo/logo-preta.png"}
+      src={src}
       alt="Hubfi"
-      width={120}
-      height={32}
+      width={width}
+      height={height}
       priority
       unoptimized
     />

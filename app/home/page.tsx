@@ -1,81 +1,61 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes';
-import Image from 'next/image';
+import Link from 'next/link';
 import { Globe, Sparkles, Target, Type, Zap, BarChart3, ArrowRight } from 'lucide-react';
+import { Logo } from '@/components/logo';
+
+const modules = [
+  {
+    icon: Globe,
+    name: 'HubPage',
+    description: 'Crie landing pages e presells otimizadas para conversão, com domínio próprio e editor visual intuitivo.',
+  },
+  {
+    icon: Sparkles,
+    name: 'HubCampaign',
+    description: 'Automatize a criação de campanhas no Google Ads com inteligência artificial. Títulos, descrições e configurações prontos em segundos.',
+  },
+  {
+    icon: Target,
+    name: 'HubPixel',
+    description: 'Gerencie pixels de rastreamento e ações de conversão para medir o desempenho real das suas campanhas.',
+  },
+  {
+    icon: Type,
+    name: 'HubTitle',
+    description: 'Gere títulos e descrições persuasivos com IA para seus anúncios. Otimizados para Google Ads com limite de caracteres.',
+  },
+];
+
+const features = [
+  {
+    icon: Zap,
+    title: 'Automação inteligente',
+    description: 'Reduza horas de trabalho manual. Nossa plataforma automatiza desde a criação de campanhas até o rastreamento de conversões.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Dados centralizados',
+    description: 'Todas as suas métricas, campanhas e páginas em um só lugar. Tome decisões baseadas em dados reais.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Inteligência artificial',
+    description: 'Textos gerados por IA seguindo as melhores práticas de copywriting e otimizados para cada plataforma de anúncios.',
+  },
+];
 
 export default function HomePage() {
-  const router = useRouter();
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const logoSrc = mounted && resolvedTheme === 'dark' ? '/logo/logo-branca.png' : '/logo/logo-preta.png';
-
-  const modules = [
-    {
-      icon: Globe,
-      name: 'HubPage',
-      description: 'Crie landing pages e presells otimizadas para conversão, com domínio próprio e editor visual intuitivo.',
-    },
-    {
-      icon: Sparkles,
-      name: 'HubCampaign',
-      description: 'Automatize a criação de campanhas no Google Ads com inteligência artificial. Títulos, descrições e configurações prontos em segundos.',
-    },
-    {
-      icon: Target,
-      name: 'HubPixel',
-      description: 'Gerencie pixels de rastreamento e ações de conversão para medir o desempenho real das suas campanhas.',
-    },
-    {
-      icon: Type,
-      name: 'HubTitle',
-      description: 'Gere títulos e descrições persuasivos com IA para seus anúncios. Otimizados para Google Ads com limite de caracteres.',
-    },
-  ];
-
-  const features = [
-    {
-      icon: Zap,
-      title: 'Automação inteligente',
-      description: 'Reduza horas de trabalho manual. Nossa plataforma automatiza desde a criação de campanhas até o rastreamento de conversões.',
-    },
-    {
-      icon: BarChart3,
-      title: 'Dados centralizados',
-      description: 'Todas as suas métricas, campanhas e páginas em um só lugar. Tome decisões baseadas em dados reais.',
-    },
-    {
-      icon: Sparkles,
-      title: 'Inteligência artificial',
-      description: 'Textos gerados por IA seguindo as melhores práticas de copywriting e otimizados para cada plataforma de anúncios.',
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
       <nav className="border-b border-border bg-card">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Image
-            src={logoSrc}
-            alt="Hubfi"
-            width={100}
-            height={27}
-            priority
-          />
-          <button
-            onClick={() => router.push('/login')}
+          <Logo width={100} height={27} />
+          <Link
+            href="/login"
             className="px-5 py-2 bg-primary text-primary-foreground rounded-md text-sm font-sans font-medium hover:opacity-80 transition-opacity"
           >
             Entrar
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -88,19 +68,19 @@ export default function HomePage() {
           Plataforma completa para afiliados digitais. Crie páginas, automatize campanhas, rastreie conversões e gere textos com inteligência artificial.
         </p>
         <div className="flex items-center justify-center gap-4">
-          <button
-            onClick={() => router.push('/register')}
+          <Link
+            href="/register"
             className="px-8 py-3 bg-primary text-primary-foreground rounded-md text-sm font-sans font-medium hover:opacity-80 transition-opacity flex items-center gap-2"
           >
             Comece agora
             <ArrowRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => router.push('/login')}
+          </Link>
+          <Link
+            href="/login"
             className="px-8 py-3 border border-border text-foreground rounded-md text-sm font-sans font-medium hover:bg-accent transition-colors"
           >
             Já tenho conta
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -180,37 +160,32 @@ export default function HomePage() {
           <p className="text-muted-foreground font-sans text-lg mb-8 max-w-lg mx-auto">
             Crie sua conta gratuitamente e tenha acesso a todas as ferramentas da plataforma.
           </p>
-          <button
-            onClick={() => router.push('/register')}
+          <Link
+            href="/register"
             className="px-8 py-3 bg-primary text-primary-foreground rounded-md text-sm font-sans font-medium hover:opacity-80 transition-opacity"
           >
             Criar conta gratuita
-          </button>
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <Image
-            src={logoSrc}
-            alt="Hubfi"
-            width={80}
-            height={22}
-          />
+          <Logo width={80} height={22} />
           <div className="flex items-center gap-6">
-            <button
-              onClick={() => router.push('/service-terms')}
+            <Link
+              href="/service-terms"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors font-sans"
             >
               Termos de Serviço
-            </button>
-            <button
-              onClick={() => router.push('/policy-and-privacy')}
+            </Link>
+            <Link
+              href="/policy-and-privacy"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors font-sans"
             >
               Política de Privacidade
-            </button>
+            </Link>
           </div>
         </div>
       </footer>
