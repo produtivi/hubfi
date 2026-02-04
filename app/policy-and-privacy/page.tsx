@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
@@ -7,6 +8,13 @@ import Image from 'next/image';
 export default function PolicyAndPrivacyPage() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const logoSrc = mounted && resolvedTheme === 'dark' ? '/logo/logo-branca.png' : '/logo/logo-preta.png';
 
   return (
     <div className="min-h-screen bg-background">
@@ -15,7 +23,7 @@ export default function PolicyAndPrivacyPage() {
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
           <button onClick={() => router.push('/home')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Image
-              src={resolvedTheme === 'dark' ? '/logo/logo-branca.png' : '/logo/logo-preta.png'}
+              src={logoSrc}
               alt="Hubfi"
               width={80}
               height={22}

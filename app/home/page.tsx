@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
@@ -8,6 +9,13 @@ import { Globe, Sparkles, Target, Type, Zap, BarChart3, ArrowRight } from 'lucid
 export default function HomePage() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const logoSrc = mounted && resolvedTheme === 'dark' ? '/logo/logo-branca.png' : '/logo/logo-preta.png';
 
   const modules = [
     {
@@ -56,7 +64,7 @@ export default function HomePage() {
       <nav className="border-b border-border bg-card">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Image
-            src={resolvedTheme === 'dark' ? '/logo/logo-branca.png' : '/logo/logo-preta.png'}
+            src={logoSrc}
             alt="Hubfi"
             width={100}
             height={27}
@@ -185,7 +193,7 @@ export default function HomePage() {
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <Image
-            src={resolvedTheme === 'dark' ? '/logo/logo-branca.png' : '/logo/logo-preta.png'}
+            src={logoSrc}
             alt="Hubfi"
             width={80}
             height={22}
