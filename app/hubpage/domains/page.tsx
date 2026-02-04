@@ -121,10 +121,10 @@ export default function DomainsPage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-6 md:p-8">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-start justify-between mb-6">
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -143,7 +143,7 @@ export default function DomainsPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <Button
             color="primary"
             size="md"

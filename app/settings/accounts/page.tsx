@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trash2, Building2, MonitorSmartphone, Target } from 'lucide-react';
+import { Trash2, Building2, MonitorSmartphone, Target, X, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSettingsToast } from '../toast-context';
 import { Button } from '@/components/base/buttons/button';
@@ -33,6 +33,8 @@ export default function ContasPage() {
   const [isLoadingInfo, setIsLoadingInfo] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isAddingGmail, setIsAddingGmail] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<GoogleAccount | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -145,18 +147,34 @@ export default function ContasPage() {
     setIsSyncing(false);
   };
 
-  const handleRemoveAccount = async (accountId: string) => {
+  const handleRemoveAccount = async () => {
+    if (!accountToDelete) return;
+
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/settings/gmails?id=${accountId}`, {
+      const response = await fetch(`/api/settings/gmails?id=${accountToDelete.id}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Erro ao remover conta');
 
       showSuccess('Conta removida com sucesso');
+      setAccountToDelete(null);
       fetchGoogleAccounts();
     } catch (error) {
       console.error('Erro:', error);
       showError('Erro ao remover conta');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openDeleteModal = (account: GoogleAccount) => {
+    setAccountToDelete(account);
+  };
+
+  const closeDeleteModal = () => {
+    if (!isDeleting) {
+      setAccountToDelete(null);
     }
   };
 
@@ -248,7 +266,7 @@ export default function ContasPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleRemoveAccount(account.id)}
+                  onClick={() => openDeleteModal(account)}
                   className="p-2 hover:bg-accent rounded-md transition-colors"
                   title="Remover conta"
                 >
@@ -288,6 +306,70 @@ export default function ContasPage() {
           ))
         )}
       </div>
+
+      {/* Modal de confirmação de exclusão */}
+      {accountToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={closeDeleteModal}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                </div>
+                <h3 className="text-title">Remover conta</h3>
+              </div>
+              <button
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+                className="p-1 hover:bg-accent rounded-md transition-colors disabled:opacity-50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="mb-6">
+              <p className="text-body text-muted-foreground mb-3">
+                Tem certeza que deseja remover a conta:
+              </p>
+              <div className="p-3 bg-accent/50 rounded-md">
+                <p className="text-body font-medium">{accountToDelete.email}</p>
+              </div>
+              <p className="text-label text-muted-foreground mt-3">
+                Esta ação irá remover todos os pixels e dados associados a esta conta.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 justify-end">
+              <Button
+                type="button"
+                color="secondary"
+                onClick={closeDeleteModal}
+                isDisabled={isDeleting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                color="primary-destructive"
+                onClick={handleRemoveAccount}
+                isLoading={isDeleting}
+              >
+                Remover
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

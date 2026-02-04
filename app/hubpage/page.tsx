@@ -205,30 +205,38 @@ export default function PageBuilder() {
   };
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-6 md:p-8">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-start justify-between mb-6">
+      <div className="mb-6 md:mb-8">
+        <div className="flex items-start justify-between mb-4 md:mb-6">
           <div>
-            <h1 className="text-headline mb-2">HubPage</h1>
+            <h1 className="text-headline mb-1 md:mb-2">HubPage</h1>
             <p className="text-body-muted">
               Crie e personalize suas pages
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button
-              color="secondary"
-              size="sm"
-              iconLeading={Settings01}
-              onClick={() => router.push('/hubpage/domains')}
-            >
-              Gerenciar Domínios
-            </Button>
-          </div>
+          <Button
+            color="secondary"
+            size="sm"
+            iconLeading={Settings01}
+            onClick={() => router.push('/hubpage/domains')}
+            className="hidden md:flex"
+          >
+            Gerenciar Domínios
+          </Button>
+          <Button
+            color="secondary"
+            size="sm"
+            iconLeading={Settings01}
+            onClick={() => router.push('/hubpage/domains')}
+            className="flex md:hidden"
+          >
+            Domínios
+          </Button>
         </div>
 
         {/* Search + Filters + Create Button */}
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4">
           <div className="flex-1">
             <Input
               placeholder="Buscar páginas por nome ou domínio..."
@@ -237,12 +245,13 @@ export default function PageBuilder() {
               icon={SearchLg}
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 md:gap-3">
             <Button
               color={showFilters ? 'primary' : 'secondary'}
               size="md"
               iconLeading={FilterLines}
               onClick={() => setShowFilters(!showFilters)}
+              className="flex-1 md:flex-none"
             >
               Filtros
             </Button>
@@ -251,6 +260,7 @@ export default function PageBuilder() {
               size="md"
               iconLeading={Plus}
               onClick={() => setIsCreateModalOpen(true)}
+              className="flex-1 md:flex-none"
             >
               Criar Página
             </Button>
@@ -260,7 +270,7 @@ export default function PageBuilder() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-card border border-border rounded-md p-6 mb-6">
+        <div className="bg-card border border-border rounded-md p-4 md:p-6 mb-4 md:mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="block text-label">Tipo de página</label>

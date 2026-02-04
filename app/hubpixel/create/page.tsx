@@ -301,7 +301,7 @@ export default function CreatePixel() {
   };
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-6 md:p-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">

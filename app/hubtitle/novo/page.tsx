@@ -86,7 +86,7 @@ export default function NovoHubTitle() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-6 md:p-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -216,6 +216,7 @@ export default function NovoHubTitle() {
                 type="submit"
                 isDisabled={isCreating || !formData.name || !formData.description}
                 isLoading={isCreating}
+                 className='p-2 md:p-0'
               >
                 Criar e Gerar Conteúdo
               </Button>

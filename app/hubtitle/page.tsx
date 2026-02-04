@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Copy07 as Copy, Check, Star01 as Star, Trash03 as Trash2, Link03 as Link, SearchLg as Search } from '@untitledui/icons'
+import { Plus, Copy07 as Copy, Check, Star01 as Star, Trash03 as Trash2, Link03 as Link, SearchLg as Search, RefreshCcw01 as RefreshCcw } from '@untitledui/icons'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/base/input/input'
@@ -133,17 +133,39 @@ export default function HubTitlePage() {
   }
 
   const handleToggleFavoriteTitle = async (titleId: number, currentState: boolean) => {
+    // Optimistic update - atualiza UI imediatamente
+    const newState = !currentState
+
+    setProducts(products.map(product => ({
+      ...product,
+      titles: product.titles.map(title =>
+        title.id === titleId ? { ...title, isFavorite: newState } : title
+      )
+    })))
+
+    if (selectedProduct) {
+      setSelectedProduct({
+        ...selectedProduct,
+        titles: selectedProduct.titles.map(title =>
+          title.id === titleId ? { ...title, isFavorite: newState } : title
+        )
+      })
+    }
+
+    // Faz a requisição em background
     try {
       await fetch(`/api/hubtitle/titles/${titleId}/favorite`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isFavorite: !currentState })
+        body: JSON.stringify({ isFavorite: newState })
       })
-
+    } catch (error) {
+      // Reverte se der erro
+      console.error('Erro ao favoritar:', error)
       setProducts(products.map(product => ({
         ...product,
         titles: product.titles.map(title =>
-          title.id === titleId ? { ...title, isFavorite: !currentState } : title
+          title.id === titleId ? { ...title, isFavorite: currentState } : title
         )
       })))
 
@@ -151,27 +173,47 @@ export default function HubTitlePage() {
         setSelectedProduct({
           ...selectedProduct,
           titles: selectedProduct.titles.map(title =>
-            title.id === titleId ? { ...title, isFavorite: !currentState } : title
+            title.id === titleId ? { ...title, isFavorite: currentState } : title
           )
         })
       }
-    } catch (error) {
-      console.error('Erro ao favoritar:', error)
     }
   }
 
   const handleToggleFavoriteDescription = async (descId: number, currentState: boolean) => {
+    // Optimistic update - atualiza UI imediatamente
+    const newState = !currentState
+
+    setProducts(products.map(product => ({
+      ...product,
+      descriptions: product.descriptions.map(desc =>
+        desc.id === descId ? { ...desc, isFavorite: newState } : desc
+      )
+    })))
+
+    if (selectedProduct) {
+      setSelectedProduct({
+        ...selectedProduct,
+        descriptions: selectedProduct.descriptions.map(desc =>
+          desc.id === descId ? { ...desc, isFavorite: newState } : desc
+        )
+      })
+    }
+
+    // Faz a requisição em background
     try {
       await fetch(`/api/hubtitle/descriptions/${descId}/favorite`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isFavorite: !currentState })
+        body: JSON.stringify({ isFavorite: newState })
       })
-
+    } catch (error) {
+      // Reverte se der erro
+      console.error('Erro ao favoritar:', error)
       setProducts(products.map(product => ({
         ...product,
         descriptions: product.descriptions.map(desc =>
-          desc.id === descId ? { ...desc, isFavorite: !currentState } : desc
+          desc.id === descId ? { ...desc, isFavorite: currentState } : desc
         )
       })))
 
@@ -179,12 +221,10 @@ export default function HubTitlePage() {
         setSelectedProduct({
           ...selectedProduct,
           descriptions: selectedProduct.descriptions.map(desc =>
-            desc.id === descId ? { ...desc, isFavorite: !currentState } : desc
+            desc.id === descId ? { ...desc, isFavorite: currentState } : desc
           )
         })
       }
-    } catch (error) {
-      console.error('Erro ao favoritar:', error)
     }
   }
 
@@ -227,7 +267,7 @@ export default function HubTitlePage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-6 md:p-8">
       <div className="mb-8">
         <h1 className="text-headline mb-2">HubTitle</h1>
         <p className="text-body-muted">
@@ -249,7 +289,7 @@ export default function HubTitlePage() {
 
         {/* Ordenação e botão criar */}
         <div className="flex gap-3">
-          <div className="w-full md:w-[200px]">
+          <div className="w-full">
             <Select
               placeholder="Ordenar por"
               defaultSelectedKey={sortBy}
@@ -262,6 +302,7 @@ export default function HubTitlePage() {
                 { id: 'name-az', label: 'Nome (A-Z)' },
                 { id: 'name-za', label: 'Nome (Z-A)' }
               ]}
+              className="flex-1 md:flex-none"
             >
               {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
             </Select>
@@ -272,6 +313,7 @@ export default function HubTitlePage() {
             size="md"
             iconLeading={Plus}
             onClick={() => router.push('/hubtitle/novo')}
+            className="flex-1 md:flex-none"
           >
             Criar novo produto
           </Button>
@@ -321,22 +363,26 @@ export default function HubTitlePage() {
                           <p className="text-label text-muted-foreground mt-1">
                             {product.titles.length} títulos • {product.descriptions.length} descrições
                           </p>
-                          <p className="text-label text-muted-foreground flex items-center gap-1 mt-1">
-                            <Star className="text-yellow-400 size-4" />{' '}
-                            {product.titles.filter((t) => t.isFavorite).length +
-                              product.descriptions.filter((d) => d.isFavorite).length}{' '}
-                            favoritos
-                          </p>
+                          {(() => {
+                            const favCount = product.titles.filter((t) => t.isFavorite).length +
+                              product.descriptions.filter((d) => d.isFavorite).length;
+                            return (
+                              <p className="text-label text-muted-foreground flex items-center gap-1 mt-1">
+                                <Star className={`size-4 text-yellow-400 ${favCount > 0 ? 'fill-yellow-400' : ''}`} />{' '}
+                                {favCount} favoritos
+                              </p>
+                            );
+                          })()}
                         </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             openDeleteDialog(product.id)
                           }}
-                          className="p-1.5 hover:bg-destructive/10 rounded-md transition-colors"
+                          className="p-2 hover:bg-destructive/10 rounded-md transition-colors"
                           title="Deletar produto"
                         >
-                          <Trash2 className="size-4 text-destructive" />
+                          <Trash2 className="size-4 text-destructive border-gray-200 md:border-0" />
                         </button>
                       </div>
                     </div>
@@ -382,8 +428,9 @@ export default function HubTitlePage() {
                 {/* Botão Gerar Mais */}
                 <div className="flex justify-center">
                   <Button
-                    size="lg"
+                    size="md"
                     color="primary"
+                    iconLeading={RefreshCcw}
                     onClick={() => handleGenerateMore(selectedProduct.id)}
                     isDisabled={isGenerating}
                     isLoading={isGenerating}

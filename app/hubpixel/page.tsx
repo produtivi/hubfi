@@ -262,7 +262,7 @@ export default function PixelTracker() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-6 md:p-8">
       <div className="mb-8">
         <h1 className="text-headline mb-2">HubPixel</h1>
         <p className="text-body-muted">
@@ -289,6 +289,7 @@ export default function PixelTracker() {
             size="md"
             iconLeading={FilterLines}
             onClick={() => setShowInactive(!showInactive)}
+            className="flex-1 md:flex-none"
           >
             {showInactive ? 'Ver Ativos' : 'Ver Inativos'}
           </Button>
@@ -298,6 +299,7 @@ export default function PixelTracker() {
             size="md"
             iconLeading={Plus}
             onClick={() => router.push('/hubpixel/create')}
+            className="flex-1 md:flex-none"
           >
             Criar novo pixel
           </Button>
