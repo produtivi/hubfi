@@ -14,7 +14,7 @@ export default function CreatePresell() {
   const router = useRouter();
   const { showSuccess, showError } = useHubPageToast();
   const [formData, setFormData] = useState({
-    domain: '',
+    customDomain: '',
     pageName: '',
     affiliateLink: '',
     producerSalesPage: '',
@@ -23,7 +23,7 @@ export default function CreatePresell() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [domains, setDomains] = useState<string[]>([]);
+  const [customDomains, setCustomDomains] = useState<Array<{id: string, domain: string}>>([]);
   const [presellTypes, setPresellTypes] = useState<string[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -36,12 +36,17 @@ export default function CreatePresell() {
     try {
       setIsLoadingData(true);
 
-      // Carregar domínios
-      const domainsResponse = await fetch('/api/domains');
-      const domainsResult = await domainsResponse.json();
+      // Carregar domínios customizados
+      const userId = 1; // TODO: Pegar userId real
+      const customDomainsResponse = await fetch(`/api/custom-domains?userId=${userId}`);
+      const customDomainsResult = await customDomainsResponse.json();
 
-      if (domainsResult.success) {
-        setDomains(domainsResult.data.map((domain: any) => domain.domainName));
+      if (customDomainsResult.domains) {
+        // Filtrar apenas domínios ativos
+        const activeDomains = customDomainsResult.domains
+          .filter((d: any) => d.status === 'active')
+          .map((d: any) => ({ id: d.id, domain: d.hostname }));
+        setCustomDomains(activeDomains);
       }
 
       // Carregar tipos de presell
@@ -93,7 +98,7 @@ export default function CreatePresell() {
         },
         body: JSON.stringify({
           userId,
-          domain: formData.domain,
+          customDomain: formData.customDomain,
           pageName: formData.pageName,
           affiliateLink: formData.affiliateLink,
           producerSalesPage: formData.producerSalesPage,
@@ -168,21 +173,26 @@ export default function CreatePresell() {
 
             {/* Grid de campos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Domínio */}
+              {/* Domínio Customizado */}
               <div className="space-y-1">
                 <span className="text-body font-medium flex items-center gap-2">
                   Domínio <span className="text-destructive">*</span>
-                  <TooltipHelp text="Selecione o domínio onde sua presell será publicada." />
+                  <TooltipHelp text="Selecione um dos seus domínios customizados ativos." />
                 </span>
                 <Select
                   placeholder="Escolha o domínio"
-                  selectedKey={formData.domain || null}
-                  onSelectionChange={(key: Key | null) => setFormData({ ...formData, domain: key as string || '' })}
-                  items={domains.map((domain) => ({ id: domain, label: domain }))}
+                  selectedKey={formData.customDomain || null}
+                  onSelectionChange={(key: Key | null) => setFormData({ ...formData, customDomain: key as string || '' })}
+                  items={customDomains.map((domain) => ({ id: domain.domain, label: domain.domain }))}
                   isRequired
                 >
                   {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
                 </Select>
+                {customDomains.length === 0 && (
+                  <p className="text-label text-muted-foreground mt-1">
+                    Nenhum domínio customizado ativo. <a href="/hubpage/domains" className="text-primary underline">Adicionar domínio</a>
+                  </p>
+                )}
               </div>
 
               {/* Nome da página */}

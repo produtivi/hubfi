@@ -3,7 +3,12 @@
 export default {
      async fetch(request, env, ctx) {
           const url = new URL(request.url);
-          const hostname = url.hostname;
+
+          // Tentar pegar o hostname original da requisição
+          // Cloudflare passa o hostname original em headers especiais quando usa custom hostname
+          let hostname = request.headers.get('X-Forwarded-Host') ||
+                        request.headers.get('Host') ||
+                        url.hostname;
 
           // Health check
           if (url.pathname === '/_health') {
@@ -15,6 +20,12 @@ export default {
 
           // Buscar configuração do domínio no KV
           const domainConfig = await env.DOMAINS_KV.get(hostname, { type: 'json' });
+
+          console.log(`[Debug] Original URL hostname: ${url.hostname}`);
+          console.log(`[Debug] X-Forwarded-Host: ${request.headers.get('X-Forwarded-Host')}`);
+          console.log(`[Debug] Host header: ${request.headers.get('Host')}`);
+          console.log(`[Debug] Final hostname: ${hostname}`);
+          console.log(`[Debug] Domain Config:`, JSON.stringify(domainConfig));
 
           if (!domainConfig) {
                return createErrorResponse(
@@ -47,10 +58,13 @@ export default {
           }
 
           // Construir URL do Spaces
-          // Formato: presells/{domain}/{path}
-          const spacesPath = `presells/${hostname}${path}`;
-          const spacesUrl = `https://${domainConfig.bucket}.${env.DO_SPACES_ENDPOINT}/${spacesPath}`;
+          // Formato: presells/{domain}/{domain-sem-pontos}{path}
+          const domainWithoutDots = hostname.replace(/\./g, '');
+          const spacesPath = `presells/${hostname}/${domainWithoutDots}${path}`;
+          const bucketName = domainConfig.bucket || 'produtivi';
+          const spacesUrl = `https://${bucketName}.${env.DO_SPACES_ENDPOINT}/${spacesPath}`;
 
+          console.log(`[Router] Bucket: ${bucketName}`);
           console.log(`[Router] ${hostname}${url.pathname} → ${spacesUrl}`);
 
           // Fetch do Digital Ocean Spaces

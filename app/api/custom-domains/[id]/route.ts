@@ -11,10 +11,10 @@ import { CustomDomain } from '@/types/custom-domain'
 // GET: Buscar status de um domínio específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     const cloudflareHostname = await getCustomHostname(id)
 
@@ -45,31 +45,44 @@ export async function GET(
 // DELETE: Remover domínio customizado
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
-    // Buscar hostname antes de deletar
-    const cloudflareHostname = await getCustomHostname(id)
+    console.log(`[Delete] Recebido ID: ${id}`)
 
-    // Remover do Cloudflare
-    await deleteCustomHostname(id)
+    try {
+      // Buscar hostname antes de deletar
+      const cloudflareHostname = await getCustomHostname(id)
+      console.log(`[Delete] Hostname encontrado: ${cloudflareHostname.hostname}`)
 
-    // TODO: Remover do KV (Cloudflare API não suporta DELETE via REST)
-    // Por enquanto, apenas desativa
-    await updateWorkerKV(cloudflareHostname.hostname, {
-      active: false,
-      bucket: '',
-      userId: 0,
-      presells: [],
-    })
+      // Remover do Cloudflare
+      await deleteCustomHostname(id)
+      console.log(`[Delete] Custom Hostname removido do Cloudflare`)
 
-    return NextResponse.json({ success: true })
+      // Desativar no KV
+      await updateWorkerKV(cloudflareHostname.hostname, {
+        active: false,
+        bucket: '',
+        userId: 0,
+        presells: [],
+      })
+      console.log(`[Delete] Domínio desativado no KV`)
+
+      return NextResponse.json({ success: true })
+    } catch (cfError) {
+      // Se o domínio não existe mais no Cloudflare, considerar como sucesso
+      console.warn(`[Delete] Domínio ${id} não encontrado no Cloudflare (possivelmente já deletado):`, cfError)
+      return NextResponse.json({
+        success: true,
+        message: 'Domínio não encontrado (possivelmente já removido)'
+      })
+    }
   } catch (error) {
     console.error('Error deleting domain:', error)
     return NextResponse.json(
-      { error: 'Failed to delete domain' },
+      { error: error instanceof Error ? error.message : 'Failed to delete domain' },
       { status: 500 }
     )
   }
@@ -78,10 +91,10 @@ export async function DELETE(
 // PATCH: Atualizar status do domínio (ativar/desativar)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { active, userId } = body
 

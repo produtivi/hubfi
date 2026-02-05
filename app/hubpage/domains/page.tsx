@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, AlertCircle } from '@untitledui/icons';
 import { useRouter } from 'next/navigation';
 import { Domain } from '@/types/page-builder';
 import { AddDomainModal } from '@/components/page-builder/add-domain-modal';
+import { DeleteDomainModal } from '@/components/page-builder/delete-domain-modal';
 import { DomainsList } from '@/components/page-builder/domains-list';
 import { Button } from '@/components/base/buttons/button';
 import { useHubPageToast } from '../toast-context';
@@ -13,6 +14,9 @@ export default function DomainsPage() {
   const router = useRouter();
   const { showSuccess, showError, showInfo } = useHubPageToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [domainToDelete, setDomainToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,15 +100,27 @@ export default function DomainsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja deletar este domínio?')) return;
+    // Encontrar o domínio para pegar o nome
+    const domain = domains.find(d => d.id === id);
+    if (!domain) return;
+
+    setDomainToDelete({ id, name: domain.domain });
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!domainToDelete) return;
 
     try {
-      const response = await fetch(`/api/custom-domains/${id}`, {
+      setIsDeleting(true);
+      const response = await fetch(`/api/custom-domains/${domainToDelete.id}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
         showSuccess('Domínio removido com sucesso!');
+        setIsDeleteModalOpen(false);
+        setDomainToDelete(null);
         loadDomains();
       } else {
         showError('Erro ao remover domínio');
@@ -112,6 +128,8 @@ export default function DomainsPage() {
     } catch (error) {
       console.error('Erro ao deletar domínio:', error);
       showError('Erro ao remover domínio');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -232,6 +250,18 @@ export default function DomainsPage() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddDomain={handleAddDomain}
+      />
+
+      {/* Delete Domain Modal */}
+      <DeleteDomainModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDomainToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        domainName={domainToDelete?.name || ''}
+        isDeleting={isDeleting}
       />
     </div>
   );

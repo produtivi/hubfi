@@ -169,3 +169,45 @@ export async function updateWorkerKV(
     }
   )
 }
+
+// Criar Worker Route para um domínio customizado
+export async function createWorkerRoute(
+  hostname: string,
+  workerName: string = 'hubfi-domains-router'
+): Promise<{ id: string; pattern: string }> {
+  const { zoneId } = getConfig()
+
+  const pattern = `${hostname}/*`
+
+  return cloudflareRequest<{ id: string; pattern: string }>(
+    `/zones/${zoneId}/workers/routes`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        pattern,
+        script: workerName,
+      }),
+    }
+  )
+}
+
+// Listar Worker Routes
+export async function listWorkerRoutes(): Promise<Array<{ id: string; pattern: string; script: string }>> {
+  const { zoneId } = getConfig()
+
+  return cloudflareRequest<Array<{ id: string; pattern: string; script: string }>>(
+    `/zones/${zoneId}/workers/routes`
+  )
+}
+
+// Deletar Worker Route
+export async function deleteWorkerRoute(routeId: string): Promise<void> {
+  const { zoneId } = getConfig()
+
+  await cloudflareRequest<void>(
+    `/zones/${zoneId}/workers/routes/${routeId}`,
+    {
+      method: 'DELETE',
+    }
+  )
+}

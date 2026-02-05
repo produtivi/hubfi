@@ -138,14 +138,14 @@ export default function PageBuilder() {
   };
 
   const handleView = (id: string) => {
-    // Buscar o htmlUrl da presell
+    // Buscar a presell
     const presell = presells.find(p => p.id.toString() === id);
 
-    if (presell?.htmlUrl) {
-      // Se já tem HTML gerado, abrir direto
-      window.open(presell.htmlUrl, '_blank');
+    if (presell?.fullUrl) {
+      // Abrir a página no domínio customizado
+      window.open(presell.fullUrl, '_blank');
     } else {
-      // Fallback para o preview Next.js enquanto HTML não está pronto
+      // Fallback para o preview Next.js enquanto não está publicado
       window.open(`/preview/${id}`, '_blank');
     }
   };

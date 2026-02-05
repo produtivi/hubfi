@@ -5,6 +5,7 @@ import {
   addCustomHostname,
   listCustomHostnames,
   updateWorkerKV,
+  createWorkerRoute,
 } from '@/lib/cloudflare'
 import { AddDomainRequest, CustomDomain } from '@/types/custom-domain'
 
@@ -72,13 +73,25 @@ export async function POST(request: NextRequest) {
     // Adicionar ao Cloudflare
     const cloudflareHostname = await addCustomHostname(hostname)
 
-    // Adicionar ao KV do Worker (inicialmente inativo)
+    // Criar Worker Route para o domínio
+    console.log(`[Domain] Criando Worker Route para ${hostname}`)
+    try {
+      const route = await createWorkerRoute(hostname)
+      console.log(`[Domain] Worker Route criado: ${route.pattern}`)
+    } catch (routeError) {
+      console.error(`[Domain] Erro ao criar Worker Route:`, routeError)
+      // Continua mesmo se falhar - o route pode ser criado manualmente depois
+    }
+
+    // Adicionar ao KV do Worker (ativo imediatamente)
+    console.log(`[Domain] Adicionando ${hostname} ao KV`)
     await updateWorkerKV(hostname, {
-      active: false, // Ativa quando DNS estiver configurado
+      active: true, // Ativo imediatamente - o Worker vai responder assim que o SSL estiver pronto
       bucket: process.env.DO_SPACES_BUCKET || '',
       userId,
       presells: [],
     })
+    console.log(`[Domain] ${hostname} configurado no KV como ativo`)
 
     const domain: CustomDomain = {
       id: cloudflareHostname.id,
