@@ -214,6 +214,40 @@ export async function takeScreenshot(url: string, presellId: number) {
       console.log(`[Screenshot] Recheck após espera: ${JSON.stringify(recheckContent)}`);
     }
 
+    // Tentar aceitar/fechar modais de cookie clicando nos botões
+    try {
+      const cookieButtonSelectors = [
+        'button:has-text("accept")', 'button:has-text("Accept")',
+        'button:has-text("aceitar")', 'button:has-text("Aceitar")',
+        'button:has-text("concordo")', 'button:has-text("Concordo")',
+        'button:has-text("agree")', 'button:has-text("Agree")',
+        'button:has-text("OK")', 'button:has-text("Ok")',
+        'button:has-text("I accept")', 'button:has-text("Yes")',
+        '[class*="cookie"] button', '[id*="cookie"] button',
+        '[class*="consent"] button', '[id*="consent"] button',
+        '[class*="accept"]', '[id*="accept"]',
+        'button[class*="close"]', '[aria-label="close"]', '[aria-label="Close"]'
+      ];
+
+      for (const selector of cookieButtonSelectors) {
+        try {
+          const button = await page.$(selector);
+          if (button) {
+            await button.click();
+            console.log(`[Screenshot] Clicou no botão de cookie: ${selector}`);
+            await page.waitForTimeout(500);
+            break;
+          }
+        } catch (e) {
+          // Continuar tentando outros seletores
+        }
+      }
+    } catch (e) {
+      console.log('[Screenshot] Erro ao tentar fechar cookie modal:', e);
+    }
+
+    await page.waitForTimeout(1000);
+
     // Scroll para o topo
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(2000);
@@ -267,64 +301,89 @@ export async function takeScreenshot(url: string, presellId: number) {
     });
     console.log(`[Screenshot] Estado visual antes do screenshot: ${JSON.stringify(visualState)}`);
 
-    // Remover possíveis overlays/modais que podem estar cobrindo o conteúdo
+    // Remover overlays/modais de cookies e popups - preservar navbars
     const removedElements = await page.evaluate(() => {
       const removed: string[] = [];
 
-      // Buscar TODOS elementos
+      // Detectar e remover modais de cookies e popups
+      const cookieSelectors = [
+        '[class*="cookie"]', '[id*="cookie"]',
+        '[class*="consent"]', '[id*="consent"]',
+        '[class*="gdpr"]', '[id*="gdpr"]',
+        '[class*="privacy"]', '[id*="privacy"]',
+        '[class*="popup"]', '[id*="popup"]',
+        '[class*="overlay"]', '[id*="overlay"]',
+        '[class*="backdrop"]', '[id*="backdrop"]',
+        '[class*="banner"][class*="cookie"]',
+        '[aria-label*="cookie"]', '[aria-label*="Cookie"]',
+        '[role="dialog"]', '[role="alertdialog"]'
+      ];
+
+      const cookieElements = document.querySelectorAll(cookieSelectors.join(','));
+      cookieElements.forEach(el => {
+        removed.push(`cookie/modal: ${el.tagName}.${el.className}`);
+        (el as HTMLElement).style.setProperty('display', 'none', 'important');
+        (el as HTMLElement).style.setProperty('visibility', 'hidden', 'important');
+        (el as HTMLElement).style.setProperty('opacity', '0', 'important');
+      });
+
+      // Remover qualquer elemento com "modal" no class que está visível
+      const modalElements = document.querySelectorAll('[class*="modal"], [class*="Modal"]');
+      modalElements.forEach(el => {
+        const style = window.getComputedStyle(el);
+        if (style.display !== 'none' && style.visibility !== 'hidden') {
+          removed.push(`modal: ${el.tagName}.${el.className}`);
+          (el as HTMLElement).style.setProperty('display', 'none', 'important');
+        }
+      });
+
+      // Remover loaders e spinners
+      const loaderElements = document.querySelectorAll([
+        '[class*="loader"]', '[class*="loading"]', '[class*="spinner"]',
+        '[id*="loader"]', '[id*="loading"]'
+      ].join(','));
+
+      loaderElements.forEach(el => {
+        removed.push(`loader: ${el.tagName}.${el.className}`);
+        (el as HTMLElement).style.setProperty('display', 'none', 'important');
+      });
+
+      // Remover elementos fixed com z-index alto que parecem overlays
       const allElements = Array.from(document.querySelectorAll('*'));
       allElements.forEach(el => {
         const style = window.getComputedStyle(el);
         const position = style.position;
         const zIndex = parseInt(style.zIndex) || 0;
-        const bg = style.backgroundColor;
+        const tag = el.tagName.toLowerCase();
+        const className = (el.className || '').toString().toLowerCase();
+        const id = (el.id || '').toLowerCase();
 
-        // FORÇA BRUTA: Resetar z-index de QUALQUER elemento com z-index muito alto
-        if (zIndex > 1000) {
-          removed.push(`${el.tagName}.${el.className} (z:${zIndex} RESETADO)`);
-          (el as HTMLElement).style.zIndex = '-1';
-          (el as HTMLElement).style.display = 'none';
+        // Preservar navbars, headers e menus
+        const isNavigation = tag === 'nav' || tag === 'header' ||
+          className.includes('nav') || className.includes('header') ||
+          className.includes('menu') || className.includes('toolbar') ||
+          id.includes('nav') || id.includes('header') || id.includes('menu');
+
+        if (isNavigation) {
+          // Garantir que navegação está visível
+          (el as HTMLElement).style.setProperty('display', '', '');
+          (el as HTMLElement).style.setProperty('visibility', 'visible', '');
+          (el as HTMLElement).style.setProperty('opacity', '1', '');
+          return;
         }
 
-        // Remover elementos fixed/absolute que podem estar cobrindo
-        if ((position === 'fixed' || position === 'absolute') && zIndex > 0) {
-          removed.push(`${el.tagName}.${el.className} (z:${zIndex})`);
-          (el as HTMLElement).style.zIndex = '-1';
-          (el as HTMLElement).style.display = 'none';
-        }
+        // Remover overlays/backdrops com alta opacidade que cobrem a página
+        if ((position === 'fixed' || position === 'absolute') && zIndex > 100) {
+          const rect = el.getBoundingClientRect();
+          const bg = style.backgroundColor;
 
-        // Remover elementos com fundo branco/preto que cobrem toda tela
-        if ((position === 'fixed' || position === 'absolute') &&
-            (bg.includes('rgb(255, 255, 255)') || bg.includes('rgb(0, 0, 0)') || bg.includes('rgba(0, 0, 0'))) {
-          const width = parseInt(style.width) || 0;
-          const height = parseInt(style.height) || 0;
-          if (width > 1000 || height > 1000) {
-            removed.push(`${el.tagName}.${el.className} (OVERLAY GRANDE)`);
-            (el as HTMLElement).style.display = 'none';
+          // Se tem fundo semi-transparente ou escuro e cobre grande parte da tela
+          if ((bg.includes('rgba') || bg.includes('rgb(0') || bg.includes('rgb(255')) &&
+              rect.width > window.innerWidth * 0.5 && rect.height > window.innerHeight * 0.5) {
+            removed.push(`overlay: ${el.tagName}.${className} (z:${zIndex})`);
+            (el as HTMLElement).style.setProperty('display', 'none', 'important');
           }
         }
-      });
-
-      // Remover loaders, modais, overlays comuns
-      const badElements = document.querySelectorAll([
-        '[class*="load"]', '[class*="spinner"]', '[id*="load"]',
-        '[class*="overlay"]', '[class*="modal"]', '[id*="modal"]',
-        '[class*="popup"]', '[class*="cbtb"]', // ClickBank Trust Badge
-        '[class*="backdrop"]', '[class*="curtain"]'
-      ].join(','));
-
-      badElements.forEach(el => {
-        removed.push(`bad: ${el.tagName}.${el.className}`);
-        (el as HTMLElement).style.display = 'none';
-        (el as HTMLElement).style.visibility = 'hidden';
-        (el as HTMLElement).style.opacity = '0';
-      });
-
-      // Remover TODOS iframes (podem causar problemas de rendering)
-      const iframes = document.querySelectorAll('iframe');
-      iframes.forEach(iframe => {
-        removed.push(`iframe: ${iframe.src}`);
-        iframe.style.display = 'none';
       });
 
       return removed;
@@ -362,6 +421,31 @@ export async function takeScreenshot(url: string, presellId: number) {
       console.log('[Screenshot] Erro ao salvar HTML debug:', e);
     }
 
+    // Garantir que navbar/header está visível antes do screenshot
+    await page.evaluate(() => {
+      // Forçar scroll para o topo absoluto
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+
+      // Garantir que elementos de navegação no topo estão visíveis
+      const navElements = document.querySelectorAll('nav, header, [class*="nav"], [class*="header"], [id*="nav"], [id*="header"]');
+      navElements.forEach(el => {
+        const htmlEl = el as HTMLElement;
+        const style = window.getComputedStyle(el);
+
+        // Se está posicionado no topo, garantir visibilidade
+        if (style.position === 'fixed' || style.position === 'sticky') {
+          htmlEl.style.setProperty('opacity', '1', 'important');
+          htmlEl.style.setProperty('visibility', 'visible', 'important');
+          htmlEl.style.setProperty('transform', 'none', 'important');
+          htmlEl.style.setProperty('top', '0', 'important');
+        }
+      });
+    });
+
+    await page.waitForTimeout(500);
+
     const desktopPath = `/screenshots/presell-${presellId}-desktop.png`;
     const desktopFullPath = path.join(process.cwd(), 'public', desktopPath);
 
@@ -369,7 +453,7 @@ export async function takeScreenshot(url: string, presellId: number) {
       path: desktopFullPath,
       fullPage: false,
       type: 'png',
-      animations: 'disabled' // Desabilitar animações
+      animations: 'disabled'
     });
 
     console.log(`[Screenshot] Screenshot desktop salvo em: ${desktopFullPath}`);
@@ -380,14 +464,14 @@ export async function takeScreenshot(url: string, presellId: number) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(1000);
 
-    // Remover overlays novamente para mobile
+    // Remover apenas overlays/modais para mobile - preservar navbars
     await page.evaluate(() => {
-      const fixedElements = document.querySelectorAll('[style*="position: fixed"], [style*="position:fixed"]');
-      fixedElements.forEach(el => {
-        const zIndex = window.getComputedStyle(el).zIndex;
-        if (zIndex && parseInt(zIndex) > 100) {
-          (el as HTMLElement).style.display = 'none';
-        }
+      const cookieElements = document.querySelectorAll([
+        '[class*="cookie"]', '[class*="consent"]', '[class*="modal"]',
+        '[class*="popup"]', '[class*="overlay"]', '[role="dialog"]'
+      ].join(','));
+      cookieElements.forEach(el => {
+        (el as HTMLElement).style.display = 'none';
       });
     });
 

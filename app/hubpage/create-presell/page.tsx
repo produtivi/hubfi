@@ -8,11 +8,13 @@ import { TooltipHelp } from '../../components/ui/tooltip-help';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
 import { Button } from '@/components/base/buttons/button';
+import { useUser } from '@/hooks/use-user';
 import type { Key } from 'react-aria-components';
 
 export default function CreatePresell() {
   const router = useRouter();
   const { showSuccess, showError } = useHubPageToast();
+  const { user } = useUser();
   const [formData, setFormData] = useState({
     customDomain: '',
     pageName: '',
@@ -29,24 +31,27 @@ export default function CreatePresell() {
 
   // Carregar domínios e tipos do banco
   useEffect(() => {
-    loadDomainsAndTypes();
-  }, []);
+    if (user?.id) {
+      loadDomainsAndTypes();
+    }
+  }, [user?.id]);
 
   const loadDomainsAndTypes = async () => {
+    if (!user?.id) return;
+
     try {
       setIsLoadingData(true);
 
       // Carregar domínios customizados
-      const userId = 1; // TODO: Pegar userId real
-      const customDomainsResponse = await fetch(`/api/custom-domains?userId=${userId}`);
+      const customDomainsResponse = await fetch(`/api/custom-domains?userId=${user.id}`);
       const customDomainsResult = await customDomainsResponse.json();
 
       if (customDomainsResult.domains) {
-        // Filtrar apenas domínios ativos
-        const activeDomains = customDomainsResult.domains
-          .filter((d: any) => d.status === 'active')
+        // Mostrar domínios ativos e pendentes (SSL pode demorar)
+        const availableDomains = customDomainsResult.domains
+          .filter((d: any) => d.status === 'active' || d.status === 'pending')
           .map((d: any) => ({ id: d.id, domain: d.hostname }));
-        setCustomDomains(activeDomains);
+        setCustomDomains(availableDomains);
       }
 
       // Carregar tipos de presell

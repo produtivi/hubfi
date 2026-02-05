@@ -9,10 +9,12 @@ import { DeleteDomainModal } from '@/components/page-builder/delete-domain-modal
 import { DomainsList } from '@/components/page-builder/domains-list';
 import { Button } from '@/components/base/buttons/button';
 import { useHubPageToast } from '../toast-context';
+import { useUser } from '@/hooks/use-user';
 
 export default function DomainsPage() {
   const router = useRouter();
   const { showSuccess, showError, showInfo } = useHubPageToast();
+  const { user } = useUser();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [domainToDelete, setDomainToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -20,17 +22,19 @@ export default function DomainsPage() {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar domínios do banco
+  // Carregar domínios do banco quando o usuário estiver disponível
   useEffect(() => {
-    loadDomains();
-  }, []);
+    if (user?.id) {
+      loadDomains();
+    }
+  }, [user?.id]);
 
   const loadDomains = async () => {
+    if (!user?.id) return;
+
     try {
       setIsLoading(true);
-      // TODO: Pegar userId real do contexto de autenticação
-      const userId = 1;
-      const response = await fetch(`/api/custom-domains?userId=${userId}`);
+      const response = await fetch(`/api/custom-domains?userId=${user.id}`);
       const result = await response.json();
 
       if (result.domains) {
@@ -134,10 +138,12 @@ export default function DomainsPage() {
   };
 
   const handleAddDomain = async (domain: string, registrar: 'godaddy' | 'hostinger' | 'already-have') => {
-    try {
-      // TODO: Pegar userId real do contexto de autenticação
-      const userId = 1;
+    if (!user?.id) {
+      showError('Usuário não autenticado');
+      return;
+    }
 
+    try {
       const response = await fetch('/api/custom-domains', {
         method: 'POST',
         headers: {
@@ -145,7 +151,7 @@ export default function DomainsPage() {
         },
         body: JSON.stringify({
           hostname: domain.toLowerCase().trim(),
-          userId
+          userId: user.id
         })
       });
 

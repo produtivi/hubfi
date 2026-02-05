@@ -25,6 +25,7 @@ model User {
   googleAccounts    GoogleAccount[]
   googleAdsAccounts GoogleAdsAccount[]
   passwordResetCodes PasswordResetCode[]
+  customDomains     CustomDomain[]
 
   @@map("users")
 }
@@ -278,4 +279,21 @@ model GeneratedDescription {
 
   @@map("generated_descriptions")
   @@index([productId, isFavorite])
+}
+
+// Domínios customizados do Cloudflare
+model CustomDomain {
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @map("user_id")
+  cloudflareHostnameId String  @unique @map("cloudflare_hostname_id")
+  hostname            String   @unique
+  status              String   @default("pending") // pending, active, error
+  sslStatus           String   @default("pending") @map("ssl_status") // pending, active, error
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("custom_domains")
 }
