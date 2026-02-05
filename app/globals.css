@@ -138,8 +138,17 @@ body {
   color: hsl(var(--foreground));
 }
 
-
 a, button {
   cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Smooth theme transitions */
+*,
+*::before,
+*::after {
+  transition: background-color 0.15s ease-in-out,
+              border-color 0.15s ease-in-out,
+              color 0.15s ease-in-out,
+              fill 0.15s ease-in-out,
+              stroke 0.15s ease-in-out !important;
 }

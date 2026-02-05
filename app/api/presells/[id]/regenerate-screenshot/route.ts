@@ -12,6 +12,8 @@ export async function POST(
     const resolvedParams = await params;
     const id = resolvedParams.id;
 
+    console.log(`[RegenerateScreenshot] Iniciando para presell ID: ${id}`);
+
     // Buscar a presell
     const presell = await prisma.presell.findUnique({
       where: { id: parseInt(id) }
@@ -37,11 +39,29 @@ export async function POST(
     }
 
     try {
-      // Capturar novos screenshots (URL já validada)
-      const screenshots = await takeScreenshot(urlValidation.sanitized!, presell.id);
+      console.log(`[RegenerateScreenshot] Iniciando captura de screenshots para URL: ${urlValidation.sanitized}`);
 
+      // Timeout agressivo: 30 segundos para capturar screenshots
+      const screenshotPromise = takeScreenshot(urlValidation.sanitized!, presell.id);
+      const timeoutPromise = new Promise<{ desktop: null, mobile: null }>((_, reject) => {
+        setTimeout(() => reject(new Error('Screenshot timeout - 30 seconds exceeded')), 30000);
+      });
 
-      // Atualizar presell com novos screenshots
+      let screenshots: { desktop: string | null, mobile: string | null };
+
+      try {
+        screenshots = await Promise.race([screenshotPromise, timeoutPromise]);
+        console.log(`[RegenerateScreenshot] Screenshots capturados:`, screenshots);
+      } catch (timeoutError) {
+        console.error('[RegenerateScreenshot] Screenshot timeout ou erro:', timeoutError);
+        // Em caso de timeout, marcar como null para finalizar o processamento
+        screenshots = { desktop: null, mobile: null };
+      }
+
+      // SEMPRE atualizar presell, mesmo que screenshots sejam null
+      // Isso garante que o polling termine e não fique travado
+      console.log(`[RegenerateScreenshot] Atualizando presell ${id} no banco...`);
+
       const updatedPresell = await prisma.presell.update({
         where: { id: parseInt(id) },
         data: {
@@ -50,11 +70,11 @@ export async function POST(
         }
       });
 
-
+      console.log(`[RegenerateScreenshot] Presell ${id} atualizado com sucesso`);
 
       return NextResponse.json({
         success: true,
-        message: 'Screenshots regenerados com sucesso',
+        message: screenshots.desktop ? 'Screenshots regenerados com sucesso' : 'Screenshots não disponíveis',
         data: {
           screenshotDesktop: screenshots.desktop,
           screenshotMobile: screenshots.mobile
@@ -63,10 +83,28 @@ export async function POST(
 
     } catch (screenshotError) {
       console.error('Erro ao capturar screenshots:', screenshotError);
-      return NextResponse.json(
-        { error: 'Erro ao capturar screenshots' },
-        { status: 500 }
-      );
+
+      // IMPORTANTE: Mesmo em caso de erro, atualizar com null para terminar polling
+      try {
+        await prisma.presell.update({
+          where: { id: parseInt(id) },
+          data: {
+            screenshotDesktop: null,
+            screenshotMobile: null
+          }
+        });
+      } catch (dbError) {
+        console.error('Erro ao atualizar presell com null:', dbError);
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Screenshots não disponíveis',
+        data: {
+          screenshotDesktop: null,
+          screenshotMobile: null
+        }
+      });
     }
 
   } catch (error) {

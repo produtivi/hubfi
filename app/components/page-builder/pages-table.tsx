@@ -2,6 +2,8 @@
 
 import { Eye, Edit02, Copy01, Trash01, Check } from '@untitledui/icons';
 import { Page, PAGE_TYPES } from '@/types/page-builder';
+import { ScreenshotStatus } from './screenshot-status';
+import { useState } from 'react';
 
 interface PagesListProps {
   pages: Page[];
@@ -9,9 +11,12 @@ interface PagesListProps {
   onView: (id: string) => void;
   onCopy: (id: string) => void;
   onDelete: (id: string) => void;
+  onPreviewComplete?: () => void;
 }
 
-export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesListProps) {
+export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewComplete }: PagesListProps) {
+  const [completedPreviews, setCompletedPreviews] = useState<Set<string>>(new Set());
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
@@ -20,6 +25,15 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
+  };
+
+  const handlePreviewComplete = (pageId: string) => {
+    setCompletedPreviews(prev => new Set(prev).add(pageId));
+    onPreviewComplete?.();
+  };
+
+  const needsPreview = (page: Page) => {
+    return !page.screenshotDesktop && !completedPreviews.has(page.id);
   };
 
   if (pages.length === 0) {
@@ -111,6 +125,17 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete }: PagesList
             </div>
           </div>
 
+          {/* Status de prévia se estiver processando */}
+          {needsPreview(page) && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <ScreenshotStatus
+                presellId={parseInt(page.id)}
+                onComplete={() => handlePreviewComplete(page.id)}
+              />
+            </div>
+          )}
+          
+          
           {/* Mobile: Datas */}
           <div className="flex gap-4 justify-between pt-4 border-t border-border md:hidden">
             <div>

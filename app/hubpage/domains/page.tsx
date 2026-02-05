@@ -5,12 +5,18 @@ import { ArrowLeft, Plus, AlertCircle } from '@untitledui/icons';
 import { useRouter } from 'next/navigation';
 import { Domain } from '@/types/page-builder';
 import { AddDomainModal } from '@/components/page-builder/add-domain-modal';
+import { DeleteDomainModal } from '@/components/page-builder/delete-domain-modal';
 import { DomainsList } from '@/components/page-builder/domains-list';
 import { Button } from '@/components/base/buttons/button';
+import { useHubPageToast } from '../toast-context';
 
 export default function DomainsPage() {
   const router = useRouter();
+  const { showSuccess, showError, showInfo } = useHubPageToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [domainToDelete, setDomainToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,15 +28,17 @@ export default function DomainsPage() {
   const loadDomains = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/domains');
+      // TODO: Pegar userId real do contexto de autenticação
+      const userId = 1;
+      const response = await fetch(`/api/custom-domains?userId=${userId}`);
       const result = await response.json();
 
-      if (result.success) {
-        // Mapear dados do banco para o formato esperado pelo componente
-        const mappedDomains: Domain[] = result.data.map((domain: any) => ({
-          id: domain.id.toString(),
-          domain: domain.domainName,
-          status: domain.isActive ? 'published' : 'draft',
+      if (result.domains) {
+        // Mapear dados do Cloudflare para o formato esperado pelo componente
+        const mappedDomains: Domain[] = result.domains.map((domain: any) => ({
+          id: domain.id,
+          domain: domain.hostname,
+          status: domain.status === 'active' ? 'published' : 'draft',
           createdAt: new Date(domain.createdAt)
         }));
 
@@ -56,9 +64,34 @@ export default function DomainsPage() {
     }).format(date);
   };
 
-  const handleVerifyPublication = () => {
-    // TODO: Implementar verificação de publicação
-    console.log('Verificar publicação');
+  const handleVerifyPublication = async () => {
+    // Recarregar todos os domínios
+    await loadDomains();
+  };
+
+  const handleVerifyDNS = async (domain: string) => {
+    try {
+      const response = await fetch('/api/custom-domains/validate-dns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ hostname: domain })
+      });
+
+      const result = await response.json();
+
+      if (result.configured) {
+        showSuccess(`DNS configurado corretamente para ${domain}!`);
+        // Recarregar domínios para atualizar o status
+        await loadDomains();
+      } else {
+        showInfo(result.message || 'DNS ainda não configurado ou não propagado');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar DNS:', error);
+      showError('Erro ao verificar DNS');
+    }
   };
 
   const handleView = (domain: string) => {
@@ -67,45 +100,69 @@ export default function DomainsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja deletar este domínio?')) return;
+    // Encontrar o domínio para pegar o nome
+    const domain = domains.find(d => d.id === id);
+    if (!domain) return;
+
+    setDomainToDelete({ id, name: domain.domain });
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!domainToDelete) return;
 
     try {
-      const response = await fetch(`/api/domains/${id}`, {
+      setIsDeleting(true);
+      const response = await fetch(`/api/custom-domains/${domainToDelete.id}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
+        showSuccess('Domínio removido com sucesso!');
+        setIsDeleteModalOpen(false);
+        setDomainToDelete(null);
         loadDomains();
+      } else {
+        showError('Erro ao remover domínio');
       }
     } catch (error) {
       console.error('Erro ao deletar domínio:', error);
+      showError('Erro ao remover domínio');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleAddDomain = async (domain: string, registrar: 'godaddy' | 'hostinger' | 'already-have') => {
     try {
-      const response = await fetch('/api/domains', {
+      // TODO: Pegar userId real do contexto de autenticação
+      const userId = 1;
+
+      const response = await fetch('/api/custom-domains', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          domainName: domain,
-          registrar: registrar === 'already-have' ? 'other' : registrar
+          hostname: domain.toLowerCase().trim(),
+          userId
         })
       });
 
       const result = await response.json();
 
       if (result.success) {
+        showSuccess(`Domínio ${domain} adicionado com sucesso!`);
         // Recarregar lista de domínios
         await loadDomains();
         setIsAddModalOpen(false);
       } else {
         console.error('Erro ao adicionar domínio:', result.error);
+        showError(result.error || 'Erro ao adicionar domínio');
       }
     } catch (error) {
       console.error('Erro ao adicionar domínio:', error);
+      showError('Erro ao adicionar domínio');
     }
   };
 
@@ -171,11 +228,21 @@ export default function DomainsPage() {
         </p>
       </div>
 
+      {/* Info Banner */}
+      {domains.length > 0 && (
+        <div className="mb-6 p-3 bg-accent border border-border rounded-md">
+          <p className="text-label text-muted-foreground">
+            Após configurar o DNS, pode levar de 5 minutos até 24 horas para o domínio começar a funcionar.
+          </p>
+        </div>
+      )}
+
       {/* Domains List */}
       <DomainsList
         domains={domains}
         onView={handleView}
         onDelete={handleDelete}
+        onVerifyDNS={handleVerifyDNS}
       />
 
       {/* Add Domain Modal */}
@@ -183,6 +250,18 @@ export default function DomainsPage() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddDomain={handleAddDomain}
+      />
+
+      {/* Delete Domain Modal */}
+      <DeleteDomainModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDomainToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        domainName={domainToDelete?.name || ''}
+        isDeleting={isDeleting}
       />
     </div>
   );

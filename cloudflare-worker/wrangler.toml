@@ -1,0 +1,17 @@
+name = "hubfi-domains-router"
+main = "src/index.js"
+compatibility_date = "2026-01-23"
+
+# Variáveis de ambiente
+[vars]
+DO_SPACES_ENDPOINT = "nyc3.digitaloceanspaces.com"
+
+# KV Namespace para armazenar configuração de domínios
+[[kv_namespaces]]
+binding = "DOMAINS_KV"
+id = "94496b4f6c0d4b228861d046e6b3dc57"
+
+# Secrets (não commitam no git!)
+# Configure via: wrangler secret put <NAME>
+# DO_SPACES_ACCESS_KEY
+# DO_SPACES_SECRET_KEY

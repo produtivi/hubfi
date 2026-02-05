@@ -1,15 +1,16 @@
 'use client';
 
-import { Eye, Trash01, Check } from '@untitledui/icons';
+import { Eye, Trash01, Check, RefreshCw05 } from '@untitledui/icons';
 import { Domain } from '@/types/page-builder';
 
 interface DomainsListProps {
   domains: Domain[];
   onView: (domain: string) => void;
   onDelete: (id: string) => void;
+  onVerifyDNS?: (domain: string) => void;
 }
 
-export function DomainsList({ domains, onView, onDelete }: DomainsListProps) {
+export function DomainsList({ domains, onView, onDelete, onVerifyDNS }: DomainsListProps) {
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
@@ -48,6 +49,16 @@ export function DomainsList({ domains, onView, onDelete }: DomainsListProps) {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {onVerifyDNS && domain.status !== 'published' && (
+                <button
+                  onClick={() => onVerifyDNS(domain.domain)}
+                  className="p-2 hover:bg-blue-500/20 rounded-md transition-colors"
+                  aria-label="Verificar DNS"
+                  title="Verificar DNS"
+                >
+                  <RefreshCw05 className="w-4 h-4 text-foreground" />
+                </button>
+              )}
               <button
                 onClick={() => onView(domain.domain)}
                 className="p-2 hover:bg-green-500/20 rounded-md transition-colors"
