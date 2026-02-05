@@ -40,9 +40,22 @@ async function cloudflareRequest<T>(
   const data = await response.json()
 
   if (!data.success) {
-    throw new Error(
-      data.errors?.[0]?.message || 'Cloudflare API request failed'
-    )
+    const errorMessage = data.errors?.[0]?.message || 'Cloudflare API request failed'
+    const errorCode = data.errors?.[0]?.code
+
+    console.error('[Cloudflare] API Error:', {
+      endpoint,
+      errorMessage,
+      errorCode,
+      errors: data.errors
+    })
+
+    // Se for erro de autenticação, dar uma mensagem mais clara
+    if (errorCode === 10000 || errorMessage.includes('Authentication')) {
+      throw new Error('Authentication error')
+    }
+
+    throw new Error(errorMessage)
   }
 
   return data.result
