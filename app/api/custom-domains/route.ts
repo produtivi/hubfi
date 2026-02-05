@@ -3,10 +3,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   addCustomHostname,
+  getCustomHostname,
   listCustomHostnames,
   updateWorkerKV,
   createWorkerRoute,
 } from '@/lib/cloudflare'
+import { prisma } from '@/lib/prisma'
 import { AddDomainRequest, CustomDomain } from '@/types/custom-domain'
 
 // GET: Listar domínios do usuário
@@ -22,22 +24,43 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Buscar domínios do Cloudflare
-    const cloudflareHostnames = await listCustomHostnames()
+    // Buscar domínios do banco filtrados por userId
+    const dbDomains = await prisma.customDomain.findMany({
+      where: { userId: parseInt(userId) },
+      orderBy: { createdAt: 'desc' }
+    })
 
-    // TODO: Filtrar por userId quando tiver banco de dados
-    // Por enquanto, retorna todos
-    const domains: CustomDomain[] = cloudflareHostnames.map((cf) => ({
-      id: cf.id,
-      hostname: cf.hostname,
-      userId: parseInt(userId),
-      status: mapCloudflareStatus(cf.status),
-      sslStatus: mapSSLStatus(cf.ssl.status),
-      cnameTarget: process.env.CUSTOM_DOMAIN_CNAME_TARGET || 'customers.hubfi.com',
-      createdAt: cf.created_at,
-      updatedAt: cf.updated_at || cf.created_at,
-      errorMessage: cf.verification_errors?.[0] || cf.ssl.validation_errors?.[0]?.message,
-    }))
+    // Buscar status atualizado do Cloudflare para cada domínio
+    const domains: CustomDomain[] = await Promise.all(
+      dbDomains.map(async (dbDomain) => {
+        try {
+          const cfHostname = await getCustomHostname(dbDomain.cloudflareHostnameId)
+          return {
+            id: dbDomain.cloudflareHostnameId,
+            hostname: dbDomain.hostname,
+            userId: dbDomain.userId,
+            status: mapCloudflareStatus(cfHostname.status),
+            sslStatus: mapSSLStatus(cfHostname.ssl.status),
+            cnameTarget: process.env.CUSTOM_DOMAIN_CNAME_TARGET || 'customers.hubfi.com',
+            createdAt: dbDomain.createdAt.toISOString(),
+            updatedAt: dbDomain.updatedAt.toISOString(),
+            errorMessage: cfHostname.verification_errors?.[0] || cfHostname.ssl.validation_errors?.[0]?.message,
+          }
+        } catch {
+          // Se falhar ao buscar do Cloudflare, retorna dados do banco
+          return {
+            id: dbDomain.cloudflareHostnameId,
+            hostname: dbDomain.hostname,
+            userId: dbDomain.userId,
+            status: dbDomain.status as CustomDomain['status'],
+            sslStatus: dbDomain.sslStatus as CustomDomain['sslStatus'],
+            cnameTarget: process.env.CUSTOM_DOMAIN_CNAME_TARGET || 'customers.hubfi.com',
+            createdAt: dbDomain.createdAt.toISOString(),
+            updatedAt: dbDomain.updatedAt.toISOString(),
+          }
+        }
+      })
+    )
 
     return NextResponse.json({ domains })
   } catch (error) {
@@ -70,8 +93,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Adicionar ao Cloudflare
-    const cloudflareHostname = await addCustomHostname(hostname)
+    // Verificar se já existe no banco local
+    const existingInDb = await prisma.customDomain.findUnique({
+      where: { hostname }
+    })
+
+    if (existingInDb) {
+      return NextResponse.json(
+        { error: 'Domínio já cadastrado' },
+        { status: 409 }
+      )
+    }
+
+    // Verificar se já existe no Cloudflare
+    let cloudflareHostname
+    const existingHostnames = await listCustomHostnames()
+    const existingCf = existingHostnames.find(h => h.hostname === hostname)
+
+    if (existingCf) {
+      // Já existe no Cloudflare, usar o existente
+      console.log(`[Domain] ${hostname} já existe no Cloudflare, vinculando ao usuário`)
+      cloudflareHostname = existingCf
+    } else {
+      // Criar no Cloudflare
+      cloudflareHostname = await addCustomHostname(hostname)
+    }
 
     // Criar Worker Route para o domínio
     console.log(`[Domain] Criando Worker Route para ${hostname}`)
@@ -92,6 +138,18 @@ export async function POST(request: NextRequest) {
       presells: [],
     })
     console.log(`[Domain] ${hostname} configurado no KV como ativo`)
+
+    // Salvar no banco de dados
+    await prisma.customDomain.create({
+      data: {
+        userId,
+        cloudflareHostnameId: cloudflareHostname.id,
+        hostname: cloudflareHostname.hostname,
+        status: 'pending',
+        sslStatus: 'pending',
+      }
+    })
+    console.log(`[Domain] ${hostname} salvo no banco de dados`)
 
     const domain: CustomDomain = {
       id: cloudflareHostname.id,

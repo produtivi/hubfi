@@ -6,6 +6,7 @@ import {
   deleteCustomHostname,
   updateWorkerKV,
 } from '@/lib/cloudflare'
+import { prisma } from '@/lib/prisma'
 import { CustomDomain } from '@/types/custom-domain'
 
 // GET: Buscar status de um domínio específico
@@ -16,12 +17,17 @@ export async function GET(
   try {
     const { id } = await params
 
+    // Buscar do banco de dados
+    const dbDomain = await prisma.customDomain.findUnique({
+      where: { cloudflareHostnameId: id }
+    })
+
     const cloudflareHostname = await getCustomHostname(id)
 
     const domain: CustomDomain = {
       id: cloudflareHostname.id,
       hostname: cloudflareHostname.hostname,
-      userId: 1, // TODO: Buscar do banco de dados
+      userId: dbDomain?.userId || 0,
       status: mapStatus(cloudflareHostname.status),
       sslStatus: mapSSLStatus(cloudflareHostname.ssl.status),
       cnameTarget: process.env.CUSTOM_DOMAIN_CNAME_TARGET || 'customers.hubfi.com',
@@ -69,6 +75,15 @@ export async function DELETE(
         presells: [],
       })
       console.log(`[Delete] Domínio desativado no KV`)
+
+      // Remover do banco de dados
+      await prisma.customDomain.delete({
+        where: { cloudflareHostnameId: id }
+      }).catch(() => {
+        // Ignora se não existir no banco
+        console.log(`[Delete] Domínio não encontrado no banco (ok)`)
+      })
+      console.log(`[Delete] Domínio removido do banco`)
 
       return NextResponse.json({ success: true })
     } catch (cfError) {

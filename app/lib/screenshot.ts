@@ -1,7 +1,5 @@
 import { chromium } from 'playwright';
-import fs from 'fs/promises';
-import path from 'path';
-import { uploadScreenshotToSpaces } from './spaces';
+import { uploadToSpaces } from './spaces';
 
 // Verificar se Playwright está disponível
 async function isPlaywrightAvailable(): Promise<boolean> {
@@ -19,6 +17,15 @@ export async function takeScreenshot(url: string, presellId: number) {
   let browser = null;
 
   try {
+    // Verificar se Spaces está configurado
+    if (!process.env.DO_SPACES_ACCESS_KEY || !process.env.DO_SPACES_SECRET_KEY) {
+      console.warn('[Screenshot] DigitalOcean Spaces não configurado, pulando screenshots');
+      return {
+        desktop: null,
+        mobile: null
+      };
+    }
+
     // Validar URL
     new URL(url);
 
@@ -100,10 +107,6 @@ export async function takeScreenshot(url: string, presellId: number) {
         route.continue();
       }
     });
-
-    // Screenshots directory
-    const screenshotsDir = path.join(process.cwd(), 'public', 'screenshots');
-    await fs.mkdir(screenshotsDir, { recursive: true });
 
     // Desktop screenshot - esperar página carregar completamente
     try {
@@ -267,112 +270,49 @@ export async function takeScreenshot(url: string, presellId: number) {
     });
     console.log(`[Screenshot] Estado visual antes do screenshot: ${JSON.stringify(visualState)}`);
 
-    // Remover possíveis overlays/modais que podem estar cobrindo o conteúdo
+    // Remover apenas modais/popups que bloqueiam a visualização (não navbars!)
     const removedElements = await page.evaluate(() => {
       const removed: string[] = [];
 
-      // Buscar TODOS elementos
-      const allElements = Array.from(document.querySelectorAll('*'));
-      allElements.forEach(el => {
-        const style = window.getComputedStyle(el);
-        const position = style.position;
-        const zIndex = parseInt(style.zIndex) || 0;
-        const bg = style.backgroundColor;
-
-        // FORÇA BRUTA: Resetar z-index de QUALQUER elemento com z-index muito alto
-        if (zIndex > 1000) {
-          removed.push(`${el.tagName}.${el.className} (z:${zIndex} RESETADO)`);
-          (el as HTMLElement).style.zIndex = '-1';
-          (el as HTMLElement).style.display = 'none';
-        }
-
-        // Remover elementos fixed/absolute que podem estar cobrindo
-        if ((position === 'fixed' || position === 'absolute') && zIndex > 0) {
-          removed.push(`${el.tagName}.${el.className} (z:${zIndex})`);
-          (el as HTMLElement).style.zIndex = '-1';
-          (el as HTMLElement).style.display = 'none';
-        }
-
-        // Remover elementos com fundo branco/preto que cobrem toda tela
-        if ((position === 'fixed' || position === 'absolute') &&
-            (bg.includes('rgb(255, 255, 255)') || bg.includes('rgb(0, 0, 0)') || bg.includes('rgba(0, 0, 0'))) {
-          const width = parseInt(style.width) || 0;
-          const height = parseInt(style.height) || 0;
-          if (width > 1000 || height > 1000) {
-            removed.push(`${el.tagName}.${el.className} (OVERLAY GRANDE)`);
-            (el as HTMLElement).style.display = 'none';
-          }
-        }
+      // Remover apenas loaders e spinners
+      const loaders = document.querySelectorAll('[class*="spinner"], [class*="loader"], [id*="loader"]');
+      loaders.forEach(el => {
+        removed.push(`loader: ${el.tagName}.${el.className}`);
+        (el as HTMLElement).style.display = 'none';
       });
 
-      // Remover loaders, modais, overlays comuns
-      const badElements = document.querySelectorAll([
-        '[class*="load"]', '[class*="spinner"]', '[id*="load"]',
-        '[class*="overlay"]', '[class*="modal"]', '[id*="modal"]',
-        '[class*="popup"]', '[class*="cbtb"]', // ClickBank Trust Badge
-        '[class*="backdrop"]', '[class*="curtain"]'
+      // Remover modais/popups de cookie consent e similares
+      const popups = document.querySelectorAll([
+        '[class*="cookie"]', '[id*="cookie"]',
+        '[class*="consent"]', '[id*="consent"]',
+        '[class*="gdpr"]', '[id*="gdpr"]'
       ].join(','));
 
-      badElements.forEach(el => {
-        removed.push(`bad: ${el.tagName}.${el.className}`);
+      popups.forEach(el => {
+        removed.push(`popup: ${el.tagName}.${el.className}`);
         (el as HTMLElement).style.display = 'none';
-        (el as HTMLElement).style.visibility = 'hidden';
-        (el as HTMLElement).style.opacity = '0';
-      });
-
-      // Remover TODOS iframes (podem causar problemas de rendering)
-      const iframes = document.querySelectorAll('iframe');
-      iframes.forEach(iframe => {
-        removed.push(`iframe: ${iframe.src}`);
-        iframe.style.display = 'none';
       });
 
       return removed;
     });
 
     if (removedElements.length > 0) {
-      console.log(`[Screenshot] Elementos removidos: ${JSON.stringify(removedElements.slice(0, 10))}`);
+      console.log(`[Screenshot] Elementos removidos: ${JSON.stringify(removedElements)}`);
     }
-
-    await page.waitForTimeout(1000);
-
-    // FORÇA BRUTA: Garantir que body e html estejam 100% visíveis
-    await page.evaluate(() => {
-      // Forçar body e html visíveis
-      document.documentElement.style.opacity = '1';
-      document.documentElement.style.visibility = 'visible';
-      document.body.style.opacity = '1';
-      document.body.style.visibility = 'visible';
-      document.body.style.display = 'block';
-
-      // Remover qualquer transform que possa esconder
-      document.body.style.transform = 'none';
-      document.documentElement.style.transform = 'none';
-    });
 
     await page.waitForTimeout(500);
 
-    // Debug: salvar HTML da página para análise
-    try {
-      const htmlContent = await page.content();
-      const debugHtmlPath = path.join(process.cwd(), 'public', 'screenshots', `debug-presell-${presellId}.html`);
-      await fs.writeFile(debugHtmlPath, htmlContent, 'utf-8');
-      console.log(`[Screenshot] HTML de debug salvo em: ${debugHtmlPath}`);
-    } catch (e) {
-      console.log('[Screenshot] Erro ao salvar HTML debug:', e);
-    }
+    const desktopFileName = `presell-${presellId}-desktop.png`;
 
-    const desktopPath = `/screenshots/presell-${presellId}-desktop.png`;
-    const desktopFullPath = path.join(process.cwd(), 'public', desktopPath);
-
-    await page.screenshot({
-      path: desktopFullPath,
+    const desktopBuffer = await page.screenshot({
       fullPage: false,
       type: 'png',
       animations: 'disabled' // Desabilitar animações
     });
 
-    console.log(`[Screenshot] Screenshot desktop salvo em: ${desktopFullPath}`);
+    console.log(`[Screenshot] Screenshot desktop capturado, fazendo upload para Spaces...`);
+    const desktopUrl = await uploadToSpaces(desktopBuffer, desktopFileName);
+    console.log(`[Screenshot] Screenshot desktop salvo em: ${desktopUrl}`);
 
     // Mobile screenshot
     await page.setViewportSize({ width: 375, height: 667 });
@@ -380,55 +320,22 @@ export async function takeScreenshot(url: string, presellId: number) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(1000);
 
-    // Remover overlays novamente para mobile
-    await page.evaluate(() => {
-      const fixedElements = document.querySelectorAll('[style*="position: fixed"], [style*="position:fixed"]');
-      fixedElements.forEach(el => {
-        const zIndex = window.getComputedStyle(el).zIndex;
-        if (zIndex && parseInt(zIndex) > 100) {
-          (el as HTMLElement).style.display = 'none';
-        }
-      });
-    });
 
-    const mobilePath = `/screenshots/presell-${presellId}-mobile.png`;
-    const mobileFullPath = path.join(process.cwd(), 'public', mobilePath);
+    const mobileFileName = `presell-${presellId}-mobile.png`;
 
-    await page.screenshot({
-      path: mobileFullPath,
+    const mobileBuffer = await page.screenshot({
       fullPage: false,
       type: 'png',
       animations: 'disabled'
     });
 
-    console.log(`[Screenshot] Screenshot mobile salvo em: ${mobileFullPath}`);
+    console.log(`[Screenshot] Screenshot mobile capturado, fazendo upload para Spaces...`);
+    const mobileUrl = await uploadToSpaces(mobileBuffer, mobileFileName);
+    console.log(`[Screenshot] Screenshot mobile salvo em: ${mobileUrl}`);
 
-    // Upload para DigitalOcean Spaces se configurado
-    if (process.env.DO_SPACES_ACCESS_KEY && process.env.DO_SPACES_SECRET_KEY) {
-      try {
-        const desktopFileName = `presell-${presellId}-desktop.png`;
-        const desktopSpacesUrl = await uploadScreenshotToSpaces(desktopFullPath, desktopFileName);
-
-        const mobileFileName = `presell-${presellId}-mobile.png`;
-        const mobileSpacesUrl = await uploadScreenshotToSpaces(mobileFullPath, mobileFileName);
-
-        // Deletar arquivos locais após upload
-        await fs.unlink(desktopFullPath);
-        await fs.unlink(mobileFullPath);
-
-        return {
-          desktop: desktopSpacesUrl,
-          mobile: mobileSpacesUrl
-        };
-      } catch (error) {
-        console.error('Erro ao enviar para Spaces, mantendo arquivos locais:', error);
-      }
-    }
-
-    // Fallback: usar arquivos locais
     return {
-      desktop: desktopPath,
-      mobile: mobilePath
+      desktop: desktopUrl,
+      mobile: mobileUrl
     };
 
   } catch (error) {

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/hooks/use-user';
 
 export default function CreateReview() {
   const router = useRouter();
+  const { user } = useUser();
   const [isAwareOfAI, setIsAwareOfAI] = useState(false);
   const [formData, setFormData] = useState({
     domain: '',
@@ -16,12 +18,29 @@ export default function CreateReview() {
     productType: '',
     niche: ''
   });
+  const [domains, setDomains] = useState<string[]>([]);
 
-  const domains = [
-    'dominio1.com.br',
-    'dominio2.com.br',
-    'dominio3.com.br'
-  ];
+  useEffect(() => {
+    if (user?.id) {
+      loadDomains();
+    }
+  }, [user?.id]);
+
+  const loadDomains = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await fetch(`/api/custom-domains?userId=${user.id}`);
+      const result = await response.json();
+      if (result.domains) {
+        const availableDomains = result.domains
+          .filter((d: any) => d.status === 'active' || d.status === 'pending')
+          .map((d: any) => d.hostname);
+        setDomains(availableDomains);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar domínios:', error);
+    }
+  };
 
   const productTypes = [
     'Infoproduto',
