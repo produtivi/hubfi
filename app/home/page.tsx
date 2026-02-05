@@ -151,8 +151,48 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Uso de dados */}
       <section className="bg-card border-y border-border">
+        <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
+          <div className="text-center mb-10">
+            <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-4">
+              Transparência no uso de dados
+            </h2>
+            <p className="text-muted-foreground font-sans text-lg max-w-2xl mx-auto">
+              Entenda como e por que o Hubfi solicita acesso aos seus dados
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="border border-border rounded-md p-6">
+              <h3 className="font-serif text-lg font-medium text-foreground mb-3">
+                Login com Google
+              </h3>
+              <p className="text-muted-foreground font-sans text-sm leading-relaxed">
+                Solicitamos acesso ao seu email e nome para criar sua conta de forma rápida e segura, sem necessidade de senhas adicionais.
+              </p>
+            </div>
+            <div className="border border-border rounded-md p-6">
+              <h3 className="font-serif text-lg font-medium text-foreground mb-3">
+                Integração com Google Ads
+              </h3>
+              <p className="text-muted-foreground font-sans text-sm leading-relaxed">
+                Com sua autorização, acessamos sua conta Google Ads para criar campanhas, gerenciar anúncios e configurar ações de conversão automaticamente.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-center text-muted-foreground font-sans text-sm mt-8 max-w-2xl mx-auto">
+            Seus dados são utilizados exclusivamente para fornecer os serviços da plataforma. Não compartilhamos informações com terceiros. Para mais detalhes, consulte nossa{' '}
+            <Link href="/policy-and-privacy" className="text-foreground underline hover:no-underline">
+              Política de Privacidade
+            </Link>.
+          </p>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-20 text-center">
           <h2 className="font-serif text-3xl md:text-4xl font-medium text-foreground mb-4">
             Pronto para começar?
