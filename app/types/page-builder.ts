@@ -28,16 +28,16 @@ export const PAGE_TYPES: Record<PageType, { label: string; description: string }
     label: 'Presell',
     description: 'Página de pré-venda para aquecer o tráfego antes da oferta'
   },
-  cloned: {
-    label: 'Página Clonada',
-    description: 'Página clonada de um modelo ou página existente'
-  },
   review: {
     label: 'Página de Review',
     description: 'Página de análise e avaliação de produtos'
   },
+  cloned: {
+    label: 'Página Clonada',
+    description: 'Cópia de uma página existente'
+  },
   'top-funnel': {
-    label: 'Top Funnel',
-    description: 'Página para atrair visitantes no topo do funil de vendas'
+    label: 'Topo de Funil',
+    description: 'Página para captação de tráfego no topo do funil'
   }
 };

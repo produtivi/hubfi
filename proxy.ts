@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Rotas públicas que não precisam de autenticação
-const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/preview', '/home', '/service-terms', '/policy-and-privacy'];
 
 // Rotas de API públicas
-const PUBLIC_API_ROUTES = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh', '/api/auth/forgot-password', '/api/auth/reset-password', '/api/auth/verify-reset-code'];
+const PUBLIC_API_ROUTES = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh', '/api/auth/forgot-password', '/api/auth/reset-password', '/api/auth/verify-reset-code', '/api/auth/google/login', '/api/auth/google/login-callback'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -20,7 +20,8 @@ export function proxy(request: NextRequest) {
     pathname.endsWith('.ico') ||
     pathname.endsWith('.png') ||
     pathname.endsWith('.jpg') ||
-    pathname.endsWith('.svg')
+    pathname.endsWith('.svg') ||
+    pathname.endsWith('.js')
   ) {
     return NextResponse.next();
   }
@@ -30,6 +31,14 @@ export function proxy(request: NextRequest) {
   const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'));
 
   if (isPublicRoute || isPublicApiRoute) {
+    return NextResponse.next();
+  }
+
+  // Permitir acesso público a rotas de pixel tracking
+  if (pathname === '/api/pixels' && request.nextUrl.searchParams.get('presellId')) {
+    return NextResponse.next();
+  }
+  if (pathname.match(/^\/api\/pixels\/[^/]+\/track$/)) {
     return NextResponse.next();
   }
 

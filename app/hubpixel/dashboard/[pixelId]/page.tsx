@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Filter, TrendingUp, Eye, MousePointer, ShoppingBag, Target, Users, Activity, Zap, Shield, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Filter, Activity, CheckCircle } from 'lucide-react';
 import { Cursor02, CursorBox } from '@untitledui/icons';
 
 interface PixelInfo {
@@ -13,16 +13,9 @@ interface PixelInfo {
   presellUrl: string;
   status: string;
   createdAt: string;
-  visits: number;
-  uniqueVisits: number;
-  cleanVisits: number;
-  paidTrafficVisits: number;
   clicks: number;
-  checkouts: number;
   sales: number;
-  conversions: number;
   bounceRate: number;
-  blockedIps: number;
 }
 
 interface DashboardParams {
@@ -73,16 +66,9 @@ export default function PixelDashboard({ params }: DashboardParams) {
             presellUrl: pixel.presellUrl,
             status: pixel.status,
             createdAt: new Date(pixel.createdAt).toLocaleDateString('pt-BR'),
-            visits: pixel.visits || 0,
-            uniqueVisits: pixel.uniqueVisits || 0,
-            cleanVisits: pixel.cleanVisits || 0,
-            paidTrafficVisits: pixel.paidTrafficVisits || 0,
             clicks: pixel.clicks || 0,
-            checkouts: pixel.checkouts || 0,
             sales: pixel.sales || 0,
-            conversions: pixel.conversions || 0,
-            bounceRate: pixel.bounceRate || 0,
-            blockedIps: pixel.blockedIps || 0
+            bounceRate: pixel.bounceRate || 0
           });
         }
       }
@@ -103,36 +89,16 @@ export default function PixelDashboard({ params }: DashboardParams) {
     setSelectedFilter('custom');
   };
 
-  // Calcular taxa de conversão
-  const calculateConversionRate = () => {
-    if (!pixelInfo || pixelInfo.visits === 0) return '0.0';
-    return ((pixelInfo.sales / pixelInfo.visits) * 100).toFixed(1);
-  };
-
-  // Calcular CTR (Click Through Rate)
-  const calculateCTR = () => {
-    if (!pixelInfo || pixelInfo.visits === 0) return '0.0';
-    return ((pixelInfo.clicks / pixelInfo.visits) * 100).toFixed(1);
-  };
-
-  // Dados reais do pixel (métricas ainda não funcionam, então valores serão 0 ou vazios)
+  // Dados reais do pixel
   const metricsData = pixelInfo ? [
     {
       title: 'Cliques no Google',
-      value: pixelInfo.visits?.toString() || '0',
+      value: '--', // TODO: Buscar do Google Ads API
       change: '--',
       trend: 'neutral',
       icon: Cursor02,
       color: 'text-foreground'
     },
-    // {
-    //   title: 'Visitas Únicas',
-    //   value: pixelInfo.uniqueVisits?.toString() || '0',
-    //   change: '--',
-    //   trend: 'neutral',
-    //   icon: Users,
-    //   color: 'text-foreground'
-    // },
     {
       title: 'Cliques na página do HubPage',
       value: pixelInfo.clicks?.toString() || '0',
@@ -141,14 +107,6 @@ export default function PixelDashboard({ params }: DashboardParams) {
       icon: CursorBox,
       color: 'text-foreground'
     },
-    // {
-    //   title: 'Checkouts',
-    //   value: pixelInfo.checkouts?.toString() || '0',
-    //   change: '--',
-    //   trend: 'neutral',
-    //   icon: ShoppingBag,
-    //   color: 'text-foreground'
-    // },
     {
       title: 'Conversão',
       value: pixelInfo.sales?.toString() || '0',
@@ -157,14 +115,6 @@ export default function PixelDashboard({ params }: DashboardParams) {
       icon: CheckCircle,
       color: 'text-foreground'
     },
-    // {
-    //   title: 'Taxa de Conversão',
-    //   value: calculateConversionRate() + '%',
-    //   change: '--',
-    //   trend: 'neutral',
-    //   icon: TrendingUp,
-    //   color: 'text-foreground'
-    // },
     {
       title: 'Taxa de Fuga',
       value: pixelInfo.bounceRate?.toFixed(1) + '%' || '0.0%',
@@ -172,15 +122,7 @@ export default function PixelDashboard({ params }: DashboardParams) {
       trend: 'neutral',
       icon: Activity,
       color: 'text-foreground'
-    },
-    // {
-    //   title: 'IPs Bloqueados',
-    //   value: pixelInfo.blockedIps?.toString() || '0',
-    //   change: '--',
-    //   trend: 'neutral',
-    //   icon: Shield,
-    //   color: 'text-foreground'
-    // }
+    }
   ] : [];
 
   if (isLoading) {

@@ -12,8 +12,8 @@ export function MainContent({ children }: MainContentProps) {
 
   return (
     <main
-      className={`flex-1 overflow-y-auto transition-all duration-300 ${
-        isExpanded ? 'ml-64' : 'ml-20'
+      className={`flex-1 overflow-y-auto transition-all duration-300 pb-16 md:pb-0 ${
+        isExpanded ? 'md:ml-64' : 'md:ml-20'
       }`}
     >
       {children}

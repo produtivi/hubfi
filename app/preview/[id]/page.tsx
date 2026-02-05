@@ -21,15 +21,53 @@ interface Presell {
   faviconUrl?: string;
 }
 
+interface Pixel {
+  pixelId: string;
+  status: string;
+}
+
 export default function PreviewPage({ params }: PreviewPageProps) {
   const [presell, setPresell] = useState<Presell | null>(null);
   const [showCookieModal, setShowCookieModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Injetar script do pixel
+  const injectPixelScript = (pixelId: string) => {
+    // Verificar se já existe
+    if (document.querySelector(`script[data-pixel-id="${pixelId}"]`)) {
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `/hubpixel.min.js?pixelId=${pixelId}`;
+    script.setAttribute('data-pixel-id', pixelId);
+    script.async = true;
+    document.head.appendChild(script);
+  };
+
+  // Buscar pixel vinculado à presell
+  const loadPixelForPresell = async (presellId: string) => {
+    try {
+      const response = await fetch(`/api/pixels?presellId=${presellId}`);
+      const result = await response.json();
+
+      if (result.success && result.data && result.data.length > 0) {
+        // Pegar o primeiro pixel ativo vinculado a esta presell
+        const activePixel = result.data.find((p: Pixel) => p.status === 'active');
+        if (activePixel) {
+          injectPixelScript(activePixel.pixelId);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pixel:', error);
+    }
+  };
+
   useEffect(() => {
     const getParams = async () => {
       const resolvedParams = await params;
       loadPresell(resolvedParams.id);
+      loadPixelForPresell(resolvedParams.id);
     };
     getParams();
   }, []);

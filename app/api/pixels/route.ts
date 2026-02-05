@@ -94,8 +94,91 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await getAuthUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Não autenticado' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const { pixelId, name } = body
+
+    if (!pixelId || !name) {
+      return NextResponse.json(
+        { success: false, error: 'pixelId e name são obrigatórios' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar se o pixel pertence ao usuário
+    const existingPixel = await prisma.pixel.findFirst({
+      where: {
+        pixelId,
+        userId: user.id
+      }
+    })
+
+    if (!existingPixel) {
+      return NextResponse.json(
+        { success: false, error: 'Pixel não encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Atualizar o nome do pixel
+    const updatedPixel = await prisma.pixel.update({
+      where: { id: existingPixel.id },
+      data: { name }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: updatedPixel.id,
+        pixelId: updatedPixel.pixelId,
+        name: updatedPixel.name
+      }
+    })
+
+  } catch (error) {
+    console.error('Erro ao atualizar pixel:', error)
+    return NextResponse.json(
+      { success: false, error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const presellId = searchParams.get('presellId')
+
+    // Se está buscando por presellId (para injeção de script), não precisa de auth
+    if (presellId) {
+      const pixels = await prisma.pixel.findMany({
+        where: {
+          presellId: parseInt(presellId),
+          status: 'active'
+        },
+        select: {
+          pixelId: true,
+          status: true
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        data: pixels
+      })
+    }
+
+    // Para listagem completa, precisa de auth
     const user = await getAuthUser()
 
     if (!user) {
@@ -142,16 +225,9 @@ export async function GET(request: NextRequest) {
         conversionActionId: pixel.conversionActionId,
         useMcc: pixel.useMcc,
         status: pixel.status,
-        visits: pixel.visits,
-        uniqueVisits: pixel.uniqueVisits,
-        cleanVisits: pixel.cleanVisits,
-        paidTrafficVisits: pixel.paidTrafficVisits,
         clicks: pixel.clicks,
-        checkouts: pixel.checkouts,
         sales: pixel.sales,
-        conversions: pixel.conversions,
         bounceRate: pixel.bounceRate ? parseFloat(pixel.bounceRate.toString()) : 0,
-        blockedIps: pixel.blockedIps,
         totalEvents: pixel._count.events,
         createdAt: pixel.createdAt,
         updatedAt: pixel.updatedAt

@@ -318,6 +318,7 @@ export default function EditPresell({ params }: EditPresellProps) {
                 size="lg"
                 isDisabled={isLoading}
                 isLoading={isLoading}
+                className='p-2'
               >
                 {isLoading ? 'Salvando...' : 'Salvar Alterações'}
               </Button>

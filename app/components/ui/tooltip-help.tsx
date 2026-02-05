@@ -12,7 +12,10 @@ interface TooltipHelpProps {
 
 export function TooltipHelp({ text, imageSrc, imageAlt = 'Exemplo' }: TooltipHelpProps) {
   const [isVisible, setIsVisible] = useState(false)
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
+  const [arrowLeft, setArrowLeft] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
 
   // Fechar ao clicar fora
   useEffect(() => {
@@ -25,6 +28,28 @@ export function TooltipHelp({ text, imageSrc, imageAlt = 'Exemplo' }: TooltipHel
     if (isVisible) {
       document.addEventListener('click', handleClickOutside)
       return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [isVisible])
+
+  // Calcular posição centralizada e clampar na viewport
+  useEffect(() => {
+    if (isVisible && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      const tooltipWidth = 288
+      const padding = 12
+      const iconCenter = rect.left + rect.width / 2
+
+      let left = iconCenter - tooltipWidth / 2
+      // Clampar para não sair da tela
+      left = Math.max(padding, Math.min(left, window.innerWidth - tooltipWidth - padding))
+
+      setTooltipStyle({
+        position: 'fixed',
+        top: rect.bottom + 8,
+        left,
+        width: tooltipWidth,
+      })
+      setArrowLeft(iconCenter - left)
     }
   }, [isVisible])
 
@@ -47,11 +72,14 @@ export function TooltipHelp({ text, imageSrc, imageAlt = 'Exemplo' }: TooltipHel
       </button>
 
       {isVisible && (
-        <div className="absolute z-50 top-full left-0 mt-2">
+        <div className="z-50" style={tooltipStyle} ref={tooltipRef}>
           {/* Seta */}
-          <div className="absolute bottom-full left-4 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-border" />
+          <div
+            className="absolute bottom-full w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-border"
+            style={{ left: arrowLeft ? arrowLeft - 8 : 16 }}
+          />
 
-          <div className="bg-card border border-border rounded-lg shadow-xl p-3 w-72 relative">
+          <div className="bg-card border border-border rounded-lg shadow-xl p-3 relative">
             {/* Botão fechar */}
             <span
               onMouseDown={(e) => {
@@ -78,7 +106,7 @@ export function TooltipHelp({ text, imageSrc, imageAlt = 'Exemplo' }: TooltipHel
             )}
 
             {/* Texto explicativo */}
-            <p className="text-sm text-foreground leading-relaxed pr-5">
+            <p className="text-sm text-foreground leading-relaxed pr-5 whitespace-pre-line">
               {text}
             </p>
           </div>

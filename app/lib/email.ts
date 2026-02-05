@@ -23,11 +23,16 @@ interface SendEmailOptions {
 export async function sendEmail({ to, subject, text, html }: SendEmailOptions) {
   const from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
+  console.log('[email] === DEBUG ENVIO ===');
+  console.log('[email] EMAIL_HOST:', process.env.EMAIL_HOST || '(não definido)');
+  console.log('[email] EMAIL_PORT:', process.env.EMAIL_PORT || '(não definido)');
+  console.log('[email] EMAIL_USER:', process.env.EMAIL_USER ? '✓ configurado' : '✗ NÃO configurado');
+  console.log('[email] EMAIL_PASS:', process.env.EMAIL_PASS ? '✓ configurado' : '✗ NÃO configurado');
+  console.log('[email] EMAIL_FROM:', from || '(não definido)');
+  console.log('[email] Para:', to);
+
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn('[email] Credenciais de email não configuradas. Email não enviado.');
-    console.log('[email] Para:', to);
-    console.log('[email] Assunto:', subject);
-    console.log('[email] Conteúdo:', text);
     return { success: false, reason: 'credentials_not_configured' };
   }
 
@@ -40,11 +45,15 @@ export async function sendEmail({ to, subject, text, html }: SendEmailOptions) {
       html
     });
 
-    console.log('[email] Email enviado:', info.messageId);
+    console.log('[email] Email enviado com sucesso! MessageId:', info.messageId);
     return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('[email] Erro ao enviar email:', error);
-    throw error;
+  } catch (error: unknown) {
+    const err = error as Error & { code?: string; responseCode?: number; response?: string };
+    console.error('[email] ERRO ao enviar email:');
+    console.error('[email] Mensagem:', err.message);
+    console.error('[email] Código:', err.code);
+    console.error('[email] Response:', err.responseCode, err.response);
+    return { success: false, reason: 'send_failed', error: err.message };
   }
 }
 
@@ -93,7 +102,7 @@ Equipe Hubfi
   </div>
 
   <div style="text-align: center; color: #999; font-size: 12px;">
-    <p>Atenciosamente,<br>Equipe Hubfi</p>
+    <p>Atenciosamente,<br>Hubfi</p>
   </div>
 </body>
 </html>

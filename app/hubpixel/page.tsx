@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Activity, Eye, EyeOff, MoreVertical, Copy, Trash2, Edit2, X, ExternalLink, LayoutDashboard, FlaskConical, Shield, ShoppingCart, CheckCircle } from 'lucide-react'
+import { Activity, Eye, EyeOff, MoreVertical, Trash2, Edit2, X, ExternalLink, LayoutDashboard, FlaskConical, Shield, ShoppingCart, CheckCircle } from 'lucide-react'
 import { SearchLg, Plus, FilterLines } from '@untitledui/icons'
 import { useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { ConfirmationModal } from '../components/confirmation-modal'
 import { Toast } from '../components/ui/toast'
 import { Button } from '@/components/base/buttons/button'
@@ -32,6 +33,7 @@ interface Pixel {
 
 export default function PixelTracker() {
   const router = useRouter()
+  const { resolvedTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState('')
   const [showInactive, setShowInactive] = useState(false)
   const [toast, setToast] = useState<{
@@ -174,24 +176,38 @@ export default function PixelTracker() {
     }, 3000)
   }
 
-  // Função para copiar código do pixel
-  const handleCopyPixelCode = async (pixelId: string) => {
+  // Função para salvar nome do pixel
+  const handleSavePixelName = async (pixelId: string, newName: string) => {
+    if (!newName.trim()) {
+      setEditingPixelId(null)
+      return
+    }
+
     try {
-      const response = await fetch(`/api/pixels/${pixelId}/code`)
+      const response = await fetch('/api/pixels', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pixelId, name: newName.trim() })
+      })
+
       const result = await response.json()
 
       if (result.success) {
-        await navigator.clipboard.writeText(result.data.trackingCode)
-        showToast('Código copiado para a área de transferência!', 'success')
+        // Atualizar o nome localmente
+        setPixels(prev => prev.map(p =>
+          p.pixelId === pixelId ? { ...p, name: newName.trim() } : p
+        ))
+        showToast('Nome atualizado com sucesso')
       } else {
-        showToast('Erro ao obter código do pixel', 'error')
+        showToast('Erro ao atualizar nome', 'error')
       }
-    } catch (err) {
-      console.error('Erro ao copiar código:', err)
-      showToast('Erro ao copiar código', 'error')
+    } catch (error) {
+      console.error('Erro ao salvar nome:', error)
+      showToast('Erro ao atualizar nome', 'error')
     }
-  }
 
+    setEditingPixelId(null)
+  }
 
   // Função para toggle do pixel
   const handleTogglePixelStatus = (pixel: Pixel) => {
@@ -246,7 +262,7 @@ export default function PixelTracker() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-6 md:p-8">
       <div className="mb-8">
         <h1 className="text-headline mb-2">HubPixel</h1>
         <p className="text-body-muted">
@@ -273,6 +289,7 @@ export default function PixelTracker() {
             size="md"
             iconLeading={FilterLines}
             onClick={() => setShowInactive(!showInactive)}
+            className="flex-1 md:flex-none"
           >
             {showInactive ? 'Ver Ativos' : 'Ver Inativos'}
           </Button>
@@ -282,6 +299,7 @@ export default function PixelTracker() {
             size="md"
             iconLeading={Plus}
             onClick={() => router.push('/hubpixel/create')}
+            className="flex-1 md:flex-none"
           >
             Criar novo pixel
           </Button>
@@ -308,18 +326,39 @@ export default function PixelTracker() {
                     <div className="flex flex-col gap-2 flex-1">
                       <div className="flex items-center gap-2 group">
                         {editingPixelId === pixel.id ? (
-                          <input
-                            type="text"
-                            defaultValue={pixel.name}
-                            className="text-title bg-card border-b-2 border-primary outline-none px-1"
-                            autoFocus
-                            onBlur={() => setEditingPixelId(null)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Escape' || e.key === 'Enter') {
-                                setEditingPixelId(null)
-                              }
-                            }}
-                          />
+                          <div className="flex items-center gap-2">
+                            <input
+                              id={`pixel-name-input-${pixel.id}`}
+                              type="text"
+                              defaultValue={pixel.name}
+                              className="text-title bg-card border-b-2 border-primary outline-none px-1"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  setEditingPixelId(null)
+                                } else if (e.key === 'Enter') {
+                                  handleSavePixelName(pixel.pixelId, e.currentTarget.value)
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                const input = document.getElementById(`pixel-name-input-${pixel.id}`) as HTMLInputElement
+                                if (input) handleSavePixelName(pixel.pixelId, input.value)
+                              }}
+                              className="p-1 bg-primary text-primary-foreground rounded hover:opacity-80 transition-opacity"
+                              title="Salvar"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setEditingPixelId(null)}
+                              className="p-1 hover:bg-accent rounded transition-colors"
+                              title="Cancelar"
+                            >
+                              <X className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </div>
                         ) : (
                           <>
                             <h3 className="text-title">{pixel.name}</h3>
@@ -350,6 +389,9 @@ export default function PixelTracker() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Botão Dashboard */}
+                      
+
                       <span
                         className={`flex items-center gap-1 px-2 py-1 rounded-full text-label ${pixel.status === 'active'
                           ? 'bg-success/10 text-success'
@@ -399,9 +441,8 @@ export default function PixelTracker() {
 
                   {/* Ações adicionais */}
                   <div className="flex flex-row items-center mt-4 pt-4 border-t border-border text-sm">
-                    {/* Botão Dashboard */}
                     <Button
-                      className='p-2 bg-black/90 text-white border-0 hover:bg-black/70'
+                      className={`p-2 border-0 ${resolvedTheme === 'dark' ? 'bg-white text-black hover:bg-white/80' : 'bg-black/90 text-white hover:bg-black/70'}`}
                       color="secondary"
                       size="sm"
                       iconLeading={LayoutDashboard}
@@ -409,17 +450,6 @@ export default function PixelTracker() {
                     >
                       Dashboard
                     </Button>
-
-                    {/* Botão Copiar código - comentado */}
-                    {/* <Button
-                      className='p-2'
-                      color="secondary"
-                      size="sm"
-                      iconLeading={Copy}
-                      onClick={() => handleCopyPixelCode(pixel.pixelId)}
-                    >
-                      Copiar código
-                    </Button> */}
 
                     <div className="flex-1" />
 

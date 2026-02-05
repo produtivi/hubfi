@@ -33,20 +33,33 @@ export async function POST(
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-    const prompt = `Você é um especialista em copywriting e marketing digital. Com base nas informações do produto abaixo, gere 5 títulos persuasivos e 5 descrições atraentes para campanhas de marketing.
+    const prompt = `Você é um especialista em Google Ads e copywriting. Gere textos para anúncios responsivos de pesquisa.
 
-INFORMAÇÕES DO PRODUTO:
+PRODUTO:
 Nome: ${product.name}
 Descrição: ${product.description}
 ${product.links ? `Links: ${product.links}` : ''}
 ${product.category ? `Categoria: ${product.category}` : ''}
 
-INSTRUÇÕES:
-1. Os títulos devem ser curtos (máximo 60 caracteres), impactantes e chamar atenção
-2. As descrições devem ter entre 100-150 caracteres, focando em benefícios e gatilhos mentais
-3. Use técnicas de copywriting como: urgência, escassez, prova social, autoridade
-${product.category ? `4. Adapte o tom de voz para a categoria "${product.category}"` : '4. Use um tom de voz persuasivo e profissional'}
-5. Cada título e descrição deve ser único e persuasivo
+GERE:
+- 5 títulos (headlines) com NO MÁXIMO 28 caracteres cada (conte cada letra, espaço e pontuação)
+- 5 descrições com NO MÁXIMO 85 caracteres cada (conte cada letra, espaço e pontuação)
+
+REGRAS OBRIGATÓRIAS (SIGA RIGOROSAMENTE):
+- TODOS os títulos DEVEM conter o nome do produto "${product.name}" (ou uma variação reconhecível dele)
+- PROIBIDO usar ponto de exclamação (!) - NUNCA termine frases com !
+- PROIBIDO usar ponto de interrogação (?)
+- PROIBIDO usar aspas ("") em nenhum momento
+- PROIBIDO usar palavras em CAIXA ALTA - apenas a primeira letra maiúscula é permitida
+- PROIBIDO incluir preços (use termos como "oferta especial", "desconto")
+- Seja persuasivo e orientado para ação
+- Use palavras de impacto que geram cliques
+- Cada título deve ser único e diferente
+- Cada descrição deve ser única e diferente
+- CRÍTICO: Conte TODOS os caracteres (incluindo espaços) ANTES de incluir no JSON
+- Títulos: máximo 28 caracteres | Descrições: máximo 85 caracteres
+- Cada texto DEVE ser uma frase COMPLETA que faz sentido sozinha
+- NUNCA gere texto que será cortado - se passar do limite, reescreva mais curto
 
 FORMATO DE RESPOSTA (JSON):
 {
@@ -83,9 +96,18 @@ Retorne APENAS o JSON, sem texto adicional.`
       )
     }
 
+    // Validar e truncar títulos (máx 30 caracteres) e descrições (máx 90 caracteres)
+    const titles = (parsedResponse.titles || [])
+      .slice(0, 5)
+      .map((t: string) => t.substring(0, 30))
+
+    const descriptions = (parsedResponse.descriptions || [])
+      .slice(0, 5)
+      .map((d: string) => d.substring(0, 90))
+
     // Salvar títulos no banco
     const savedTitles = await Promise.all(
-      parsedResponse.titles.map((content: string) =>
+      titles.map((content: string) =>
         prisma.generatedTitle.create({
           data: {
             productId,
@@ -97,7 +119,7 @@ Retorne APENAS o JSON, sem texto adicional.`
 
     // Salvar descrições no banco
     const savedDescriptions = await Promise.all(
-      parsedResponse.descriptions.map((content: string) =>
+      descriptions.map((content: string) =>
         prisma.generatedDescription.create({
           data: {
             productId,

@@ -41,10 +41,16 @@ export async function POST(
       where: { pixelId }
     })
 
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+
     if (!pixel) {
       return NextResponse.json(
         { success: false, error: 'Pixel não encontrado' },
-        { status: 404 }
+        { status: 404, headers: corsHeaders }
       )
     }
 
@@ -52,7 +58,7 @@ export async function POST(
     if (pixel.status !== 'active') {
       return NextResponse.json(
         { success: false, error: 'Pixel está inativo - eventos não serão registrados' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       )
     }
 
@@ -82,7 +88,7 @@ export async function POST(
 
       return NextResponse.json(
         { success: false, error: 'IP bloqueado' },
-        { status: 403 }
+        { status: 403, headers: corsHeaders }
       )
     }
 
@@ -148,33 +154,9 @@ export async function POST(
 
     switch (eventType) {
       case 'visit':
-        if (!isBot) {
-          updateData.visits = { increment: 1 }
-          updateData.cleanVisits = { increment: 1 }
-
-          if (isUnique) {
-            updateData.uniqueVisits = { increment: 1 }
-          }
-
-          if (isPaid) {
-            updateData.paidTrafficVisits = { increment: 1 }
-          }
-        } else {
-          // Apenas incrementar total de visitas mesmo para bots
-          updateData.visits = { increment: 1 }
-          updateData.blockedIps = { increment: 1 }
-        }
-        break
-
       case 'click':
         if (!isBot) {
           updateData.clicks = { increment: 1 }
-        }
-        break
-
-      case 'checkout':
-        if (!isBot) {
-          updateData.checkouts = { increment: 1 }
         }
         break
 
@@ -182,8 +164,6 @@ export async function POST(
       case 'conversion':
         if (!isBot) {
           updateData.sales = { increment: 1 }
-          // Manter compatibilidade com campo antigo
-          updateData.conversions = { increment: 1 }
         }
         break
     }
@@ -204,13 +184,20 @@ export async function POST(
         isUnique: isUnique || false,
         ipBlocked: false
       }
-    })
+    }, { headers: corsHeaders })
 
   } catch (error) {
     console.error('Erro ao registrar evento do pixel:', error)
     return NextResponse.json(
       { success: false, error: 'Erro interno do servidor' },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        }
+      }
     )
   }
 }
