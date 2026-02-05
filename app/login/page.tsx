@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { TraditionalLogin } from '../components/traditional-login';
@@ -11,6 +12,27 @@ import type { LoginCredentials } from '../types/auth';
 function LoginContent() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
+  const [googleError, setGoogleError] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error === 'google_failed') {
+      setGoogleError('Falha ao fazer login com Google. Tente novamente.');
+      window.history.replaceState({}, '', '/login');
+    } else if (error === 'cancelled') {
+      setGoogleError('Login com Google cancelado.');
+      window.history.replaceState({}, '', '/login');
+    }
+  }, []);
+
+  // Usar tema light como padrão para evitar hydration mismatch
+  const theme = mounted ? resolvedTheme : 'light';
 
   const handleTraditionalLogin = async (credentials: LoginCredentials) => {
     try {
@@ -41,7 +63,7 @@ function LoginContent() {
         <div className="w-full max-w-md">
           <div
               className="bg-card rounded-lg p-8 shadow-sm dark:shadow-lg"
-              style={{ border: resolvedTheme === 'dark' ? '1px solid #3A3A3A' : '1px solid #D1D5DB' }}
+              style={{ border: theme === 'dark' ? '1px solid #3A3A3A' : '1px solid #D1D5DB' }}
             >
             <div className="mb-8">
               <div className="flex items-center justify-between">
@@ -52,6 +74,12 @@ function LoginContent() {
                 Acesse sua conta para continuar
               </p>
             </div>
+
+            {googleError && (
+              <div className="mb-6 rounded-md bg-destructive/10 border border-destructive/20 p-4 text-label text-destructive">
+                {googleError}
+              </div>
+            )}
 
             <TraditionalLogin onSubmit={handleTraditionalLogin} />
 
@@ -72,15 +100,15 @@ function LoginContent() {
       <div
         className="hidden lg:flex flex-1 items-center justify-center relative"
         style={{
-          backgroundColor: resolvedTheme === 'dark' ? '#FFFFFF' : '#000000',
-          boxShadow: resolvedTheme === 'dark'
+          backgroundColor: theme === 'dark' ? '#FFFFFF' : '#000000',
+          boxShadow: theme === 'dark'
             ? '-12px 0 40px rgba(0,0,0,0.3)'
             : '-12px 0 40px rgba(255,255,255,0.15)'
         }}
       >
         <div className="w-full max-w-md px-8 text-center">
           <Image
-            src={resolvedTheme === 'dark' ? '/logo/logo-preta.png' : '/logo/logo-branca.png'}
+            src={theme === 'dark' ? '/logo/logo-preta.png' : '/logo/logo-branca.png'}
             alt="Hubfi"
             width={400}
             height={120}
@@ -89,7 +117,7 @@ function LoginContent() {
           />
           <p
             className="text-title"
-            style={{ color: resolvedTheme === 'dark' ? '#181818' : '#E5E5E5' }}
+            style={{ color: theme === 'dark' ? '#181818' : '#E5E5E5' }}
           >
             Tudo que você precisa em um só lugar
           </p>

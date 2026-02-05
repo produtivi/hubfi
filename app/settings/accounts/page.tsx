@@ -240,7 +240,7 @@ export default function ContasPage() {
               Nenhuma conta Google conectada
             </p>
             <p className="text-label text-muted-foreground">
-              Adicione uma conta Gmail acima para começar
+              Adicione uma conta Gmail para começar
             </p>
           </div>
         ) : (
@@ -259,7 +259,7 @@ export default function ContasPage() {
                     {account.adsError && (
                       <p className="text-label text-destructive mt-1">
                         {account.adsError.includes('DEVELOPER_TOKEN')
-                          ? 'Developer Token nao configurado no servidor'
+                          ? 'Developer Token não configurado no servidor'
                           : account.adsError}
                       </p>
                     )}

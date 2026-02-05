@@ -32,6 +32,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Conta criada via Google (sem senha)
+    if (!user.password) {
+      return NextResponse.json(
+        { error: 'Esta conta usa login com Google. Clique em "Entrar com Google".' },
+        { status: 401 }
+      );
+    }
+
     // Verificar senha
     const passwordMatch = await bcrypt.compare(password, user.password);
 
