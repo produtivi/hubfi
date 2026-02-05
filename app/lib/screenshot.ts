@@ -1,7 +1,5 @@
 import { chromium } from 'playwright';
-import fs from 'fs/promises';
-import path from 'path';
-import { uploadScreenshotToSpaces } from './spaces';
+import { uploadToSpaces } from './spaces';
 
 // Verificar se Playwright está disponível
 async function isPlaywrightAvailable(): Promise<boolean> {
@@ -19,6 +17,15 @@ export async function takeScreenshot(url: string, presellId: number) {
   let browser = null;
 
   try {
+    // Verificar se Spaces está configurado
+    if (!process.env.DO_SPACES_ACCESS_KEY || !process.env.DO_SPACES_SECRET_KEY) {
+      console.warn('[Screenshot] DigitalOcean Spaces não configurado, pulando screenshots');
+      return {
+        desktop: null,
+        mobile: null
+      };
+    }
+
     // Validar URL
     new URL(url);
 
@@ -100,10 +107,6 @@ export async function takeScreenshot(url: string, presellId: number) {
         route.continue();
       }
     });
-
-    // Screenshots directory
-    const screenshotsDir = path.join(process.cwd(), 'public', 'screenshots');
-    await fs.mkdir(screenshotsDir, { recursive: true });
 
     // Desktop screenshot - esperar página carregar completamente
     try {
@@ -214,40 +217,6 @@ export async function takeScreenshot(url: string, presellId: number) {
       console.log(`[Screenshot] Recheck após espera: ${JSON.stringify(recheckContent)}`);
     }
 
-    // Tentar aceitar/fechar modais de cookie clicando nos botões
-    try {
-      const cookieButtonSelectors = [
-        'button:has-text("accept")', 'button:has-text("Accept")',
-        'button:has-text("aceitar")', 'button:has-text("Aceitar")',
-        'button:has-text("concordo")', 'button:has-text("Concordo")',
-        'button:has-text("agree")', 'button:has-text("Agree")',
-        'button:has-text("OK")', 'button:has-text("Ok")',
-        'button:has-text("I accept")', 'button:has-text("Yes")',
-        '[class*="cookie"] button', '[id*="cookie"] button',
-        '[class*="consent"] button', '[id*="consent"] button',
-        '[class*="accept"]', '[id*="accept"]',
-        'button[class*="close"]', '[aria-label="close"]', '[aria-label="Close"]'
-      ];
-
-      for (const selector of cookieButtonSelectors) {
-        try {
-          const button = await page.$(selector);
-          if (button) {
-            await button.click();
-            console.log(`[Screenshot] Clicou no botão de cookie: ${selector}`);
-            await page.waitForTimeout(500);
-            break;
-          }
-        } catch (e) {
-          // Continuar tentando outros seletores
-        }
-      }
-    } catch (e) {
-      console.log('[Screenshot] Erro ao tentar fechar cookie modal:', e);
-    }
-
-    await page.waitForTimeout(1000);
-
     // Scroll para o topo
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(2000);
@@ -301,162 +270,49 @@ export async function takeScreenshot(url: string, presellId: number) {
     });
     console.log(`[Screenshot] Estado visual antes do screenshot: ${JSON.stringify(visualState)}`);
 
-    // Remover overlays/modais de cookies e popups - preservar navbars
+    // Remover apenas modais/popups que bloqueiam a visualização (não navbars!)
     const removedElements = await page.evaluate(() => {
       const removed: string[] = [];
 
-      // Detectar e remover modais de cookies e popups
-      const cookieSelectors = [
+      // Remover apenas loaders e spinners
+      const loaders = document.querySelectorAll('[class*="spinner"], [class*="loader"], [id*="loader"]');
+      loaders.forEach(el => {
+        removed.push(`loader: ${el.tagName}.${el.className}`);
+        (el as HTMLElement).style.display = 'none';
+      });
+
+      // Remover modais/popups de cookie consent e similares
+      const popups = document.querySelectorAll([
         '[class*="cookie"]', '[id*="cookie"]',
         '[class*="consent"]', '[id*="consent"]',
-        '[class*="gdpr"]', '[id*="gdpr"]',
-        '[class*="privacy"]', '[id*="privacy"]',
-        '[class*="popup"]', '[id*="popup"]',
-        '[class*="overlay"]', '[id*="overlay"]',
-        '[class*="backdrop"]', '[id*="backdrop"]',
-        '[class*="banner"][class*="cookie"]',
-        '[aria-label*="cookie"]', '[aria-label*="Cookie"]',
-        '[role="dialog"]', '[role="alertdialog"]'
-      ];
-
-      const cookieElements = document.querySelectorAll(cookieSelectors.join(','));
-      cookieElements.forEach(el => {
-        removed.push(`cookie/modal: ${el.tagName}.${el.className}`);
-        (el as HTMLElement).style.setProperty('display', 'none', 'important');
-        (el as HTMLElement).style.setProperty('visibility', 'hidden', 'important');
-        (el as HTMLElement).style.setProperty('opacity', '0', 'important');
-      });
-
-      // Remover qualquer elemento com "modal" no class que está visível
-      const modalElements = document.querySelectorAll('[class*="modal"], [class*="Modal"]');
-      modalElements.forEach(el => {
-        const style = window.getComputedStyle(el);
-        if (style.display !== 'none' && style.visibility !== 'hidden') {
-          removed.push(`modal: ${el.tagName}.${el.className}`);
-          (el as HTMLElement).style.setProperty('display', 'none', 'important');
-        }
-      });
-
-      // Remover loaders e spinners
-      const loaderElements = document.querySelectorAll([
-        '[class*="loader"]', '[class*="loading"]', '[class*="spinner"]',
-        '[id*="loader"]', '[id*="loading"]'
+        '[class*="gdpr"]', '[id*="gdpr"]'
       ].join(','));
 
-      loaderElements.forEach(el => {
-        removed.push(`loader: ${el.tagName}.${el.className}`);
-        (el as HTMLElement).style.setProperty('display', 'none', 'important');
-      });
-
-      // Remover elementos fixed com z-index alto que parecem overlays
-      const allElements = Array.from(document.querySelectorAll('*'));
-      allElements.forEach(el => {
-        const style = window.getComputedStyle(el);
-        const position = style.position;
-        const zIndex = parseInt(style.zIndex) || 0;
-        const tag = el.tagName.toLowerCase();
-        const className = (el.className || '').toString().toLowerCase();
-        const id = (el.id || '').toLowerCase();
-
-        // Preservar navbars, headers e menus
-        const isNavigation = tag === 'nav' || tag === 'header' ||
-          className.includes('nav') || className.includes('header') ||
-          className.includes('menu') || className.includes('toolbar') ||
-          id.includes('nav') || id.includes('header') || id.includes('menu');
-
-        if (isNavigation) {
-          // Garantir que navegação está visível
-          (el as HTMLElement).style.setProperty('display', '', '');
-          (el as HTMLElement).style.setProperty('visibility', 'visible', '');
-          (el as HTMLElement).style.setProperty('opacity', '1', '');
-          return;
-        }
-
-        // Remover overlays/backdrops com alta opacidade que cobrem a página
-        if ((position === 'fixed' || position === 'absolute') && zIndex > 100) {
-          const rect = el.getBoundingClientRect();
-          const bg = style.backgroundColor;
-
-          // Se tem fundo semi-transparente ou escuro e cobre grande parte da tela
-          if ((bg.includes('rgba') || bg.includes('rgb(0') || bg.includes('rgb(255')) &&
-              rect.width > window.innerWidth * 0.5 && rect.height > window.innerHeight * 0.5) {
-            removed.push(`overlay: ${el.tagName}.${className} (z:${zIndex})`);
-            (el as HTMLElement).style.setProperty('display', 'none', 'important');
-          }
-        }
+      popups.forEach(el => {
+        removed.push(`popup: ${el.tagName}.${el.className}`);
+        (el as HTMLElement).style.display = 'none';
       });
 
       return removed;
     });
 
     if (removedElements.length > 0) {
-      console.log(`[Screenshot] Elementos removidos: ${JSON.stringify(removedElements.slice(0, 10))}`);
+      console.log(`[Screenshot] Elementos removidos: ${JSON.stringify(removedElements)}`);
     }
-
-    await page.waitForTimeout(1000);
-
-    // FORÇA BRUTA: Garantir que body e html estejam 100% visíveis
-    await page.evaluate(() => {
-      // Forçar body e html visíveis
-      document.documentElement.style.opacity = '1';
-      document.documentElement.style.visibility = 'visible';
-      document.body.style.opacity = '1';
-      document.body.style.visibility = 'visible';
-      document.body.style.display = 'block';
-
-      // Remover qualquer transform que possa esconder
-      document.body.style.transform = 'none';
-      document.documentElement.style.transform = 'none';
-    });
 
     await page.waitForTimeout(500);
 
-    // Debug: salvar HTML da página para análise
-    try {
-      const htmlContent = await page.content();
-      const debugHtmlPath = path.join(process.cwd(), 'public', 'screenshots', `debug-presell-${presellId}.html`);
-      await fs.writeFile(debugHtmlPath, htmlContent, 'utf-8');
-      console.log(`[Screenshot] HTML de debug salvo em: ${debugHtmlPath}`);
-    } catch (e) {
-      console.log('[Screenshot] Erro ao salvar HTML debug:', e);
-    }
+    const desktopFileName = `presell-${presellId}-desktop.png`;
 
-    // Garantir que navbar/header está visível antes do screenshot
-    await page.evaluate(() => {
-      // Forçar scroll para o topo absoluto
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-
-      // Garantir que elementos de navegação no topo estão visíveis
-      const navElements = document.querySelectorAll('nav, header, [class*="nav"], [class*="header"], [id*="nav"], [id*="header"]');
-      navElements.forEach(el => {
-        const htmlEl = el as HTMLElement;
-        const style = window.getComputedStyle(el);
-
-        // Se está posicionado no topo, garantir visibilidade
-        if (style.position === 'fixed' || style.position === 'sticky') {
-          htmlEl.style.setProperty('opacity', '1', 'important');
-          htmlEl.style.setProperty('visibility', 'visible', 'important');
-          htmlEl.style.setProperty('transform', 'none', 'important');
-          htmlEl.style.setProperty('top', '0', 'important');
-        }
-      });
-    });
-
-    await page.waitForTimeout(500);
-
-    const desktopPath = `/screenshots/presell-${presellId}-desktop.png`;
-    const desktopFullPath = path.join(process.cwd(), 'public', desktopPath);
-
-    await page.screenshot({
-      path: desktopFullPath,
+    const desktopBuffer = await page.screenshot({
       fullPage: false,
       type: 'png',
-      animations: 'disabled'
+      animations: 'disabled' // Desabilitar animações
     });
 
-    console.log(`[Screenshot] Screenshot desktop salvo em: ${desktopFullPath}`);
+    console.log(`[Screenshot] Screenshot desktop capturado, fazendo upload para Spaces...`);
+    const desktopUrl = await uploadToSpaces(desktopBuffer, desktopFileName);
+    console.log(`[Screenshot] Screenshot desktop salvo em: ${desktopUrl}`);
 
     // Mobile screenshot
     await page.setViewportSize({ width: 375, height: 667 });
@@ -464,55 +320,22 @@ export async function takeScreenshot(url: string, presellId: number) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(1000);
 
-    // Remover apenas overlays/modais para mobile - preservar navbars
-    await page.evaluate(() => {
-      const cookieElements = document.querySelectorAll([
-        '[class*="cookie"]', '[class*="consent"]', '[class*="modal"]',
-        '[class*="popup"]', '[class*="overlay"]', '[role="dialog"]'
-      ].join(','));
-      cookieElements.forEach(el => {
-        (el as HTMLElement).style.display = 'none';
-      });
-    });
 
-    const mobilePath = `/screenshots/presell-${presellId}-mobile.png`;
-    const mobileFullPath = path.join(process.cwd(), 'public', mobilePath);
+    const mobileFileName = `presell-${presellId}-mobile.png`;
 
-    await page.screenshot({
-      path: mobileFullPath,
+    const mobileBuffer = await page.screenshot({
       fullPage: false,
       type: 'png',
       animations: 'disabled'
     });
 
-    console.log(`[Screenshot] Screenshot mobile salvo em: ${mobileFullPath}`);
+    console.log(`[Screenshot] Screenshot mobile capturado, fazendo upload para Spaces...`);
+    const mobileUrl = await uploadToSpaces(mobileBuffer, mobileFileName);
+    console.log(`[Screenshot] Screenshot mobile salvo em: ${mobileUrl}`);
 
-    // Upload para DigitalOcean Spaces se configurado
-    if (process.env.DO_SPACES_ACCESS_KEY && process.env.DO_SPACES_SECRET_KEY) {
-      try {
-        const desktopFileName = `presell-${presellId}-desktop.png`;
-        const desktopSpacesUrl = await uploadScreenshotToSpaces(desktopFullPath, desktopFileName);
-
-        const mobileFileName = `presell-${presellId}-mobile.png`;
-        const mobileSpacesUrl = await uploadScreenshotToSpaces(mobileFullPath, mobileFileName);
-
-        // Deletar arquivos locais após upload
-        await fs.unlink(desktopFullPath);
-        await fs.unlink(mobileFullPath);
-
-        return {
-          desktop: desktopSpacesUrl,
-          mobile: mobileSpacesUrl
-        };
-      } catch (error) {
-        console.error('Erro ao enviar para Spaces, mantendo arquivos locais:', error);
-      }
-    }
-
-    // Fallback: usar arquivos locais
     return {
-      desktop: desktopPath,
-      mobile: mobilePath
+      desktop: desktopUrl,
+      mobile: mobileUrl
     };
 
   } catch (error) {
