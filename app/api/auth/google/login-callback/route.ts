@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const ACCESS_TOKEN_EXPIRY = 15 * 60; // 15 minutos
 const REFRESH_TOKEN_EXPIRY = 5 * 24 * 60 * 60; // 5 dias
+const BASE_URL = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,11 +15,11 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
 
     if (error) {
-      return NextResponse.redirect(new URL('/login?error=cancelled', request.url));
+      return NextResponse.redirect(new URL('/login?error=cancelled', BASE_URL));
     }
 
     if (!code) {
-      return NextResponse.redirect(new URL('/login?error=missing_code', request.url));
+      return NextResponse.redirect(new URL('/login?error=missing_code', BASE_URL));
     }
 
     // Trocar código por tokens
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     const { id: googleId, email, name } = googleUser;
 
     if (!email) {
-      return NextResponse.redirect(new URL('/login?error=no_email', request.url));
+      return NextResponse.redirect(new URL('/login?error=no_email', BASE_URL));
     }
 
     // Encontrar ou criar usuário
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Redirecionar para home
-    const response = NextResponse.redirect(new URL('/', request.url));
+    const response = NextResponse.redirect(new URL('/', BASE_URL));
 
     // Setar cookies
     response.cookies.set('accessToken', accessToken, {
@@ -110,6 +111,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro no login com Google:', error);
-    return NextResponse.redirect(new URL('/login?error=google_failed', request.url));
+    return NextResponse.redirect(new URL('/login?error=google_failed', BASE_URL));
   }
 }
