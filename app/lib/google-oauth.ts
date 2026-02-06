@@ -5,13 +5,6 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback';
 const LOGIN_REDIRECT_URI = process.env.GOOGLE_LOGIN_REDIRECT_URI || 'http://localhost:3000/api/auth/google/login-callback';
 
-// Debug: verificar se as variáveis estão sendo lidas
-console.log('🔍 Google OAuth Config:', {
-  REDIRECT_URI,
-  LOGIN_REDIRECT_URI,
-  hasClientId: !!CLIENT_ID,
-});
-
 // Scopes necessários para Google Ads
 const ADS_SCOPES = [
   'https://www.googleapis.com/auth/userinfo.email',
