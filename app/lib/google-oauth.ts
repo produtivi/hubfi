@@ -5,13 +5,6 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback';
 const LOGIN_REDIRECT_URI = process.env.GOOGLE_LOGIN_REDIRECT_URI || 'http://localhost:3000/api/auth/google/login-callback';
 
-// Debug: verificar se as variáveis estão sendo lidas
-console.log('🔍 Google OAuth Config:', {
-  REDIRECT_URI,
-  LOGIN_REDIRECT_URI,
-  hasClientId: !!CLIENT_ID,
-});
-
 // Scopes necessários para Google Ads
 const ADS_SCOPES = [
   'https://www.googleapis.com/auth/userinfo.email',
@@ -48,12 +41,17 @@ export function getAuthUrl(userId: number): string {
 }
 
 export function getLoginAuthUrl(): string {
-  return loginOauth2Client.generateAuthUrl({
+  const authUrl = loginOauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: LOGIN_SCOPES,
     state: JSON.stringify({ action: 'login' }),
     prompt: 'consent',
   });
+
+  console.log('🔗 URL de autorização gerada:', authUrl);
+  console.log('🔗 Redirect URI configurado:', LOGIN_REDIRECT_URI);
+
+  return authUrl;
 }
 
 export async function getTokensFromCode(code: string) {
