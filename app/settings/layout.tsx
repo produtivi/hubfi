@@ -35,7 +35,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4 mb-4">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-accent rounded-md transition-colors"
+              className="p-2 hover:bg-accent rouznded-md transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -46,7 +46,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
         {/* Layout com sidebar */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch">
           {/* Sidebar de navegação */}
-          <div className="w-full lg:w-80 flex-shrink-0 bg-card border border-border rounded-md p-4 h-[750px]">
+          <div className="w-full lg:w-80 flex-shrink-0 bg-card border border-border rounded-md p-4 md:h-[750px]">
             {navigationItems.map((section) => (
               <div key={section.section} className="mb-6">
                 <h3 className="text-label text-primary font-medium mb-2">

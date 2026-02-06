@@ -351,6 +351,7 @@ export default function PageBuilder() {
           onCopy={handleCopy}
           onDelete={handleDelete}
           onPreviewComplete={loadPresells}
+          onCreateFirst={() => setIsCreateModalOpen(true)}
         />
       )}
 
