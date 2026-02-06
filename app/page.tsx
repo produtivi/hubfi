@@ -93,7 +93,7 @@ export default function Home() {
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-headline mb-2">Bem-vindo ao Hubfi</h1>
+            <h1 className="text-headline mb-2">Bem-vindo ao Hubfi (Dados fictícios)</h1>
             <p className="text-body-muted">
               Aqui está um resumo do seu desempenho e recursos para te ajudar
             </p>
