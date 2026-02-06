@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, Edit02, Copy01, Trash01, Check } from '@untitledui/icons';
+import { Eye, Edit02, Copy01, Trash01, Check, Plus } from '@untitledui/icons';
 import { Page, PAGE_TYPES } from '@/types/page-builder';
 import { ScreenshotStatus } from './screenshot-status';
 import { useState } from 'react';
@@ -12,9 +12,10 @@ interface PagesListProps {
   onCopy: (id: string) => void;
   onDelete: (id: string) => void;
   onPreviewComplete?: () => void;
+  onCreateFirst?: () => void;
 }
 
-export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewComplete }: PagesListProps) {
+export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewComplete, onCreateFirst }: PagesListProps) {
   const [completedPreviews, setCompletedPreviews] = useState<Set<string>>(new Set());
 
   const formatDate = (date: Date) => {
@@ -38,8 +39,17 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
 
   if (pages.length === 0) {
     return (
-      <div className="text-center py-12 text-body-muted">
-        Nenhuma página encontrada
+      <div className="bg-card border border-border rounded-md py-8 md:py-16 text-center">
+        <p className="text-body text-muted-foreground mb-4">Nenhuma página criada ainda</p>
+        {onCreateFirst && (
+          <button
+            onClick={onCreateFirst}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-md hover:opacity-90 transition-opacity text-body font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Criar primeira página
+          </button>
+        )}
       </div>
     );
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trash2, Building2, MonitorSmartphone, Target, X, AlertTriangle } from 'lucide-react';
+import { Trash2, Building2, MonitorSmartphone, Target, X, AlertTriangle, MoreVertical } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSettingsToast } from '../toast-context';
 import { Button } from '@/components/base/buttons/button';
@@ -35,6 +35,7 @@ export default function ContasPage() {
   const [isAddingGmail, setIsAddingGmail] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<GoogleAccount | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -250,7 +251,7 @@ export default function ContasPage() {
               className="bg-background border border-border rounded-lg p-5 hover:border-foreground/20 transition-colors"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1 md:gap-4">
                   <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center text-foreground font-medium text-lg">
                     {account.email[0].toUpperCase()}
                   </div>
@@ -265,13 +266,47 @@ export default function ContasPage() {
                     )}
                   </div>
                 </div>
+                {/* Desktop: ícone de lixeira */}
                 <button
                   onClick={() => openDeleteModal(account)}
-                  className="p-2 hover:bg-accent rounded-md transition-colors"
+                  className="hidden md:block p-2 hover:bg-accent rounded-md transition-colors"
                   title="Remover conta"
                 >
                   <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                 </button>
+
+                {/* Mobile: menu de três pontos */}
+                <div className="relative md:hidden">
+                  <button
+                    onClick={() => setOpenMenuId(openMenuId === account.id ? null : account.id)}
+                    className="p-2 hover:bg-accent rounded-md transition-colors"
+                  >
+                    <MoreVertical className="w-4 h-4 text-muted-foreground mt-2 ml-3" />
+                  </button>
+
+                  {openMenuId === account.id && (
+                    <>
+                      {/* Backdrop para fechar o menu */}
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setOpenMenuId(null)}
+                      />
+                      {/* Menu dropdown */}
+                      <div className="absolute right-0 top-full mt-1 z-20 bg-card border border-border rounded-md shadow-lg min-w-[140px]">
+                        <button
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            openDeleteModal(account);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-destructive hover:bg-accent transition-colors text-left"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="text-label">Excluir</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Métricas com ícones */}
@@ -284,19 +319,36 @@ export default function ContasPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-center">
+                      <div className=" items-center md:flex hidden">
                         <div className='flex items-center gap-2'>
                         <Building2 className="w-4 h-4 text-muted-foreground" />
                         <span className="text-label text-muted-foreground">{account.mccCount} MCC</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="items-center gap-2 md:flex hidden">
                         <MonitorSmartphone className="w-4 h-4 text-muted-foreground" />
                         <span className="text-label text-muted-foreground">{account.adsAccountCount} Contas Google Ads</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="items-center gap-2 md:flex hidden">
                         <Target className="w-4 h-4 text-muted-foreground" />
                         <span className="text-label text-muted-foreground">{account.conversionActionsCount} Ações de conversão</span>
+                      </div>
+                      
+                      <div className='flex flex-col w-full gap-4 md:hidden'>
+                       <div className="flex items-center md:hidden">
+                        <div className='flex items-center gap-2'>
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-label text-muted-foreground">{account.mccCount} MCC</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 md:hidden">
+                        <MonitorSmartphone className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-label text-muted-foreground">{account.adsAccountCount} Contas Google Ads</span>
+                      </div>
+                      <div className="flex items-center gap-2 md:hidden">
+                        <Target className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-label text-muted-foreground">{account.conversionActionsCount} Ações de conversão</span>
+                      </div>
                       </div>
                     </>
                   )}

@@ -12,6 +12,10 @@ export default function PerfilPage() {
     name: '',
     email: ''
   });
+  const [originalProfileData, setOriginalProfileData] = useState({
+    name: '',
+    email: ''
+  });
   const [passwordData, setPasswordData] = useState({
     newPassword: '',
     confirmPassword: ''
@@ -20,6 +24,9 @@ export default function PerfilPage() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
+
+  const hasProfileChanges = profileData.name !== originalProfileData.name ||
+                            profileData.email !== originalProfileData.email;
 
   useEffect(() => {
     fetchProfile();
@@ -31,10 +38,12 @@ export default function PerfilPage() {
       const response = await fetch('/api/auth/me');
       if (response.ok) {
         const data = await response.json();
-        setProfileData({
+        const profile = {
           name: data.user?.name || '',
           email: data.user?.email || ''
-        });
+        };
+        setProfileData(profile);
+        setOriginalProfileData(profile);
       }
     } catch (error) {
       console.error('Erro ao buscar perfil:', error);
@@ -68,6 +77,7 @@ export default function PerfilPage() {
         throw new Error(data.error || 'Erro ao atualizar perfil');
       }
 
+      setOriginalProfileData({ ...profileData });
       showSuccess('Perfil atualizado com sucesso!');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar perfil';
@@ -145,7 +155,7 @@ export default function PerfilPage() {
           <div className="space-y-4">
             <h3 className="text-body font-medium">Informações básicas</h3>
 
-            <div className="flex items-end gap-4">
+            <div className="md:flex md:flex-row flex flex-col gap-4 ">
               <div className="flex-1 space-y-1">
                 <span className="text-label text-muted-foreground">Nome</span>
                 <Input
@@ -165,15 +175,18 @@ export default function PerfilPage() {
                 />
               </div>
 
+              <div>
               <Button
                 color="primary"
                 size="md"
                 onClick={handleSaveProfile}
-                isDisabled={isSavingProfile}
+                isDisabled={isSavingProfile || !hasProfileChanges}
                 isLoading={isSavingProfile}
+                 className='md:mt-6'
               >
                 {isSavingProfile ? 'Salvando...' : 'Salvar alterações'}
               </Button>
+              </div>
             </div>
           </div>
 
@@ -249,7 +262,7 @@ export default function PerfilPage() {
                       color="primary"
                       size="md"
                       onClick={handleSavePassword}
-                      isDisabled={isSavingPassword}
+                      isDisabled={isSavingPassword || !passwordData.newPassword || !passwordData.confirmPassword}
                       isLoading={isSavingPassword}
                     >
                       {isSavingPassword ? 'Salvando...' : 'Salvar nova senha'}
