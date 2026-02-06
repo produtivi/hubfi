@@ -41,12 +41,17 @@ export function getAuthUrl(userId: number): string {
 }
 
 export function getLoginAuthUrl(): string {
-  return loginOauth2Client.generateAuthUrl({
+  const authUrl = loginOauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: LOGIN_SCOPES,
     state: JSON.stringify({ action: 'login' }),
     prompt: 'consent',
   });
+
+  console.log('🔗 URL de autorização gerada:', authUrl);
+  console.log('🔗 Redirect URI configurado:', LOGIN_REDIRECT_URI);
+
+  return authUrl;
 }
 
 export async function getTokensFromCode(code: string) {
