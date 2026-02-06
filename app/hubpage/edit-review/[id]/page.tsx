@@ -3,19 +3,29 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useHubPageToast } from '../toast-context';
-import { TooltipHelp } from '../../components/ui/tooltip-help';
+import { useHubPageToast } from '../../toast-context';
+import { TooltipHelp } from '../../../components/ui/tooltip-help';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
 import { Button } from '@/components/base/buttons/button';
 import { useUser } from '@/hooks/use-user';
 import type { Key } from 'react-aria-components';
 
-export default function CreateReview() {
+interface EditReviewProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default function EditReview({ params }: EditReviewProps) {
   const router = useRouter();
   const { showSuccess, showError } = useHubPageToast();
   const { user } = useUser();
-  const [isAwareOfAI, setIsAwareOfAI] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [error, setError] = useState('');
+  const [reviewId, setReviewId] = useState<string>('');
+
   const [formData, setFormData] = useState({
     domain: '',
     pageName: '',
@@ -26,24 +36,72 @@ export default function CreateReview() {
     niche: '',
     language: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  const [originalData, setOriginalData] = useState({
+    producerSalesPage: ''
+  });
+
   const [customDomains, setCustomDomains] = useState<Array<{id: string, domain: string}>>([]);
   const [niches, setNiches] = useState<Array<{id: number, name: string}>>([]);
   const [productTypes, setProductTypes] = useState<Array<{id: number, name: string}>>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  // Carregar nichos e tipos de produto ao montar
+  const languages = [
+    'Português',
+    'Inglês',
+    'Espanhol'
+  ];
+
   useEffect(() => {
     loadNichesAndTypes();
   }, []);
 
-  // Carregar domínios quando user estiver disponível
   useEffect(() => {
     if (user?.id) {
       loadDomains();
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    const loadReview = async () => {
+      try {
+        const resolvedParams = await params;
+        setReviewId(resolvedParams.id);
+
+        const response = await fetch(`/api/reviews/${resolvedParams.id}`);
+        const result = await response.json();
+
+        if (result.success) {
+          const data = result.data;
+
+          setOriginalData({
+            producerSalesPage: data.producerSalesPage || ''
+          });
+
+          setFormData({
+            domain: data.domain?.domainName || '',
+            pageName: data.pageName || '',
+            productName: data.productName || '',
+            affiliateLink: data.affiliateLink || '',
+            producerSalesPage: data.producerSalesPage || '',
+            productType: data.productType || '',
+            niche: data.niche || '',
+            language: data.language || ''
+          });
+        } else {
+          showError('Erro ao carregar review');
+          setTimeout(() => router.back(), 2000);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar review:', error);
+        showError('Erro ao carregar review');
+        setTimeout(() => router.back(), 2000);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadReview();
+  }, [params]);
 
   const loadNichesAndTypes = async () => {
     try {
@@ -73,7 +131,6 @@ export default function CreateReview() {
     if (!user?.id) return;
 
     try {
-      setIsLoadingData(true);
       const response = await fetch(`/api/custom-domains?userId=${user.id}`);
       const result = await response.json();
 
@@ -85,53 +142,49 @@ export default function CreateReview() {
       }
     } catch (error) {
       console.error('Erro ao carregar domínios:', error);
-      showError('Erro ao carregar domínios');
-    } finally {
-      setIsLoadingData(false);
     }
   };
 
-  const languages = [
-    'Português',
-    'Inglês',
-    'Espanhol'
-  ];
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setIsLoading(true);
 
     try {
-      const response = await fetch('/api/reviews', {
-        method: 'POST',
+      if (!formData.pageName || !formData.productName || !formData.affiliateLink ||
+        !formData.producerSalesPage || !formData.productType || !formData.niche || !formData.language) {
+        throw new Error('Todos os campos são obrigatórios');
+      }
+
+      const response = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user?.id,
           pageName: formData.pageName,
           productName: formData.productName,
-          domain: formData.domain,
           affiliateLink: formData.affiliateLink,
           producerSalesPage: formData.producerSalesPage,
           productType: formData.productType,
           niche: formData.niche,
           language: formData.language
-        }),
+        })
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Erro ao criar review');
+        throw new Error(result.error || 'Erro ao atualizar review');
       }
 
-      showSuccess(`Página de review "${formData.pageName}" criada com sucesso! O conteúdo está sendo gerado.`);
-      router.push('/hubpage');
+      showSuccess(`Página "${formData.pageName}" atualizada com sucesso!`);
+
+      setTimeout(() => {
+        router.push('/hubpage');
+      }, 1000);
 
     } catch (error) {
-      console.error('Erro:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       setError(errorMessage);
       showError(errorMessage);
@@ -163,9 +216,9 @@ export default function CreateReview() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-headline">Criar Nova Review</h1>
+            <h1 className="text-headline">Editar Review</h1>
             <p className="text-label text-muted-foreground">
-              Configure os detalhes da sua página de review
+              Atualize as informações da sua página de review
             </p>
           </div>
         </div>
@@ -184,26 +237,21 @@ export default function CreateReview() {
 
             {/* Grid de campos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Domínio */}
+              {/* Domínio (desabilitado) */}
               <div className="space-y-1">
                 <span className="text-body font-medium flex items-center gap-2">
                   Domínio <span className="text-destructive">*</span>
-                  <TooltipHelp text="Selecione um dos seus domínios customizados ativos." />
+                  <TooltipHelp text="O domínio não pode ser alterado após a criação." />
                 </span>
                 <Select
-                  placeholder="Escolha o domínio"
+                  placeholder="Domínio"
                   selectedKey={formData.domain || null}
-                  onSelectionChange={(key: Key | null) => setFormData({ ...formData, domain: key as string || '' })}
+                  onSelectionChange={() => {}}
                   items={customDomains.map((domain) => ({ id: domain.domain, label: domain.domain }))}
-                  isRequired
+                  isDisabled
                 >
                   {(item) => <Select.Item key={item.id} id={item.id} label={item.label} />}
                 </Select>
-                {customDomains.length === 0 && (
-                  <p className="text-label text-muted-foreground mt-1">
-                    Nenhum domínio customizado ativo. <a href="/hubpage/domains" className="text-primary underline">Adicionar domínio</a>
-                  </p>
-                )}
               </div>
 
               {/* Nome da página */}
@@ -224,7 +272,7 @@ export default function CreateReview() {
               <div className="space-y-1">
                 <span className="text-body font-medium flex items-center gap-2">
                   Nome do produto <span className="text-destructive">*</span>
-                  <TooltipHelp text="Nome do produto que será avaliado na review." />
+                  <TooltipHelp text="Nome do produto que será apresentado na review." />
                 </span>
                 <Input
                   value={formData.productName}
@@ -268,7 +316,7 @@ export default function CreateReview() {
               <div className="space-y-1">
                 <span className="text-body font-medium flex items-center gap-2">
                   Tipo de produto <span className="text-destructive">*</span>
-                  <TooltipHelp text="Categoria do produto que será avaliado." />
+                  <TooltipHelp text="Categoria do produto que será apresentado." />
                 </span>
                 <Select
                   placeholder="Escolha a categoria"
@@ -316,21 +364,6 @@ export default function CreateReview() {
               </div>
             </div>
 
-            {/* Confirmação IA */}
-            <div className="p-6 border border-border rounded-lg">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isAwareOfAI}
-                  onChange={(e) => setIsAwareOfAI(e.target.checked)}
-                  className="mt-1 w-4 h-4 border-border rounded focus:ring-2 focus:ring-primary accent-foreground"
-                />
-                <span className="text-body text-muted-foreground">
-                  Estou ciente de que o conteúdo é gerado por inteligência artificial e que devo revisá-lo antes de anunciar
-                </span>
-              </label>
-            </div>
-
             {/* Botões de ação */}
             <div className="flex justify-between items-center pt-8 border-t border-border">
               <Button
@@ -338,7 +371,6 @@ export default function CreateReview() {
                 color="secondary"
                 size="lg"
                 onClick={() => router.back()}
-                isDisabled={isLoading}
               >
                 Cancelar
               </Button>
@@ -347,11 +379,11 @@ export default function CreateReview() {
                 type="submit"
                 color="primary"
                 size="lg"
-                isDisabled={isLoading || !isAwareOfAI}
+                isDisabled={isLoading}
                 isLoading={isLoading}
-                showTextWhileLoading
+                className='p-2'
               >
-                {isLoading ? 'Criando Review...' : 'Criar Review'}
+                {isLoading ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </div>
           </form>

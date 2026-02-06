@@ -3,6 +3,7 @@
 import { Eye, Edit02, Copy01, Trash01, Check, Plus } from '@untitledui/icons';
 import { Page, PAGE_TYPES } from '@/types/page-builder';
 import { ScreenshotStatus } from './screenshot-status';
+import { ReviewStatus } from './review-status';
 import { useState } from 'react';
 
 interface PagesListProps {
@@ -34,7 +35,20 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
   };
 
   const needsPreview = (page: Page) => {
+    // Apenas presells precisam de prévia (screenshot)
+    if (page.type !== 'presell') return false;
     return !page.screenshotDesktop && !completedPreviews.has(page.id);
+  };
+
+  const needsReviewContent = (page: Page) => {
+    // Apenas reviews precisam de conteúdo gerado
+    if (page.type !== 'review') return false;
+    return page.status === 'draft' && !completedPreviews.has(page.id);
+  };
+
+  const getRealId = (pageId: string) => {
+    const parts = pageId.split('-');
+    return parts.length > 1 ? parts.slice(1).join('-') : pageId;
   };
 
   if (pages.length === 0) {
@@ -84,7 +98,7 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
 
             {/* Desktop: Ícones de ação no header */}
             <div className="hidden md:flex items-center gap-1 shrink-0 ml-2">
-              {!needsPreview(page) && (
+              {!needsPreview(page) && !needsReviewContent(page) && (
                 <>
                   <button
                     onClick={() => onEdit(page.id)}
@@ -139,11 +153,21 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
             </div>
           </div>
 
-          {/* Status de prévia se estiver processando */}
+          {/* Status de prévia se estiver processando (apenas presells) */}
           {needsPreview(page) && (
             <div className="mt-4 pt-4 border-t border-border">
               <ScreenshotStatus
-                presellId={parseInt(page.id)}
+                presellId={parseInt(getRealId(page.id))}
+                onComplete={() => handlePreviewComplete(page.id)}
+              />
+            </div>
+          )}
+
+          {/* Status de geração de conteúdo (apenas reviews) */}
+          {needsReviewContent(page) && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <ReviewStatus
+                reviewId={parseInt(getRealId(page.id))}
                 onComplete={() => handlePreviewComplete(page.id)}
               />
             </div>
@@ -164,7 +188,7 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
 
           {/* Mobile: Ações em botões */}
           <div className="flex items-center justify-between gap-2 pt-4 md:hidden">
-            {!needsPreview(page) && (
+            {!needsPreview(page) && !needsReviewContent(page) && (
               <>
                 <button
                   onClick={() => onEdit(page.id)}
