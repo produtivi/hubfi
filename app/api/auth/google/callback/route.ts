@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTokensFromCode, getUserInfo } from '@/lib/google-oauth';
 import { prisma } from '@/lib/prisma';
 
+const BASE_URL = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -11,11 +13,11 @@ export async function GET(request: NextRequest) {
 
     // Se houve erro (usuário cancelou)
     if (error) {
-      return NextResponse.redirect(new URL('/settings/accounts?error=cancelled', request.url));
+      return NextResponse.redirect(new URL('/settings/accounts?error=cancelled', BASE_URL));
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(new URL('/settings/accounts?error=missing_params', request.url));
+      return NextResponse.redirect(new URL('/settings/accounts?error=missing_params', BASE_URL));
     }
 
     // Decodificar o state para pegar o userId
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
       const stateData = JSON.parse(state);
       userId = stateData.userId;
     } catch (e) {
-      return NextResponse.redirect(new URL('/settings/accounts?error=invalid_state', request.url));
+      return NextResponse.redirect(new URL('/settings/accounts?error=invalid_state', BASE_URL));
     }
 
     // Trocar código por tokens
@@ -49,10 +51,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Redirecionar de volta para settings com sucesso
-    return NextResponse.redirect(new URL('/settings/accounts?success=account_connected', request.url));
+    return NextResponse.redirect(new URL('/settings/accounts?success=account_connected', BASE_URL));
 
   } catch (error) {
     console.error('Erro no callback OAuth:', error);
-    return NextResponse.redirect(new URL('/settings/accounts?error=oauth_failed', request.url));
+    return NextResponse.redirect(new URL('/settings/accounts?error=oauth_failed', BASE_URL));
   }
 }
