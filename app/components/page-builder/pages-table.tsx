@@ -1,8 +1,9 @@
 'use client';
 
-import { Eye, Edit02, Copy01, Trash01, Check } from '@untitledui/icons';
+import { Eye, Edit02, Copy01, Trash01, Check, Plus } from '@untitledui/icons';
 import { Page, PAGE_TYPES } from '@/types/page-builder';
 import { ScreenshotStatus } from './screenshot-status';
+import { ReviewStatus } from './review-status';
 import { useState } from 'react';
 
 interface PagesListProps {
@@ -12,9 +13,10 @@ interface PagesListProps {
   onCopy: (id: string) => void;
   onDelete: (id: string) => void;
   onPreviewComplete?: () => void;
+  onCreateFirst?: () => void;
 }
 
-export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewComplete }: PagesListProps) {
+export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewComplete, onCreateFirst }: PagesListProps) {
   const [completedPreviews, setCompletedPreviews] = useState<Set<string>>(new Set());
 
   const formatDate = (date: Date) => {
@@ -33,13 +35,35 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
   };
 
   const needsPreview = (page: Page) => {
+    // Apenas presells precisam de prévia (screenshot)
+    if (page.type !== 'presell') return false;
     return !page.screenshotDesktop && !completedPreviews.has(page.id);
+  };
+
+  const needsReviewContent = (page: Page) => {
+    // Apenas reviews precisam de conteúdo gerado
+    if (page.type !== 'review') return false;
+    return page.status === 'draft' && !completedPreviews.has(page.id);
+  };
+
+  const getRealId = (pageId: string) => {
+    const parts = pageId.split('-');
+    return parts.length > 1 ? parts.slice(1).join('-') : pageId;
   };
 
   if (pages.length === 0) {
     return (
-      <div className="text-center py-12 text-body-muted">
-        Nenhuma página encontrada
+      <div className="bg-card border border-border rounded-md py-8 md:py-16 text-center">
+        <p className="text-body text-muted-foreground mb-4">Nenhuma página criada ainda</p>
+        {onCreateFirst && (
+          <button
+            onClick={onCreateFirst}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-md hover:opacity-90 transition-opacity text-body font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Criar primeira página
+          </button>
+        )}
       </div>
     );
   }
@@ -74,30 +98,34 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
 
             {/* Desktop: Ícones de ação no header */}
             <div className="hidden md:flex items-center gap-1 shrink-0 ml-2">
-              <button
-                onClick={() => onEdit(page.id)}
-                className="p-2 hover:bg-blue-500/20 rounded-md transition-colors"
-                aria-label="Editar"
-                title="Editar"
-              >
-                <Edit02 className="w-4 h-4 text-foreground" />
-              </button>
-              <button
-                onClick={() => onView(page.id)}
-                className="p-2 hover:bg-green-500/20 rounded-md transition-colors"
-                aria-label="Visualizar"
-                title="Visualizar"
-              >
-                <Eye className="w-4 h-4 text-foreground" />
-              </button>
-              <button
-                onClick={() => onCopy(page.id)}
-                className="p-2 hover:bg-amber-500/20 rounded-md transition-colors"
-                aria-label="Copiar"
-                title="Copiar"
-              >
-                <Copy01 className="w-4 h-4 text-foreground" />
-              </button>
+              {!needsPreview(page) && !needsReviewContent(page) && (
+                <>
+                  <button
+                    onClick={() => onEdit(page.id)}
+                    className="p-2 hover:bg-blue-500/20 rounded-md transition-colors"
+                    aria-label="Editar"
+                    title="Editar"
+                  >
+                    <Edit02 className="w-4 h-4 text-foreground" />
+                  </button>
+                  <button
+                    onClick={() => onView(page.id)}
+                    className="p-2 hover:bg-green-500/20 rounded-md transition-colors"
+                    aria-label="Visualizar"
+                    title="Visualizar"
+                  >
+                    <Eye className="w-4 h-4 text-foreground" />
+                  </button>
+                  <button
+                    onClick={() => onCopy(page.id)}
+                    className="p-2 hover:bg-amber-500/20 rounded-md transition-colors"
+                    aria-label="Copiar"
+                    title="Copiar"
+                  >
+                    <Copy01 className="w-4 h-4 text-foreground" />
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => onDelete(page.id)}
                 className="p-2 hover:bg-destructive/20 rounded-md transition-colors"
@@ -125,11 +153,21 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
             </div>
           </div>
 
-          {/* Status de prévia se estiver processando */}
+          {/* Status de prévia se estiver processando (apenas presells) */}
           {needsPreview(page) && (
             <div className="mt-4 pt-4 border-t border-border">
               <ScreenshotStatus
-                presellId={parseInt(page.id)}
+                presellId={parseInt(getRealId(page.id))}
+                onComplete={() => handlePreviewComplete(page.id)}
+              />
+            </div>
+          )}
+
+          {/* Status de geração de conteúdo (apenas reviews) */}
+          {needsReviewContent(page) && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <ReviewStatus
+                reviewId={parseInt(getRealId(page.id))}
                 onComplete={() => handlePreviewComplete(page.id)}
               />
             </div>
@@ -150,33 +188,37 @@ export function PagesList({ pages, onEdit, onView, onCopy, onDelete, onPreviewCo
 
           {/* Mobile: Ações em botões */}
           <div className="flex items-center justify-between gap-2 pt-4 md:hidden">
-            <button
-              onClick={() => onEdit(page.id)}
-              className="p-1 border border-border hover:bg-accent gap-1 flex flex-row rounded-md transition-colors"
-              aria-label="Editar"
-              title="Editar"
-            >
-              <Edit02 className="w-3 h-4 text-foreground mt-1" />
-              Editar
-            </button>
-            <button
-              onClick={() => onView(page.id)}
-              className="p-1 border border-border hover:bg-accent flex flex-row gap-1 rounded-md transition-colors"
-              aria-label="Visualizar"
-              title="Visualizar"
-            >
-              <Eye className="w-4 h-4 text-foreground mt-1" />
-              Visualizar
-            </button>
-            <button
-              onClick={() => onCopy(page.id)}
-              className="p-1 border border-border hover:bg-accent gap-1 flex flex-row rounded-md transition-colors"
-              aria-label="Copiar"
-              title="Copiar"
-            >
-              <Copy01 className="w-4 h-4 text-foreground mt-1" />
-              Copiar
-            </button>
+            {!needsPreview(page) && !needsReviewContent(page) && (
+              <>
+                <button
+                  onClick={() => onEdit(page.id)}
+                  className="p-1 border border-border hover:bg-accent gap-1 flex flex-row rounded-md transition-colors"
+                  aria-label="Editar"
+                  title="Editar"
+                >
+                  <Edit02 className="w-3 h-4 text-foreground mt-1" />
+                  Editar
+                </button>
+                <button
+                  onClick={() => onView(page.id)}
+                  className="p-1 border border-border hover:bg-accent flex flex-row gap-1 rounded-md transition-colors"
+                  aria-label="Visualizar"
+                  title="Visualizar"
+                >
+                  <Eye className="w-4 h-4 text-foreground mt-1" />
+                  Visualizar
+                </button>
+                <button
+                  onClick={() => onCopy(page.id)}
+                  className="p-1 border border-border hover:bg-accent gap-1 flex flex-row rounded-md transition-colors"
+                  aria-label="Copiar"
+                  title="Copiar"
+                >
+                  <Copy01 className="w-4 h-4 text-foreground mt-1" />
+                  Copiar
+                </button>
+              </>
+            )}
             <button
               onClick={() => onDelete(page.id)}
               className="p-1 border border-border hover:bg-destructive/20 rounded-md gap-1 flex flex-row transition-colors"

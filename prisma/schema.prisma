@@ -21,10 +21,12 @@ model User {
 
   // Relacionamentos
   presells          Presell[]
+  reviews           Review[]
   pixels            Pixel[]
   googleAccounts    GoogleAccount[]
   googleAdsAccounts GoogleAdsAccount[]
   passwordResetCodes PasswordResetCode[]
+  customDomains     CustomDomain[]
 
   @@map("users")
 }
@@ -48,10 +50,11 @@ model Domain {
   domainName String   @unique @map("domain_name")
   isActive   Boolean  @default(true) @map("is_active")
   createdAt  DateTime @default(now()) @map("created_at")
-  
+
   // Relacionamentos
   presells   Presell[]
-  
+  reviews    Review[]
+
   @@map("domains")
 }
 
@@ -96,6 +99,53 @@ model Presell {
 
   @@unique([domainId, slug])
   @@map("presells")
+}
+
+model Review {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @map("user_id")
+  domainId           Int      @map("domain_id")
+  pageName           String   @map("page_name")
+  slug               String
+  productName        String   @map("product_name")
+  affiliateLink      String   @map("affiliate_link")
+  producerSalesPage  String   @map("producer_sales_page")
+  productType        String   @map("product_type")
+  niche              String
+  language           String
+  status             String   @default("draft")
+
+  // Conteúdo gerado pela IA
+  headline           String?
+  subheadline        String?
+  introduction       String?  @db.Text
+  benefits           String?  @db.Text  // JSON array de benefícios
+  features           String?  @db.Text  // JSON array de funcionalidades
+  whoIsItFor         String?  @db.Text  @map("who_is_it_for")
+  callToAction       String?  @map("call_to_action")
+  contentHtml        String?  @map("content_html") @db.Text
+  metaTitle          String?  @map("meta_title")
+  metaDescription    String?  @map("meta_description")
+  faviconUrl         String?  @map("favicon_url")
+
+  // Screenshots
+  screenshotDesktop  String?  @map("screenshot_desktop")
+  screenshotMobile   String?  @map("screenshot_mobile")
+
+  // Métricas
+  views              Int      @default(0)
+  clicks             Int      @default(0)
+
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  publishedAt        DateTime? @map("published_at")
+
+  // Relacionamentos
+  user               User     @relation(fields: [userId], references: [id])
+  domain             Domain   @relation(fields: [domainId], references: [id])
+
+  @@unique([domainId, slug])
+  @@map("reviews")
 }
 
 model PresellTemplate {
@@ -278,4 +328,41 @@ model GeneratedDescription {
 
   @@map("generated_descriptions")
   @@index([productId, isFavorite])
+}
+
+// Domínios customizados do Cloudflare
+model CustomDomain {
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @map("user_id")
+  cloudflareHostnameId String  @unique @map("cloudflare_hostname_id")
+  hostname            String   @unique
+  status              String   @default("pending") // pending, active, error
+  sslStatus           String   @default("pending") @map("ssl_status") // pending, active, error
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("custom_domains")
+}
+
+// Nichos de mercado
+model Niche {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("niches")
+}
+
+// Tipos de produto
+model ProductType {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("product_types")
 }
