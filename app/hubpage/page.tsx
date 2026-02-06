@@ -31,6 +31,24 @@ interface Presell {
   fullUrl: string;
 }
 
+interface Review {
+  id: number;
+  pageName: string;
+  productName: string;
+  productType: string;
+  niche: string;
+  language: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  affiliateLink: string;
+  contentHtml?: string;
+  domain: {
+    domainName: string;
+  };
+  fullUrl: string;
+}
+
 export default function PageBuilder() {
   const router = useRouter();
   const { showSuccess, showError } = useHubPageToast();
@@ -41,6 +59,7 @@ export default function PageBuilder() {
   const [filterDomain, setFilterDomain] = useState<string | 'all'>('all');
   const [showArchived, setShowArchived] = useState(false);
   const [presells, setPresells] = useState<Presell[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -54,12 +73,12 @@ export default function PageBuilder() {
     isDeleting: false
   });
 
-  // Carregar presells da API
+  // Carregar presells e reviews da API
   useEffect(() => {
-    loadPresells();
+    loadPages();
   }, []);
 
-  const loadPresells = async () => {
+  const loadPages = async () => {
     try {
       setIsLoading(true);
       // Tentar pegar userId do usuário logado
@@ -74,25 +93,42 @@ export default function PageBuilder() {
         // Se não estiver logado, buscar todos (em dev)
       }
 
-      const response = await fetch(`/api/presells${queryParam}`);
-      const result = await response.json();
+      // Carregar presells e reviews em paralelo
+      const [presellsResponse, reviewsResponse] = await Promise.all([
+        fetch(`/api/presells${queryParam}`),
+        fetch(`/api/reviews${queryParam}`)
+      ]);
 
-      if (result.success) {
-        setPresells(result.data);
+      const [presellsResult, reviewsResult] = await Promise.all([
+        presellsResponse.json(),
+        reviewsResponse.json()
+      ]);
+
+      if (presellsResult.success) {
+        setPresells(presellsResult.data);
       } else {
-        console.error('Erro ao carregar presells:', result.error);
+        console.error('Erro ao carregar presells:', presellsResult.error);
+      }
+
+      if (reviewsResult.success) {
+        setReviews(reviewsResult.data);
+      } else {
+        console.error('Erro ao carregar reviews:', reviewsResult.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar presells:', error);
+      console.error('Erro ao carregar páginas:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Converter presells para o formato de páginas
+  // Função legada para compatibilidade
+  const loadPresells = loadPages;
+
+  // Converter presells e reviews para o formato de páginas
   const pages: Page[] = useMemo(() => {
-    return presells.map(presell => ({
-      id: presell.id.toString(),
+    const presellPages = presells.map(presell => ({
+      id: `presell-${presell.id}`,
       name: presell.pageName,
       type: 'presell' as PageType,
       domain: presell.domain.domainName,
@@ -103,7 +139,25 @@ export default function PageBuilder() {
       screenshotDesktop: presell.screenshotDesktop,
       screenshotMobile: presell.screenshotMobile
     }));
-  }, [presells]);
+
+    const reviewPages = reviews.map(review => ({
+      id: `review-${review.id}`,
+      name: review.pageName,
+      type: 'review' as PageType,
+      domain: review.domain.domainName,
+      status: review.status as 'draft' | 'published' | 'archived',
+      createdAt: new Date(review.createdAt),
+      updatedAt: new Date(review.updatedAt),
+      url: review.fullUrl,
+      screenshotDesktop: undefined,
+      screenshotMobile: undefined
+    }));
+
+    // Combinar e ordenar por data de criação (mais recente primeiro)
+    return [...presellPages, ...reviewPages].sort((a, b) =>
+      b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  }, [presells, reviews]);
 
   // Extrair domínios únicos das páginas
   const uniqueDomains = useMemo(() => {
@@ -134,26 +188,43 @@ export default function PageBuilder() {
   // (removido auto-reload no focus para evitar conflito com preview)
 
   const handleEdit = (id: string) => {
-    router.push(`/hubpage/edit-presell/${id}`);
+    const [type, realId] = id.split('-');
+    if (type === 'presell') {
+      router.push(`/hubpage/edit-presell/${realId}`);
+    } else if (type === 'review') {
+      router.push(`/hubpage/edit-review/${realId}`);
+    }
   };
 
   const handleView = (id: string) => {
-    // Buscar a presell
-    const presell = presells.find(p => p.id.toString() === id);
+    const [type, realId] = id.split('-');
 
-    if (presell?.fullUrl) {
-      // Abrir a página no domínio customizado
-      window.open(presell.fullUrl, '_blank');
-    } else {
-      // Fallback para o preview Next.js enquanto não está publicado
-      window.open(`/preview/${id}`, '_blank');
+    if (type === 'presell') {
+      const presell = presells.find(p => p.id.toString() === realId);
+      if (presell?.fullUrl) {
+        window.open(presell.fullUrl, '_blank');
+      } else {
+        window.open(`/preview/${realId}`, '_blank');
+      }
+    } else if (type === 'review') {
+      const review = reviews.find(r => r.id.toString() === realId);
+      if (review?.fullUrl) {
+        window.open(review.fullUrl, '_blank');
+      }
     }
   };
 
   const handleCopy = async (id: string) => {
+    const [type, realId] = id.split('-');
+    const page = pages.find(p => p.id === id);
+
     try {
-      const previewUrl = `${window.location.origin}/preview/${id}`;
-      await navigator.clipboard.writeText(previewUrl);
+      if (page?.url) {
+        await navigator.clipboard.writeText(page.url);
+      } else {
+        const previewUrl = `${window.location.origin}/preview/${realId}`;
+        await navigator.clipboard.writeText(previewUrl);
+      }
       showSuccess('Link copiado para a área de transferência!');
     } catch (error) {
       console.error('Erro ao copiar link:', error);
@@ -162,22 +233,39 @@ export default function PageBuilder() {
   };
 
   const handleDelete = (id: string) => {
-    const presell = presells.find(p => p.id.toString() === id);
-    if (presell) {
-      setDeleteModal({
-        isOpen: true,
-        pageId: id,
-        pageName: presell.pageName,
-        isDeleting: false
-      });
+    const [type, realId] = id.split('-');
+
+    if (type === 'presell') {
+      const presell = presells.find(p => p.id.toString() === realId);
+      if (presell) {
+        setDeleteModal({
+          isOpen: true,
+          pageId: id,
+          pageName: presell.pageName,
+          isDeleting: false
+        });
+      }
+    } else if (type === 'review') {
+      const review = reviews.find(r => r.id.toString() === realId);
+      if (review) {
+        setDeleteModal({
+          isOpen: true,
+          pageId: id,
+          pageName: review.pageName,
+          isDeleting: false
+        });
+      }
     }
   };
 
   const handleConfirmDelete = async () => {
     setDeleteModal(prev => ({ ...prev, isDeleting: true }));
 
+    const [type, realId] = deleteModal.pageId.split('-');
+    const apiEndpoint = type === 'presell' ? `/api/presells/${realId}` : `/api/reviews/${realId}`;
+
     try {
-      const response = await fetch(`/api/presells/${deleteModal.pageId}`, {
+      const response = await fetch(apiEndpoint, {
         method: 'DELETE'
       });
 
@@ -185,8 +273,8 @@ export default function PageBuilder() {
 
       if (result.success) {
         showSuccess(`Página "${deleteModal.pageName}" excluída com sucesso!`);
-        // Recarregar a lista de presells após exclusão
-        await loadPresells();
+        // Recarregar a lista de páginas após exclusão
+        await loadPages();
         setDeleteModal({
           isOpen: false,
           pageId: '',
@@ -350,7 +438,7 @@ export default function PageBuilder() {
           onView={handleView}
           onCopy={handleCopy}
           onDelete={handleDelete}
-          onPreviewComplete={loadPresells}
+          onPreviewComplete={loadPages}
           onCreateFirst={() => setIsCreateModalOpen(true)}
         />
       )}

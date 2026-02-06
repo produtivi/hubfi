@@ -10,6 +10,7 @@ export interface Page {
   status: PageStatus;
   createdAt: Date;
   updatedAt: Date;
+  url?: string;
   screenshotDesktop?: string | null;
   screenshotMobile?: string | null;
   faviconUrl?: string | null;

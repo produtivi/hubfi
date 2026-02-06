@@ -71,6 +71,63 @@ async function main() {
     console.log('Tipo de presell criado:', template.name)
   }
 
+  // Criar nichos de mercado
+  const niches = [
+    'Artes e Entretenimento',
+    'Autoajuda',
+    'Casa e Jardim',
+    'Computadores / Internet',
+    'Culinária, Comida e Vinho',
+    'Educação',
+    'Empregos e Carreiras',
+    'Espiritualidade, Nova Era e Crenças Alternativas',
+    'Esportes',
+    'Ficção',
+    'Idiomas',
+    'Jogos',
+    'Mobile / Celulares',
+    'Negócios / Investimentos',
+    'Negócios e Marketing Digital',
+    'Parentalidade e Famílias',
+    'Política / Atualidades',
+    'Produtos Sustentáveis',
+    'Referência',
+    'Saúde e Fitness',
+    'Sistemas de Apostas',
+    'Software e Serviços',
+    'Viagens'
+  ]
+
+  for (const nicheName of niches) {
+    const niche = await prisma.niche.upsert({
+      where: { name: nicheName },
+      update: {},
+      create: {
+        name: nicheName,
+        isActive: true
+      }
+    })
+    console.log('Nicho criado:', niche.name)
+  }
+
+  // Criar tipos de produto
+  const productTypes = [
+    'Infoproduto',
+    'Produto Físico'
+  ]
+
+  for (const typeName of productTypes) {
+    const productType = await prisma.productType.upsert({
+      where: { name: typeName },
+      update: {},
+      create: {
+        name: typeName,
+        isActive: true
+      }
+    })
+    console.log('Tipo de produto criado:', productType.name)
+  }
+
   console.log('Banco de dados configurado com sucesso!')
 }
 
