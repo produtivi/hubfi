@@ -1,5 +1,188 @@
-import { GoogleAdsApi, services } from 'google-ads-api';
+import { GoogleAdsApi, services, enums } from 'google-ads-api';
 import { prisma } from './prisma';
+
+// Mapeamento de localização para geo_target_constant
+const LOCATION_GEO_TARGETS: Record<string, string> = {
+  'global': '2840', // World (default para global)
+  'br': '2076',     // Brazil
+  'us': '2840',     // United States
+  'pt': '2620',     // Portugal
+  'es': '2724',     // Spain
+};
+
+// Mapeamento de idioma para language_constant
+const LANGUAGE_CONSTANTS: Record<string, string> = {
+  'br': '1014',  // Portuguese
+  'us': '1000',  // English
+  'pt': '1014',  // Portuguese
+  'es': '1003',  // Spanish
+  'global': '1000', // English (default)
+};
+
+interface KeywordMetrics {
+  keyword: string;
+  avgMonthlySearches: number;
+  competition: string;
+  competitionIndex: number;
+  lowTopOfPageBidMicros: number;
+  highTopOfPageBidMicros: number;
+  avgCpcMicros: number;
+  monthlySearchVolumes: Array<{
+    year: number;
+    month: number;
+    searches: number;
+  }>;
+}
+
+interface KeywordPlannerResult {
+  success: boolean;
+  data?: {
+    keyword: string;
+    avgMonthlySearches: number;
+    avgCpc: number;
+    competition: string;
+    monthlySearchVolumes: Array<{
+      year: number;
+      month: string;
+      searches: number;
+    }>;
+    relatedKeywords: Array<{
+      keyword: string;
+      avgMonthlySearches: number;
+      avgCpc: number;
+      competition: string;
+    }>;
+  };
+  error?: string;
+}
+
+export async function getKeywordMetrics(
+  userId: number,
+  keyword: string,
+  location: string = 'br'
+): Promise<KeywordPlannerResult> {
+  try {
+    // Buscar conta Google conectada do usuário
+    const googleAccount = await prisma.googleAccount.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (!googleAccount) {
+      return { success: false, error: 'Conta Google não conectada' };
+    }
+
+    if (!process.env.GOOGLE_ADS_DEVELOPER_TOKEN) {
+      return { success: false, error: 'Developer token não configurado' };
+    }
+
+    const client = new GoogleAdsApi({
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      developer_token: process.env.GOOGLE_ADS_DEVELOPER_TOKEN!
+    });
+
+    // Listar contas acessíveis para encontrar uma com histórico de gastos
+    const resourceNames = await client.listAccessibleCustomers(googleAccount.refreshToken);
+
+    if (!resourceNames.resource_names || resourceNames.resource_names.length === 0) {
+      return { success: false, error: 'Nenhuma conta Google Ads encontrada' };
+    }
+
+    // Usar a primeira conta disponível
+    const customerId = resourceNames.resource_names[0].split('/').pop()!;
+
+    const customer = client.Customer({
+      customer_id: customerId,
+      refresh_token: googleAccount.refreshToken
+    });
+
+    // Configurar geo target e idioma
+    const geoTargetConstant = LOCATION_GEO_TARGETS[location] || LOCATION_GEO_TARGETS['br'];
+    const languageConstant = LANGUAGE_CONSTANTS[location] || LANGUAGE_CONSTANTS['br'];
+
+    // Chamar o Keyword Planner
+    const keywordPlanIdeas = await customer.keywordPlanIdeas.generateKeywordIdeas({
+      customer_id: customerId,
+      language: `languageConstants/${languageConstant}`,
+      geo_target_constants: [`geoTargetConstants/${geoTargetConstant}`],
+      include_adult_keywords: false,
+      keyword_plan_network: enums.KeywordPlanNetwork.GOOGLE_SEARCH,
+      keyword_seed: {
+        keywords: [keyword]
+      },
+      page_token: '',
+      page_size: 100,
+      keyword_annotation: []
+    } as any) as unknown as any[];
+
+    if (!keywordPlanIdeas || keywordPlanIdeas.length === 0) {
+      return { success: false, error: 'Nenhum dado encontrado para esta palavra-chave' };
+    }
+
+    // Encontrar a keyword principal
+    const mainKeyword = keywordPlanIdeas.find(
+      (idea: any) => idea.text?.toLowerCase() === keyword.toLowerCase()
+    ) || keywordPlanIdeas[0];
+
+    // Extrair métricas
+    const metrics = mainKeyword.keyword_idea_metrics;
+
+    // Converter competition enum para string
+    const competitionMap: Record<number, string> = {
+      0: 'Desconhecida',
+      1: 'Baixa',
+      2: 'Média',
+      3: 'Alta'
+    };
+
+    // Processar volume de buscas mensal
+    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const monthlyVolumes = (metrics?.monthly_search_volumes || []).map((vol: any) => ({
+      year: vol.year,
+      month: monthNames[vol.month - 1] || vol.month,
+      searches: Number(vol.monthly_searches) || 0
+    }));
+
+    // Pegar keywords relacionadas (excluindo a principal)
+    const relatedKeywords = keywordPlanIdeas
+      .filter((idea: any) => idea.text?.toLowerCase() !== keyword.toLowerCase())
+      .slice(0, 10)
+      .map((idea: any) => ({
+        keyword: idea.text,
+        avgMonthlySearches: Number(idea.keyword_idea_metrics?.avg_monthly_searches) || 0,
+        avgCpc: Number(idea.keyword_idea_metrics?.average_cpc_micros) / 1000000 || 0,
+        competition: competitionMap[idea.keyword_idea_metrics?.competition] || 'Desconhecida'
+      }));
+
+    return {
+      success: true,
+      data: {
+        keyword: mainKeyword.text || keyword,
+        avgMonthlySearches: Number(metrics?.avg_monthly_searches) || 0,
+        avgCpc: Number(metrics?.average_cpc_micros) / 1000000 || 0,
+        competition: competitionMap[metrics?.competition] || 'Desconhecida',
+        monthlySearchVolumes: monthlyVolumes,
+        relatedKeywords
+      }
+    };
+
+  } catch (error) {
+    console.error('Erro ao buscar métricas de keyword:', error);
+
+    if (error instanceof Error) {
+      if (error.message.includes('PERMISSION_DENIED')) {
+        return { success: false, error: 'Sem permissão para acessar o Keyword Planner. Verifique o nível de acesso da API.' };
+      }
+      if (error.message.includes('CUSTOMER_NOT_ENABLED')) {
+        return { success: false, error: 'Conta Google Ads não está habilitada para usar esta funcionalidade.' };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Erro desconhecido ao buscar dados' };
+  }
+}
 
 interface CreateSubAccountParams {
   userId: number;

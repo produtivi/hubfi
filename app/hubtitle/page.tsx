@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Copy07 as Copy, Check, Star01 as Star, Trash03 as Trash2, Link03 as Link, SearchLg as Search, RefreshCcw01 as RefreshCcw } from '@untitledui/icons'
+import { Plus, Copy07 as Copy, Check, Star01 as Star, Trash03 as Trash2, Link03 as Link, SearchLg as Search, RefreshCcw01 as RefreshCcw, Trash01, XClose } from '@untitledui/icons'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/base/input/input'
@@ -578,33 +578,55 @@ export default function HubTitlePage() {
 
       {/* Dialog de confirmação de exclusão */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Deletar Produto</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-body text-muted-foreground">
-              Tem certeza que deseja deletar este produto? Esta ação não pode ser desfeita e todos os títulos e descrições gerados serão perdidos.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button
-                size="md"
-                color="secondary"
-                onClick={() => {
-                  setDeleteDialogOpen(false)
-                  setProductToDelete(null)
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                size="md"
-                color="primary-destructive"
-                onClick={handleDeleteProduct}
-              >
-                Deletar
-              </Button>
+        <DialogContent className="max-w-md p-6">
+          {/* Close button */}
+          <button
+            onClick={() => {
+              setDeleteDialogOpen(false)
+              setProductToDelete(null)
+            }}
+            className="absolute top-4 right-4 p-1 hover:bg-accent rounded-md transition-colors"
+            aria-label="Fechar"
+          >
+            <XClose className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Icon + Title */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+              <Trash01 className="w-6 h-6 text-destructive" />
             </div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Excluir produto
+            </h2>
+          </div>
+
+          {/* Description */}
+          <p className="text-body text-muted-foreground mb-6">
+            Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.
+          </p>
+
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <Button
+              color="secondary"
+              size="lg"
+              className="flex-1"
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setProductToDelete(null)
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="primary-destructive"
+              size="lg"
+              className="flex-1"
+              onClick={handleDeleteProduct}
+            >
+              Excluir
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

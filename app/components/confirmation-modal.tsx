@@ -1,7 +1,8 @@
 'use client'
 
-import { X, AlertTriangle, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, XClose } from '@untitledui/icons'
 import { Button } from '@/components/base/buttons/button'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 interface ConfirmationModalProps {
   isOpen: boolean
@@ -26,52 +27,44 @@ export function ConfirmationModal({
   type = 'deactivate',
   isLoading = false
 }: ConfirmationModalProps) {
-  if (!isOpen) return null
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !isLoading) {
-      onClose()
-    }
-  }
+  const Icon = type === 'activate' ? Eye : EyeOff
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-      onClick={handleOverlayClick}
-    >
-      <div className="bg-card border border-border rounded-lg max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-destructive/10 rounded-full">
-              {type === 'activate' ? (
-                <Eye className="w-5 h-5 text-destructive" />
-              ) : (
-                <EyeOff className="w-5 h-5 text-destructive" />
-              )}
-            </div>
-            <h3 className="text-title font-semibold">{title}</h3>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && onClose()}>
+      <DialogContent className="max-w-md p-6">
+        {/* Close button */}
+        {!isLoading && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1 hover:bg-accent rounded-md transition-colors"
+            aria-label="Fechar"
+          >
+            <XClose className="w-5 h-5 text-muted-foreground" />
+          </button>
+        )}
+
+        {/* Icon + Title */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+            <Icon className="w-6 h-6 text-destructive" />
           </div>
-          {!isLoading && (
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-accent rounded-md transition-colors"
-            >
-              <X className="w-5 h-5 text-muted-foreground" />
-            </button>
-          )}
+          <h2 className="text-lg font-semibold text-foreground">
+            {title}
+          </h2>
         </div>
 
-        <div className="mb-6">
-          <p 
-            className="text-body text-muted-foreground"
-            dangerouslySetInnerHTML={{ __html: message }}
-          />
-        </div>
+        {/* Description */}
+        <p
+          className="text-body text-muted-foreground mb-6"
+          dangerouslySetInnerHTML={{ __html: message }}
+        />
 
-        <div className="flex gap-3 justify-end">
+        {/* Buttons */}
+        <div className="flex gap-3">
           <Button
             color="secondary"
-            size="md"
+            size="lg"
+            className="flex-1"
             onClick={onClose}
             isDisabled={isLoading}
           >
@@ -79,16 +72,15 @@ export function ConfirmationModal({
           </Button>
           <Button
             color="primary-destructive"
-            size="md"
-            iconLeading={type === 'activate' ? Eye : EyeOff}
+            size="lg"
+            className="flex-1"
             onClick={onConfirm}
-            isDisabled={isLoading}
             isLoading={isLoading}
           >
-            {isLoading ? 'Processando...' : confirmText}
+            {confirmText}
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

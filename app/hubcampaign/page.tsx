@@ -65,6 +65,12 @@ export default function HubCampaignPage() {
         </Button>
       </div>
 
+      <div className="mb-4">
+        <p className="text-label text-muted-foreground">
+          <span className="text-foreground font-medium">{filteredCampaigns.length}</span> campanhas encontradas
+        </p>
+      </div>
+
       {/* Lista de campanhas */}
       {isLoading ? (
         <div className="bg-card border border-border rounded-md p-12 text-center">

@@ -1,7 +1,8 @@
 'use client';
 
-import { X, Trash2, AlertTriangle } from 'lucide-react';
+import { Trash01, XClose } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -18,47 +19,41 @@ export function DeleteConfirmationModal({
   pageName,
   isDeleting
 }: DeleteConfirmationModalProps) {
-  if (!isOpen) return null;
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !isDeleting) {
-      onClose();
-    }
-  };
-
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-      onClick={handleOverlayClick}
-    >
-      <div className="bg-card border border-border rounded-lg max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-destructive/10 rounded-full">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
-            </div>
-            <h3 className="text-title font-semibold">Confirmar exclusão</h3>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isDeleting && onClose()}>
+      <DialogContent className="max-w-md p-6">
+        {/* Close button */}
+        {!isDeleting && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1 hover:bg-accent rounded-md transition-colors"
+            aria-label="Fechar"
+          >
+            <XClose className="w-5 h-5 text-muted-foreground" />
+          </button>
+        )}
+
+        {/* Icon + Title */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+            <Trash01 className="w-6 h-6 text-destructive" />
           </div>
-          {!isDeleting && (
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-accent rounded-md transition-colors"
-            >
-              <X className="w-5 h-5 text-muted-foreground" />
-            </button>
-          )}
+          <h2 className="text-lg font-semibold text-foreground">
+            Excluir página
+          </h2>
         </div>
 
-        <div className="mb-6">
-          <p className="text-body text-muted-foreground">
-            Tem certeza que deseja excluir a página <strong className="text-foreground">"{pageName}"</strong>? Esta ação não pode ser desfeita e a página será removida permanentemente.
-          </p>
-        </div>
+        {/* Description */}
+        <p className="text-body text-muted-foreground mb-6">
+          Tem certeza que deseja excluir <strong className="text-foreground">"{pageName}"</strong>? Esta ação não pode ser desfeita.
+        </p>
 
-        <div className="flex gap-3 justify-end">
+        {/* Buttons */}
+        <div className="flex gap-3">
           <Button
             color="secondary"
-            size="md"
+            size="lg"
+            className="flex-1"
             onClick={onClose}
             isDisabled={isDeleting}
           >
@@ -66,16 +61,15 @@ export function DeleteConfirmationModal({
           </Button>
           <Button
             color="primary-destructive"
-            size="md"
-            iconLeading={Trash2}
+            size="lg"
+            className="flex-1"
             onClick={onConfirm}
-            isDisabled={isDeleting}
             isLoading={isDeleting}
           >
-            {isDeleting ? 'Excluindo...' : 'Excluir página'}
+            Excluir
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

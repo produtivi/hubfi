@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { X } from 'lucide-react';
 
 interface DialogProps {
   open?: boolean;
@@ -25,26 +24,40 @@ interface DialogTitleProps {
 }
 
 const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50">
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {children}
-        <button
-          onClick={() => onOpenChange?.(false)}
-          className="absolute top-4 right-4 p-2 rounded-md hover:bg-accent"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+    <div
+      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onOpenChange?.(false);
+        }
+      }}
+    >
+      {children}
     </div>
   );
 };
 
 const DialogContent = ({ children, className = '' }: DialogContentProps) => {
+  const hasMaxWidth = className.includes('max-w-');
+  const hasPadding = className.includes('p-0') || className.includes('p-') || className.includes('px-') || className.includes('py-');
+
   return (
-    <div className={`bg-card border border-border rounded-lg shadow-lg p-6 w-full max-w-md ${className}`}>
+    <div
+      className={`relative bg-card border border-border rounded-lg shadow-lg w-full my-8 max-h-[calc(100vh-4rem)] overflow-y-auto ${!hasMaxWidth ? 'max-w-md' : ''} ${!hasPadding ? 'p-6' : ''} ${className}`}
+      onClick={(e) => e.stopPropagation()}
+    >
       {children}
     </div>
   );

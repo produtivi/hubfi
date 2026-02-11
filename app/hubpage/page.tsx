@@ -335,7 +335,7 @@ export default function PageBuilder() {
         </div>
 
         {/* Search + Filters + Create Button */}
-        <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:mt-8">
           <div className="flex-1">
             <Input
               placeholder="Buscar páginas por nome ou domínio..."
