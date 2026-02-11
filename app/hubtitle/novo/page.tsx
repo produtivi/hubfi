@@ -216,7 +216,7 @@ export default function NovoHubTitle() {
                 type="submit"
                 isDisabled={isCreating || !formData.name || !formData.description}
                 isLoading={isCreating}
-                 className='p-2 md:p-0'
+                 className='p-2 md:p-2'
               >
                 Criar e Gerar Conteúdo
               </Button>

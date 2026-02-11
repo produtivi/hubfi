@@ -35,6 +35,8 @@
     --ring: 0 0% 9%;
 
     --radius: 0.375rem;                /* 6px */
+
+    --chart-bar: #374151;              /* gray-700 */
   }
 
   .dark {
@@ -69,6 +71,8 @@
     --border: 0 0% 16%;                /* #2A2A2A - Chumbo escuro */
     --input: 0 0% 16%;
     --ring: 0 0% 90%;
+
+    --chart-bar: #e5e7eb;              /* gray-200 */
   }
 }
 

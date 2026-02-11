@@ -306,6 +306,12 @@ export default function PixelTracker() {
         </div>
       </div>
 
+      <div className="mb-4">
+        <p className="text-label text-muted-foreground">
+          <span className="text-foreground font-medium">{filteredPixels.length}</span> pixels encontrados
+        </p>
+      </div>
+
       {/* Lista de pixels */}
       {isLoading ? (
         <div className="bg-card border border-border rounded-md p-12 text-center">
