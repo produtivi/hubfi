@@ -1,29 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getKeywordMetrics } from '@/lib/google-ads';
-import { verifyToken } from '@/lib/auth';
-import { cookies } from 'next/headers';
+import { getKeywordMetricsDataForSEO } from '@/lib/dataforseo';
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get('accessToken')?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, error: 'Não autenticado' },
-        { status: 401 }
-      );
-    }
-
-    const decoded = verifyToken(accessToken);
-    if (!decoded) {
-      return NextResponse.json(
-        { success: false, error: 'Token inválido' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
     const { keyword, location } = body;
 
@@ -34,12 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar métricas do Keyword Planner
-    const result = await getKeywordMetrics(
-      decoded.userId,
-      keyword,
-      location || 'br'
-    );
+    // Buscar métricas via DataForSEO
+    const result = await getKeywordMetricsDataForSEO(keyword, location || 'br');
 
     if (!result.success) {
       return NextResponse.json(

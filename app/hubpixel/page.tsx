@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Activity, Eye, EyeOff, MoreVertical, Trash2, Edit2, X, ExternalLink, LayoutDashboard, FlaskConical, Shield, ShoppingCart, CheckCircle } from 'lucide-react'
-import { SearchLg, Plus, FilterLines } from '@untitledui/icons'
+import { SearchLg, Plus, FilterLines, CheckCircleBroken } from '@untitledui/icons'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { ConfirmationModal } from '../components/confirmation-modal'
@@ -320,177 +320,166 @@ export default function PixelTracker() {
           </p>
         </div>
       ) : filteredPixels.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
           {filteredPixels.map((pixel) => (
             <div
               key={pixel.id}
-              className="bg-card border border-border rounded-md px-6 pt-6 pb-4  hover:shadow-md transition-shadow"
+              className="bg-card border border-border rounded-md p-4 md:px-6 md:pt-6 md:pb-4 hover:shadow-md transition-shadow overflow-hidden"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex flex-row justify-between items-start pb-5">
-                    <div className="flex flex-col gap-2 flex-1">
-                      <div className="flex items-center gap-2 group">
-                        {editingPixelId === pixel.id ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              id={`pixel-name-input-${pixel.id}`}
-                              type="text"
-                              defaultValue={pixel.name}
-                              className="text-title bg-card border-b-2 border-primary outline-none px-1"
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                  setEditingPixelId(null)
-                                } else if (e.key === 'Enter') {
-                                  handleSavePixelName(pixel.pixelId, e.currentTarget.value)
-                                }
-                              }}
-                            />
-                            <button
-                              onClick={() => {
-                                const input = document.getElementById(`pixel-name-input-${pixel.id}`) as HTMLInputElement
-                                if (input) handleSavePixelName(pixel.pixelId, input.value)
-                              }}
-                              className="p-1 bg-primary text-primary-foreground rounded hover:opacity-80 transition-opacity"
-                              title="Salvar"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => setEditingPixelId(null)}
-                              className="p-1 hover:bg-accent rounded transition-colors"
-                              title="Cancelar"
-                            >
-                              <X className="w-4 h-4 text-muted-foreground" />
-                            </button>
-                          </div>
-                        ) : (
-                          <>
-                            <h3 className="text-title">{pixel.name}</h3>
-                            <button
-                              onClick={() => setEditingPixelId(pixel.id)}
-                              className="p-1 hover:bg-accent rounded transition-colors"
-                              title="Editar nome"
-                            >
-                              <Edit2 className="w-4 h-4 text-muted-foreground" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Link da presell */}
-                      <div className="flex items-center gap-2">
-                        <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                        <a
-                          href={pixel.presellUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-label text-muted-foreground hover:text-foreground transition-colors truncate max-w-xs"
-                          title={pixel.presellUrl}
-                        >
-                          {pixel.presellUrl}
-                        </a>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* Botão Dashboard */}
-                      
-
-                      <span
-                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-label ${pixel.status === 'active'
-                          ? 'bg-success/10 text-success'
-                          : 'bg-destructive/10 text-destructive'
-                          }`}
+              {/* Header: Nome + Status + Menu */}
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {editingPixelId === pixel.id ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <input
+                        id={`pixel-name-input-${pixel.id}`}
+                        type="text"
+                        defaultValue={pixel.name}
+                        className="text-title bg-card border-b-2 border-primary outline-none px-1 flex-1 min-w-0"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            setEditingPixelId(null)
+                          } else if (e.key === 'Enter') {
+                            handleSavePixelName(pixel.pixelId, e.currentTarget.value)
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          const input = document.getElementById(`pixel-name-input-${pixel.id}`) as HTMLInputElement
+                          if (input) handleSavePixelName(pixel.pixelId, input.value)
+                        }}
+                        className="p-1 hover:bg-accent rounded border border-border transition-colors shrink-0"
+                        title="Salvar"
                       >
-                        {pixel.status === 'active' ? (
-                          <>
-                            <Activity className="w-3 h-3" />
-                            Ativo
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="w-3 h-3" />
-                            Inativo
-                          </>
-                        )}
-                      </span>
-
-                      {/* Menu de ações */}
-                      <div className="relative dropdown-container">
-                        <button
-                          onClick={() => setOpenDropdownId(openDropdownId === pixel.id ? null : pixel.id)}
-                          className="p-2 hover:bg-accent rounded-md transition-colors"
-                        >
-                          <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                        </button>
-
-                        {/* Dropdown menu */}
-                        {openDropdownId === pixel.id && (
-                          <div className="absolute right-0 mt-2 bg-card border border-border rounded-md shadow-lg z-10 p-2">
-                            <Button
-                              color={pixel.status === 'active' ? 'tertiary-destructive' : 'tertiary'}
-                              size="sm"
-                              iconLeading={pixel.status === 'active' ? EyeOff : Eye}
-                              onClick={() => handleTogglePixelStatus(pixel)}
-                              className="w-full justify-start"
-                            >
-                              {pixel.status === 'active' ? 'Desativar pixel' : 'Ativar pixel'}
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+                        <CheckCircleBroken className="w-5 h-5 text-foreground" />
+                      </button>
+                      <button
+                        onClick={() => setEditingPixelId(null)}
+                        className="p-1 hover:bg-accent rounded border border-border transition-colors shrink-0"
+                        title="Cancelar"
+                      >
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <h3 className="text-title truncate">{pixel.name}</h3>
+                      <button
+                        onClick={() => setEditingPixelId(pixel.id)}
+                        className="p-1 hover:bg-accent rounded transition-colors shrink-0"
+                        title="Editar nome"
+                      >
+                        <Edit2 className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </>
+                  )}
+                </div>
 
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-label whitespace-nowrap ${pixel.status === 'active'
+                      ? 'bg-success/10 text-success'
+                      : 'bg-destructive/10 text-destructive'
+                      }`}
+                  >
+                    {pixel.status === 'active' ? (
+                      <>
+                        <Activity className="w-3 h-3" />
+                        <span className="hidden sm:inline">Ativo</span>
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="w-3 h-3" />
+                        <span className="hidden sm:inline">Inativo</span>
+                      </>
+                    )}
+                  </span>
 
-                  {/* Ações adicionais */}
-                  <div className="flex flex-row items-center mt-4 pt-4 border-t border-border text-sm">
-                    <Button
-                      className={`p-2 border-0 ${resolvedTheme === 'dark' ? 'bg-white text-black hover:bg-white/80' : 'bg-black/90 text-white hover:bg-black/70'}`}
-                      color="secondary"
-                      size="sm"
-                      iconLeading={LayoutDashboard}
-                      onClick={() => router.push(`/hubpixel/dashboard/${pixel.pixelId}`)}
+                  {/* Menu de ações */}
+                  <div className="relative dropdown-container">
+                    <button
+                      onClick={() => setOpenDropdownId(openDropdownId === pixel.id ? null : pixel.id)}
+                      className="p-2 hover:bg-accent rounded-md transition-colors"
                     >
-                      Dashboard
-                    </Button>
+                      <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                    </button>
 
-                    <div className="flex-1" />
-
-                    <div className="flex gap-4 text-sm">
-                      <Button
-                      className='p-2'
-                        color="secondary"
-                        size="sm"
-                        iconLeading={FlaskConical}
-                        onClick={() => console.log('Testar instalação', pixel.pixelId)}
-                      >
-                        Testar instalação
-                      </Button>
-
-                      <Button
-                      className='p-2'
-                        color="secondary"
-                        size="sm"
-                        iconLeading={Shield}
-                        onClick={() => console.log('Bloqueador de IPs', pixel.pixelId)}
-                      >
-                        Bloqueador de IPs
-                      </Button>
-
-                      <Button
-                      className='p-2'
-                        color="secondary"
-                        size="sm"
-                        iconLeading={ShoppingCart}
-                        onClick={() => console.log('Configurar checkout', pixel.pixelId)}
-                      >
-                        Configurar checkout
-                      </Button>
-                    </div>
+                    {/* Dropdown menu */}
+                    {openDropdownId === pixel.id && (
+                      <div className="absolute right-0 mt-2 bg-card border border-border rounded-md shadow-lg z-10 p-2">
+                        <Button
+                          color={pixel.status === 'active' ? 'tertiary-destructive' : 'tertiary'}
+                          size="sm"
+                          iconLeading={pixel.status === 'active' ? EyeOff : Eye}
+                          onClick={() => handleTogglePixelStatus(pixel)}
+                          className="w-full justify-start"
+                        >
+                          {pixel.status === 'active' ? 'Desativar pixel' : 'Ativar pixel'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
+                </div>
+              </div>
+
+              {/* Link da presell */}
+              <div className="flex items-center gap-2 mb-4">
+                <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+                <a
+                  href={pixel.presellUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-label text-muted-foreground hover:text-foreground transition-colors truncate"
+                  title={pixel.presellUrl}
+                >
+                  {pixel.presellUrl}
+                </a>
+              </div>
+
+              {/* Ações */}
+              <div className="flex items-center justify-between gap-2 pt-4 border-t border-border">
+                <Button
+                  className={`p-2 border-0 shrink-0 ${resolvedTheme === 'dark' ? 'bg-white text-black hover:bg-white/80' : 'bg-black/90 text-white hover:bg-black/70'}`}
+                  color="secondary"
+                  size="sm"
+                  iconLeading={LayoutDashboard}
+                  onClick={() => router.push(`/hubpixel/dashboard/${pixel.pixelId}`)}
+                >
+                  Dashboard
+                </Button>
+
+                <div className="flex gap-2 min-w-0">
+                  <Button
+                    className="p-2 min-w-0 [&>span]:truncate"
+                    color="secondary"
+                    size="sm"
+                    iconLeading={FlaskConical}
+                    onClick={() => console.log('Testar instalação', pixel.pixelId)}
+                  >
+                    Testar instalação
+                  </Button>
+
+                  <Button
+                    className="p-2 min-w-0 [&>span]:truncate"
+                    color="secondary"
+                    size="sm"
+                    iconLeading={Shield}
+                    onClick={() => console.log('Bloqueador de IPs', pixel.pixelId)}
+                  >
+                    Bloqueador de IPs
+                  </Button>
+
+                  <Button
+                    className="p-2 min-w-0 [&>span]:truncate"
+                    color="secondary"
+                    size="sm"
+                    iconLeading={ShoppingCart}
+                    onClick={() => console.log('Configurar checkout', pixel.pixelId)}
+                  >
+                    Configurar checkout
+                  </Button>
                 </div>
               </div>
             </div>
@@ -578,12 +567,16 @@ export default function PixelTracker() {
 
 
       {/* Toast */}
-      <Toast
-        type={toast.type}
-        message={toast.message}
-        isVisible={toast.isVisible}
-        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
-      />
+      {toast.isVisible && (
+        <div className="fixed top-4 right-4 z-50">
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            isVisible={toast.isVisible}
+            onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
+          />
+        </div>
+      )}
     </div>
   )
 }

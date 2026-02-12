@@ -25,7 +25,46 @@ export default function CreatePresell() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [linkErrors, setLinkErrors] = useState({
+    affiliateLink: '',
+    producerSalesPage: ''
+  });
   const [customDomains, setCustomDomains] = useState<Array<{id: string, domain: string}>>([]);
+
+  // Validação de URL
+  const isValidUrl = (url: string): boolean => {
+    if (!url) return true; // Vazio é tratado pelo required
+    try {
+      const urlObj = new URL(url);
+      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  // Validar link e atualizar erro
+  const validateLink = (field: 'affiliateLink' | 'producerSalesPage', value: string) => {
+    if (value && !isValidUrl(value)) {
+      setLinkErrors(prev => ({ ...prev, [field]: 'Insira um link válido (ex: https://exemplo.com)' }));
+    } else {
+      setLinkErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Verificar se todos os campos obrigatórios estão preenchidos
+  const isFormComplete =
+    formData.customDomain !== '' &&
+    formData.pageName !== '' &&
+    formData.affiliateLink !== '' &&
+    formData.producerSalesPage !== '' &&
+    formData.presellType !== '' &&
+    formData.presellLanguage !== '';
+
+  // Verificar se o formulário é válido (completo e sem erros de link)
+  const isFormValid =
+    isFormComplete &&
+    isValidUrl(formData.affiliateLink) &&
+    isValidUrl(formData.producerSalesPage);
   const [presellTypes, setPresellTypes] = useState<string[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -227,10 +266,17 @@ export default function CreatePresell() {
                 <Input
                   type="url"
                   value={formData.affiliateLink}
-                  onChange={(value) => setFormData({ ...formData, affiliateLink: value })}
+                  onChange={(value) => {
+                    setFormData({ ...formData, affiliateLink: value });
+                    validateLink('affiliateLink', value);
+                  }}
                   placeholder="Informe o link de afiliado"
                   isRequired
+                  isInvalid={!!linkErrors.affiliateLink}
                 />
+                {linkErrors.affiliateLink && (
+                  <p className="text-label text-destructive">{linkErrors.affiliateLink}</p>
+                )}
               </div>
 
               {/* Página de vendas do produtor */}
@@ -242,10 +288,17 @@ export default function CreatePresell() {
                 <Input
                   type="url"
                   value={formData.producerSalesPage}
-                  onChange={(value) => setFormData({ ...formData, producerSalesPage: value })}
+                  onChange={(value) => {
+                    setFormData({ ...formData, producerSalesPage: value });
+                    validateLink('producerSalesPage', value);
+                  }}
                   placeholder="Informe a página de vendas"
                   isRequired
+                  isInvalid={!!linkErrors.producerSalesPage}
                 />
+                {linkErrors.producerSalesPage && (
+                  <p className="text-label text-destructive">{linkErrors.producerSalesPage}</p>
+                )}
               </div>
 
               {/* Tipo de Presell */}
@@ -300,7 +353,7 @@ export default function CreatePresell() {
                 type="submit"
                 color="primary"
                 size="lg"
-                isDisabled={isLoading}
+                isDisabled={isLoading || !isFormValid}
                 isLoading={isLoading}
                 showTextWhileLoading
               >
