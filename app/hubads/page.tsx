@@ -360,6 +360,154 @@ export default function HubAds() {
               </div>
             </div>
           </div>
+
+          {/* Erro */}
+          {error && (
+            <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-body text-destructive">{error}</p>
+            </div>
+          )}
+
+          {/* Resultados da Calculadora */}
+          {keywordData && (
+            <div className="mt-6 space-y-6">
+              {/* Header com métricas principais */}
+              <div className="bg-card border border-border rounded-lg p-6">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                  {/* Título */}
+                  <div>
+                    <p className="text-label text-muted-foreground">
+                      Viabilidade de Anúncio para o termo
+                    </p>
+                    <h2 className="text-headline mt-1">"{keywordData.keyword}"</h2>
+                    <p className="text-label text-muted-foreground mt-2">
+                      Volume de buscas dos últimos 12 meses
+                    </p>
+                  </div>
+
+                  {/* Métricas */}
+                  <div className="flex flex-wrap gap-8">
+                    <div>
+                      <p className="text-label text-muted-foreground">CPC Estimado</p>
+                      <p className="text-title font-semibold">{formatCurrency(keywordData.avgCpc)}</p>
+                    </div>
+                    <div>
+                      <p className="text-label text-muted-foreground">Volume de buscas</p>
+                      <p className="text-title font-semibold">{formatNumber(keywordData.avgMonthlySearches)}</p>
+                    </div>
+                    <div>
+                      <p className="text-label text-muted-foreground">Concorrência atual</p>
+                      <p className="text-title font-semibold">{keywordData.competition}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gráfico de volume mensal */}
+                {keywordData.monthlySearchVolumes.length > 0 && (
+                  <div className="mt-6 h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={keywordData.monthlySearchVolumes.map((vol) => ({
+                          month: `${vol.month}/${vol.year}`,
+                          buscas: vol.searches
+                        }))}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                        <XAxis
+                          dataKey="month"
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={false}
+                          axisLine={{ stroke: 'hsl(var(--border))' }}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(value) => {
+                            if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                            if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+                            return value.toString();
+                          }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            color: 'hsl(var(--foreground))'
+                          }}
+                          formatter={(value) => value !== undefined ? [formatNumber(Number(value)), 'Buscas'] : ['', '']}
+                          labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="buscas"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          dot={{ fill: 'hsl(var(--primary))', strokeWidth: 0, r: 4 }}
+                          activeDot={{ r: 6, strokeWidth: 0 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* Cálculo de viabilidade */}
+                <div className="mt-6 pt-6 border-t border-border">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    {/* Texto explicativo */}
+                    <p className="text-body text-muted-foreground max-w-md">
+                      Simulando uma média de <span className="font-semibold text-foreground">{clicksPerSale} cliques</span> por{' '}
+                      <span className="font-semibold text-foreground">{formatCurrency(cpcUsado)}</span> cada para obter uma venda de{' '}
+                      <span className="font-semibold text-foreground">{formatCurrency(comissao)}</span> de comissão,
+                      o resultado estimado é de <span className={`font-semibold ${resultadoEstimado >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {formatCurrency(resultadoEstimado)}
+                      </span> por venda.
+                    </p>
+
+                    {/* Cards de resultado */}
+                    <div className="flex gap-6">
+                      <div>
+                        <p className="text-label text-muted-foreground">Custo {clicksPerSale} cliques</p>
+                        <p className="text-xs text-muted-foreground">Qtd. de cliques × CPC Estimado</p>
+                        <p className="text-title font-semibold mt-1">{formatCurrency(custoCliques)}</p>
+                      </div>
+                      <div>
+                        <p className="text-label text-muted-foreground">Resultado estimado</p>
+                        <p className="text-xs text-muted-foreground">Valor comissão - custo cliques</p>
+                        <p className={`text-title font-semibold mt-1 ${resultadoEstimado >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          {formatCurrency(resultadoEstimado)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Palavras-chave relacionadas */}
+              {keywordData.relatedKeywords.length > 0 && (
+                <div className="bg-card border border-border rounded-lg p-6">
+                  <p className="text-label text-muted-foreground">
+                    Buscas Relacionadas para o termo
+                  </p>
+                  <h3 className="text-title font-semibold mt-1 mb-4">"{keywordData.keyword}"</h3>
+
+                  <div className="flex flex-wrap gap-2">
+                    {keywordData.relatedKeywords.map((related, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1.5 bg-accent border border-border rounded-full text-label text-foreground hover:bg-accent/80 transition-colors cursor-default"
+                      >
+                        {related.keyword} ({formatCurrency(related.avgCpc)})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Análise de Tráfego */}

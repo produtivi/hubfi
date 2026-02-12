@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X, CheckCircle, Copy } from 'lucide-react'
+import { Button } from '@/components/base/buttons/button'
 
 interface PixelData {
   name: string
@@ -168,23 +169,23 @@ export function PixelConfirmationModal({ pixelData, onClose, onSuccess, onError,
 
               {/* Botoes de acao */}
               <div className="flex justify-between pt-4">
-                <button
+                <Button
+                  color="secondary"
+                  size="lg"
                   onClick={onClose}
-                  className="px-6 py-2 border border-border bg-card hover:bg-accent text-foreground rounded-md transition-colors"
                 >
                   Voltar
-                </button>
-                <button
+                </Button>
+                <Button
+                  color="primary"
+                  size="lg"
                   onClick={createPixel}
-                  disabled={isLoading}
-                  className={`px-6 py-2 rounded-md transition-colors ${
-                    !isLoading
-                      ? 'bg-foreground hover:bg-foreground/90 text-background cursor-pointer'
-                      : 'bg-border text-muted-foreground cursor-not-allowed'
-                  }`}
+                  isDisabled={isLoading}
+                  isLoading={isLoading}
+                  showTextWhileLoading
                 >
                   {isLoading ? 'Criando...' : 'Criar Pixel'}
-                </button>
+                </Button>
               </div>
             </div>
           </>
@@ -221,19 +222,23 @@ export function PixelConfirmationModal({ pixelData, onClose, onSuccess, onError,
 
               {/* Botao de acao */}
               <div className="flex justify-center gap-4">
-                <button
+                <Button
+                  color="secondary"
+                  size="lg"
                   onClick={onSuccess}
-                  className="px-6 py-2 border border-border bg-card hover:bg-accent text-foreground rounded-md transition-colors"
                 >
                   Ir para lista de pixels
-                </button>
-                <button
+                </Button>
+                <Button
+                  color="primary"
+                  size="lg"
                   onClick={generateTrackingCode}
-                  disabled={isLoading}
-                  className="px-6 py-2 bg-foreground hover:bg-foreground/90 text-background rounded-md transition-colors"
+                  isDisabled={isLoading}
+                  isLoading={isLoading}
+                  showTextWhileLoading
                 >
                   {isLoading ? 'Gerando codigo...' : 'Gerar codigo de instalacao'}
-                </button>
+                </Button>
               </div>
             </div>
           </>
@@ -287,19 +292,21 @@ export function PixelConfirmationModal({ pixelData, onClose, onSuccess, onError,
 
               {/* Botoes de acao */}
               <div className="flex justify-between">
-                <button
+                <Button
+                  color="secondary"
+                  size="lg"
                   onClick={copyTrackingCode}
-                  className="flex items-center gap-2 px-4 py-2 border border-border hover:bg-accent rounded-md transition-colors"
+                  iconLeading={Copy}
                 >
-                  <Copy className="w-4 h-4" />
                   Copiar codigo
-                </button>
-                <button
+                </Button>
+                <Button
+                  color="primary"
+                  size="lg"
                   onClick={onSuccess}
-                  className="px-6 py-2 bg-foreground hover:bg-foreground/90 text-background rounded-md transition-colors"
                 >
                   Finalizar
-                </button>
+                </Button>
               </div>
             </div>
           </>

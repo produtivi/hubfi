@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Home, Zap, BarChart3, TrendingUp, Globe, Sparkles, Target, Menu, Type, X } from 'lucide-react';
+import { Calculator, ChartBreakoutSquare } from '@untitledui/icons';
 import Image from 'next/image';
 import { AccountDropdown } from './account-dropdown';
 import { useSidebar } from './sidebar-layout';
@@ -38,12 +39,13 @@ export function Sidebar() {
   const navItems = [
     { id: 'home', label: 'Início', icon: Home, path: '/' },
     // { id: 'hubfinder', label: 'HubFinder', icon: Zap, path: '/hubfinder' },
-    // { id: 'hubads', label: 'HubAds', icon: BarChart3, path: '/hubads' },
+    { id: 'hubads', label: 'HubAds', icon: BarChart3, path: '/hubads' },
     // { id: 'hubranking', label: 'HubRanking', icon: TrendingUp, path: '/hubranking' },
     { id: 'hubpage', label: 'HubPage', icon: Globe, path: '/hubpage' },
     { id: 'hubcampaign', label: 'HubCampaign', icon: Sparkles, path: '/hubcampaign' },
     { id: 'hubpixel', label: 'HubPixel', icon: Target, path: '/hubpixel' },
     { id: 'title-generator', label: 'HubTitle', icon: Type, path: '/hubtitle' },
+
   ];
 
   const isActive = (path: string) => pathname === path;
